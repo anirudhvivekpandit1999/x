@@ -1,0 +1,13 @@
+{
+    "type": "service_account",
+    "project_id": "premium-sum-451011-j4",
+    "private_key_id": "6595420e9fbbcf2ca8114bdaa67ba7764d3ccc7b",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC0y0Bc5cudP3Nj\n4px2h0cMbLL4c9UqTM3EWsWUxFTjNbgR6m9guvoEQPzXVjLblQ7S6kfqiFu6hB25\nImFBitjtFXc+ezoMthwsF6mA0nAQo+VjY4hsvXD76xDNowa7gxR8EDxNVN6ddlff\n4+TlLdWR0D0X8ve7q/GgkWtKCddD3jUyRYLcaivDhcpwlS0RQISn0ccO5Zy3qf31\nS4NQzx4w9nTRc7e3KWsY4BvGIca5kK35SWFjk5QEXh/xHCVFspY4jm+Wr4rb+TEZ\nf8Fbuq20rLYHUvTe3ZyJiZIE6sxZkE10ABV40Jrgb9VKYNX3uIJyGRbiPnbXxPYF\nEWeamhetAgMBAAECggEAKl7xHmR3qAqBEVGAcFHrb4jBF/PTqzZ1SfWpFSC/MUG7\nei1qfW3MnvcZGqF3yVkBcKJaCOf8sXV5ntQlHW58QPIVMHZCSEzcxOOlxMxs2aWD\notumky+BvXSdi0gQEZ2ajSnj7A6+HoKn/Q+Eq0Zm5WW7j7OQZjIZrpMuJRux0NRr\nj44wku2ao8ZBHNCJB6i5GGuqYn1DSBTcPYycQm7UtCYXW49uVfde59wJLZNMOSAv\nQc5UCYEdCwJUyn9swkAz7hGINbtqgNeFcBLegk/Cqb88w19w6IL7SKldfj811GMF\n67iqxNmXPYwB9k8eDoT+XI4+Yd2kC2Kdna54FadYyQKBgQDpcfPu5EUrErnzGgz9\niRc1CyicH3IjYtp/T1m7G9WJ0XzNjbDh3JxFBMy3KYBkk7IsQRbj+h1DstrM0A1X\nGLWxued8xJ86F01zoaCntRgeWvXlnwefC61LBErstyJrnqPW5m2wroeedEkkBnsB\nqPG6RvaF6YPj8FBp4uq+wnq9ZQKBgQDGQwVXzDkHDSClriaETsq28Zs/29oQ7LP8\n7k8OdJn9QwGjmokWpFUwl33Rg+rHH/3CnD+kpVVaXvt/FYl5R/oxjnUsvnXu5p0g\nW+cKdr2cmMgG+qPCh/MMSzw30DPOi+HWLKhGK/aJ8Iha+xFhKHx9FKcrbWR3i0TY\nVQkQ8F3QqQKBgQDInSUEJydJ3M3wHHMNbsKC0xQTFvL/dfRPc+Go6kKYLW8TNrDL\naMrihT1oKkIsLMDxRv5k7Iw5oXpmiGTudE2wbhKBJnevdFcbB8sIVJhlfcXTjtb9\n1wsVbJr20mrCEZK7G0soitQBV+2DCA6tXoJdkp5IdmThfaOdW2RgisDwAQKBgDJ2\nkqCTSZyi2cFx/znD+FLyUirB4dJW/UUOvy6VvTA6YutqhSQvNcPFe2/dnN+MJAHp\n1UUqE/yJmofxSmmFSYhdkzONUuU465t16Ou/52k5dghYuV/lTJa/e5dVNiqHbjce\nbMJXpEvd3kcSCo1pSa5omFg0YtMOrrpFgqY+GBLpAoGBAOb2CirbcPsTMky3UGlj\njqivl1EwF1HwLrelyr3K/EZKMiog5KXObG7rSXMy/RFW0ixs60nVt1FjKKLI4YIQ\nNWcfwynycwH1Z5Ca6eoiBvT2wPmMrugdrpUELsjBvmbhJoYRnEBm2y9nLEIY5Frs\nJSc3elU3LTgv2LPJlvN9yQpE\n-----END PRIVATE KEY-----\n",
+    "client_email": "smartcoke-abhitech@premium-sum-451011-j4.iam.gserviceaccount.com",
+    "client_id": "103260096537529195416",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/smartcoke-abhitech%40premium-sum-451011-j4.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+  }

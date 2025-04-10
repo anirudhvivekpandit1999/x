@@ -1,0 +1,481 @@
+
+* { 
+    margin: 0;
+    padding: 0;
+    font-size: medium;
+    
+}
+body {
+    font-family: Arial, sans-serif;
+    background-color: rgb(209, 209, 209);
+    color: #020947;
+}
+
+/* Navbar */
+.navbar {
+
+    position: fixed; /* Sticks to the top */
+    width: 100%;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    background-color: #020947;
+    z-index: 1000; /* Ensures navbar stays on top */
+    display: flex;
+}
+
+/* Logo Styling */
+.logo-left{
+    position: absolute;
+    left: 0px;
+    
+}
+
+.logo-img-left {
+    width: 95px;
+    height: auto; 
+    margin-right: 5px;
+    
+}
+
+/* Navbar Links */
+.navbar-links {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0 auto;
+}
+
+.navbar-links li {
+    margin: 0 15px;
+    position: relative;
+}
+
+.navbar-links h1 {
+    font-size: 30px;
+    color: #fff;
+    margin-left: 40px;
+    transition: transform 0.3s ease;
+}
+
+/* Navbar Links Styling */
+.navbar-links a, .navbar-links .dropbtn {
+    color: #fff;
+    text-decoration: none;
+    font-size: 20px;
+    transition: transform 0.3s ease;
+    padding: 6px 10px;
+}
+
+.navbar-links a:hover, .navbar a.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-radius: 4px;
+}
+
+/* Dropdown Styling */
+.navbar-links .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #c2c6f7;
+    min-width: 160px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    z-index: 1;
+    top: 100%;
+    left: 0;
+}
+
+.navbar-links .dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    display: block;
+}
+
+.navbar-links .dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Mobile-Friendly Navbar */
+@media (max-width: 1024px) {
+    header {
+        height: auto;
+        padding: 10px;
+    }
+    
+    .navbar {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .logo-left, .logo-right {
+        width: 80px;
+    }
+
+    .navbar-links {
+        flex-direction: column;
+        width: 100%;
+        text-align: center;
+    }
+
+    .navbar-links li {
+        margin: 10px 0;
+    }
+    
+    .navbar-links a {
+        font-size: 18px;
+        padding: 8px;
+    }
+}
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+    .logo-left{
+        width: 70px;
+    }
+
+    .navbar-links a {
+        font-size: 16px;
+        padding: 6px;
+    }
+
+    .navbar-links h1 {
+        font-size: 22px;
+    }
+}
+
+#language-select {
+    background-color: #fff; /* White background for the dropdown */
+    color: #333; /* Text color */
+    border: 2px solid #ccc; /* Light gray border */
+    border-radius: 4px; /* Rounded corners */
+    padding: 8px 12px; /* Padding to make it look spacious */
+    font-size: 14px; /* Font size */
+    font-family: Arial, sans-serif; /* Font family */
+    appearance: none; /* Remove default browser styling */
+    outline: none; /* Remove outline */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: all 0.3s ease; /* Smooth transition for interaction */
+    margin-right: 30px;
+    width: 100px;
+}
+
+#language-select:hover {
+    border-color: #007BFF; /* Change border color on hover */
+    background-color: #f1f1f1; /* Change background on hover */
+}
+
+.logout {
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.logout:hover {
+    color: red;
+    text-decoration: underline;
+}
+
+/* Home Section Styles */
+section.home {
+    background: url('/static/images/collage1.jpg') no-repeat center center;
+    background-size: cover; /* Ensures full coverage without cropping too much */
+    background-attachment: fixed; /* Enables parallax effect */
+    min-height: 120vh; /* Ensures full viewport coverage */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding-top: 10px;
+    position: relative;
+   
+}
+
+/* Add a translucent background for better readability */
+section.home .content {
+    background: rgba(255, 255, 255, 0.438); /* Light translucent white */
+    padding: 20px;
+    border-radius: 10px;
+    display: inline-block;
+    backdrop-filter: blur(5px); /* Adds a slight blur effect */
+}
+
+section.home .content h3 {
+    font-size: 2.5rem;
+    color: #000000; /* Ensures visibility */
+    margin-bottom: 15px;
+}
+
+section.home .content p {
+    font-size: 1.2rem;
+    color: #000000; /* Ensures readability */
+}
+
+/* Adjust for smaller screens */
+@media (max-width: 768px) {
+    section.home {
+        background-attachment: scroll; /* Disables parallax on mobile for better performance */
+        background-size: contain; /* Keeps full image visible */
+        min-height: 100vh;
+    }
+
+    section.home .content {
+        padding: 15px;
+        width: 90%;
+    }
+}
+
+/* About Section Styles */
+section.about {
+    padding: 50px 20px;
+    background: rgba(255, 255, 255, 0.438);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+section.about .container {
+    width: 90%; /* Adjust width as needed */
+    max-width: 1400px; /* Ensures it doesn't get too wide */
+    padding: 20px;
+    border: 1px solid #333; /* Border for box effect */
+    border-radius: 15px; /* Rounded corners for a smooth look */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+     /* Slightly different background for contrast */
+}
+
+section.about h1.heading {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2rem;
+    text-transform: uppercase;
+}
+
+section.about .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    align-items: center;
+}
+
+section.about .top-row .image,
+section.about .bottom-row .image {
+    flex: 1;
+    padding: 10px;
+}
+
+section.about .top-row .content,
+section.about .bottom-row .content {
+    flex: 1;
+    padding: 10px;
+}
+
+section.about img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Magnify the model.png image */
+section.about .model-image img {
+    transform: scale(1.0);
+    transition: transform 0.3s ease;
+    
+}
+
+section.about h1 {
+    text-align: center;
+    margin: 0 auto 30px auto;
+    font-size: 1.3rem;
+    max-width: 1200px;
+}
+
+section.about .content {
+    flex: 1;
+    max-width: 500px;
+    text-align: justify;
+    margin: 0 20px;
+}
+
+section.about .content h3 {
+    font-size: 1.5rem;
+    
+    margin-bottom: 20px;
+}
+
+
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    section.about .row {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    section.about .image {
+        max-width: 90%;
+    }
+
+    section.about .content {
+        max-width: 100%;
+    }
+}
+
+section.process {
+    padding: 50px 20px;
+    background: rgba(255, 255, 255, 0.438);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+section.process .box-container {
+    width: 90%; /* Adjust width as needed */
+    max-width: 1400px; /* Ensures it doesn't get too wide */
+    padding: 20px;
+    border: 1px solid #333; /* Border for box effect */
+    border-radius: 15px; /* Rounded corners for a smooth look */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+    
+    
+}
+
+/* Services Section Styles */
+section.process .content h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin: 50px 0;
+}
+
+section.process .content h2 {
+    text-align: center;
+    font-size: 1.5rem;
+    margin: 50px 0;
+}
+
+section.process .content .row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+   
+}
+
+section.process .content .col-md-4 {
+    flex: 0 0 30%;
+    max-width: 30%;
+    margin-bottom: 20px;
+}
+
+section.process .content .card {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #333;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    flex-direction: column; /* Ensures uniform height */
+    height: 100%;
+}
+
+section.process .content .card:hover {
+    transform: translateY(-10px);
+}
+
+section.process .content .card img {
+    width: 100%;
+    height: auto;
+}
+
+section.process .content .card-body {
+    padding: 20px;
+    text-align: justify;
+}
+
+section.process .content .card-body h5 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+section.process .content .card-body p {
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.footerInner {
+    background-color: #002155; /* Dark Blue Background */
+    color: #ffffff; /* White Text */
+    padding: 30px 0;
+    text-align: center;
+}
+
+.footerInnerTop {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.footerCol3 {
+    max-width: 400px;
+    margin: 10px;
+}
+
+.footerCol3 h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: #ffffff;
+}
+
+.footersocial ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footersocial ul li {
+    display: inline-block;
+    margin: 0 10px;
+}
+
+.footersocial ul li a {
+    color: #ffffff;
+    font-size: 24px;
+    transition: color 0.3s;
+}
+
+.footersocial ul li a:hover {
+    color: #fbbc05; /* Google-style yellow for effect */
+    
+}
+
+.callIcon {
+    margin-top: 10px;
+}
+
+.callIcon a, .mailIcon a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.callIcon a i, .mailIcon a i {
+    font-size: 20px;
+    margin-right: 8px;
+}
+
+.mailIcon span {
+    word-break: break-word;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .footerInnerTop {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+

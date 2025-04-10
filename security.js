@@ -1,0 +1,1 @@
+export const  secretKey = Buffer.from("qwertyuiopasdfghjklzxcvbnm", "utf-8");
