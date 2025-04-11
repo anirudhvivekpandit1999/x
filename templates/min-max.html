@@ -492,7 +492,8 @@
 
             try {
                 const response = await postEncrypted('http://3.111.23.36:3000/api/updateMinMaxValues', data);
-                alert(response.message);
+                alert('Data submitted successfully!');
+                console.log(response);
             } catch (error) {
                 alert('Error: ' + error.message);
                 console.error(error);
