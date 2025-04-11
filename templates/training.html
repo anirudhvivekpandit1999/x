@@ -540,12 +540,24 @@
             window.location.href = 'http://127.0.0.1:5000/TrainData-storage.html';
         });
 
-        document.getElementById('download-template-btn').addEventListener('click', () => {
-            // Trigger the file download
-            window.location.href = 'http://127.0.0.1:5000/download-template';
-        });
+        // document.getElementById('download-template-btn').addEventListener('click', () => {
+        //     // Trigger the file download
+        //     window.location.href = '/download-template';
+        // });
 
-
+        document.getElementById("download-template-btn").addEventListener("click", function () {
+  fetch("/download-template")
+    .then(response => response.blob())
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "template.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+});
 
         function updateProcessParameters() {
             const processType = document.getElementById("processDropdown").value;

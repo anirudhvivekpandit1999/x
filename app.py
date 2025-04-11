@@ -478,7 +478,7 @@ def cost():
         input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
         
         daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(52, -1)
-        Blended_coal_parameters = np.loadtxt('./Blended_Coal_data/blended_coal_data.csv', delimiter=',')
+        Blended_coal_parameters = np.loadtxt('blended_coal_data.csv', delimiter=',')
         
         input_train, input_test, target_train, target_test = train_test_split(
             daily_vectors_tensor.numpy(), Blended_coal_parameters, test_size=0.2, random_state=42
@@ -668,6 +668,7 @@ def cost():
         
         def read_min_max_values():
             df = pd.read_csv('min-maxvalues.csv')
+            print(df);
             return {
                 'ash': {
                     'lower': df['ash_lower'].iloc[0],
