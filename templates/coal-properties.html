@@ -434,11 +434,20 @@
       }
     }
 
-    document
-      .getElementById("downloadcoalfile")
-      .addEventListener("click", function () {
-        window.location.href = "/download-template-properties";
-      });
+    document.getElementById("downloadcoalfile").addEventListener("click", function () {
+  fetch("/download-template-properties")
+    .then(response => response.blob())
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "coal-properties-template.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+});
+
 
     let coalData = [];
     let coalTypes = [];
