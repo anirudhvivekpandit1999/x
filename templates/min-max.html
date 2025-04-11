@@ -507,20 +507,28 @@
         const result = await postEncrypted('http://3.111.23.36:3000/api/getMinMaxValues', {p_CompanyId : 1 }); // assuming no payload
         console.log(result[0].CoalPropertiesFormatted);
         // Populate form fields with the fetched data
-        for (const key in result[0].CoalPropertiesFormatted) {
-            const input = document.querySelector(`[name="${key}"]`);
-            if (input) {
-                input.value = result[key];
+        document.querySelector('[name="ash_lower"]').value = result[0].CoalPropertiesFormatted.ash.lower;
+document.querySelector('[name="ash_upper"]').value = result[0].CoalPropertiesFormatted.ash.upper;
+document.querySelector('[name="vm_lower"]').value = result[0].CoalPropertiesFormatted.vm.lower;
+document.querySelector('[name="vm_upper"]').value = result[0].CoalPropertiesFormatted.vm.upper;
 
-                // Update slider value display
-                if (input.type === 'range') {
-                    const sliderValue = document.getElementById(`${key}_value`);
-                    if (sliderValue) {
-                        sliderValue.textContent = parseFloat(input.value).toFixed(1);
-                    }
-                }
-            }
-        }
+document.querySelector('[name="m40_lower"]').value = result[0].CoalPropertiesFormatted.m40.lower;
+document.querySelector('[name="m40_upper"]').value = result[0].CoalPropertiesFormatted.m40.upper;
+
+document.querySelector('[name="m10_lower"]').value = result[0].CoalPropertiesFormatted.m10.lower;
+document.querySelector('[name="m10_upper"]').value = result[0].CoalPropertiesFormatted.m10.upper;
+
+document.querySelector('[name="csr_lower"]').value = result[0].CoalPropertiesFormatted.csr.lower;
+document.querySelector('[name="csr_upper"]').value = result[0].CoalPropertiesFormatted.csr.upper;
+
+document.querySelector('[name="cri_lower"]').value = result[0].CoalPropertiesFormatted.cri.lower;
+document.querySelector('[name="cri_upper"]').value = result[0].CoalPropertiesFormatted.cri.upper;
+
+document.querySelector('[name="ams_lower"]').value = result[0].CoalPropertiesFormatted.ams.lower;
+document.querySelector('[name="ams_upper"]').value = result[0].CoalPropertiesFormatted.ams.upper;
+
+
+
 
         // Update all sliders after form values are set
         sliders.forEach(({ slider, valueDisplay, noColor }) => {
