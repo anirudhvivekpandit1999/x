@@ -523,34 +523,40 @@
     }
 
 
-    document.getElementById("selectCoal").addEventListener("change", () => {
+    document.getElementById("selectCoal").addEventListener("change",async () => {
       const selectedIndex = parseInt(
         document.getElementById("selectCoal").value,
         10
       );
-
+      const result = await postEncrypted("http://3.111.23.36:3000/api/getIndividualCoalProperty", { p_CompanyId: 1 , p_CoalId : (selectedIndex + 1) })
+      console.log(result);
       if (selectedIndex >= 0 && selectedIndex < coalData.length) {
         const selectedCoal = coalData[selectedIndex];
 
-        document.getElementById("coal").value = selectedCoal[0];
-        document.getElementById("ash").value = selectedCoal[1];
-        document.getElementById("volatile_matter").value = selectedCoal[2];
-        document.getElementById("moisture").value = selectedCoal[3];
-        document.getElementById("max_contraction").value = selectedCoal[4];
-        document.getElementById("max_expansion").value = selectedCoal[5];
-        document.getElementById("max_fluidity").value = selectedCoal[6];
-        document.getElementById("mmr").value = selectedCoal[7];
-        document.getElementById("hgi").value = selectedCoal[8];
-        document.getElementById("softening_temp").value = selectedCoal[9];
+        document.getElementById("coal").value = selectedCoal.CoalName;
+        document.getElementById("ash").value = selectedCoal.Ash;
+        document.getElementById("volatile_matter").value = selectedCoal.VolatileMatter;
+        document.getElementById("moisture").value = selectedCoal.Moisture;
+        document.getElementById("max_contraction").value = selectedCoal.MaxContraction;
+        document.getElementById("max_expansion").value = selectedCoal.MaxExpansion;
+        document.getElementById("max_fluidity").value = selectedCoal.Maxfluidityddpm;
+        document.getElementById("mmr").value = selectedCoal.MMR;
+        document.getElementById("hgi").value = selectedCoal.HGI;
+        document.getElementById("softening_temp").value = selectedCoal.SofteningTemperaturec;
         document.getElementById("resolidification_min").value =
-          selectedCoal[10];
+          selectedCoal.
+          ResolidificationTempRangeMinc;
         document.getElementById("resolidification_max").value =
-          selectedCoal[11];
-        document.getElementById("plastic_range").value = selectedCoal[12];
-        document.getElementById("sulphur").value = selectedCoal[13];
-        document.getElementById("phosphorous").value = selectedCoal[14];
-        document.getElementById("csn").value = selectedCoal[15];
-        document.getElementById("cost").value = selectedCoal[16];
+          selectedCoal.ResolidificationTempRangeMaxc;
+        document.getElementById("plastic_range").value = selectedCoal.
+        PlasticRangec;
+        document.getElementById("sulphur").value = selectedCoal.Sulphur;
+        document.getElementById("phosphorous").value = selectedCoal.
+Phosphorous
+;
+        document.getElementById("csn").value = selectedCoal.CSN
+        ;
+        document.getElementById("cost").value = selectedCoal.CostPerTonRs;
       }
     });
 
@@ -563,6 +569,7 @@
           document.getElementById("selectCoal").value,
           10
         );
+        console.log(selectedIndex);
 
         // These should be available based on how you're managing IDs
         const coalId = selectedIndex + 1; // Assuming select dropdown value = CoalId
