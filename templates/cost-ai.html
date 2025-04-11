@@ -850,7 +850,7 @@
                     encryptedData: encryptedPayload,
                 });
 
-                const encryptedResponse = result.data.coalProperties;
+                const encryptedResponse = result.data?.coalProperties || result.data.encryptedData;
                 //  const firstResultSet = encryptedResponse[0];
 
                 //  if (!encryptedResponse) {
@@ -1034,30 +1034,30 @@
         function updateCoalCost() {
             let totalCost = 0;
 
-            document.querySelectorAll('.blend').forEach(blend => {
+            document.querySelectorAll('.blend').forEach(async blend => {
                 const select = blend.querySelector('select');
                 const rangeInput = blend.querySelector('input[type="number"]');
 
                 const selectedCoal = select.value;
                 const range = parseFloat(rangeInput.value) || 0;
-
-                if (selectedCoal && range > 0 && window.coalProperties) {
-                    const coalData = window.coalProperties.find(row => row[0] === selectedCoal);
-                    if (coalData) {
-                        const costPerTon = parseFloat(coalData[16]); // Assuming cost is in the 17th column
-                        totalCost += costPerTon * range / 100; // Add the weighted cost
+                const result = await postEncrypted('http://3.111.23.36:3000/api/getIndividualCoalPropertiesByName', {  p_CompanyId:1, p_CoalName : selectedCoal });
+                if (selectedCoal && range > 0 ) {
+                    
+                    if (result) {
+                        const costPerTon = result[0].CostPerTonRs; // Assuming cost is in the 17th column
+                        totalCost += costPerTon * range / 100; 
+                        // Add the weighted cost
+                        document.getElementById('currentCost').value = totalCost.toFixed(2);
                     }
+                    
                 }
             });
 
-            document.getElementById('currentCost').value = totalCost.toFixed(2);
+            
         }
 
         window.addEventListener('DOMContentLoaded', loadCoalTypes);
 
-        function removeBlend(button) {
-            button.parentElement.remove();
-        }
 
 
 
@@ -1446,7 +1446,7 @@ async function loadProposedCoalTypes() {
             const showProposed = proposedBlendCoal.some(coal => coal.range > 0);
 
             updateCoalCost();
-            const currentCost = document.getElementById('currentCost').value || '0.00';
+            
 
             const table = document.createElement('table');
             table.classList.add('blend-table');
