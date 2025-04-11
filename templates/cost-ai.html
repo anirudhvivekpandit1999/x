@@ -713,7 +713,7 @@
 
     async function sendDataToBackend(data) {
     try {
-        const response = await fetch('http://127.0.0.1:5001/ai', {
+        const response = await fetch('http://3.111.23.36:5000/ai', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -756,7 +756,7 @@
 
     async function loadCoalTypes() {
         try {
-            const response = await fetch('http://127.0.0.1:5000/get_coal_types_cost');
+            const response = await fetch('http://3.111.23.36:5000/get_coal_types_cost');
             const data = await response.json();
             const coalTypes = data.coal_types;
 
@@ -890,7 +890,7 @@
         
     
         document.addEventListener('DOMContentLoaded', () => {
-            fetch('http://127.0.0.1:5000/get_ranges')
+            fetch('http://3.111.23.36:5000/get_ranges')
                 .then(response => response.json())
                 .then(data => {
                     // Update sliders dynamically
@@ -916,7 +916,7 @@
     
         async function loadProposedCoalTypes() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/get_proposed_coal_types');
+                const response = await fetch('http://3.111.23.36:5000/get_proposed_coal_types');
                 const data = await response.json();
                 const coalInfo = data.coal_info;
 
