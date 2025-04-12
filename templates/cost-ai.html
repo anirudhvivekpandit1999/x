@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,103 +14,157 @@
             font-family: Arial, sans-serif;
             background-color: #ffffff;
             color: #020947;
-            padding-top: 1px; /* This will add space at the top for the navbar */
+            padding-top: 1px;
+            /* This will add space at the top for the navbar */
         }
 
-        
-        #inputFormSection {
-            margin-top: 100px; /* This ensures the form is below the navbar */
+        #fullPageLoader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            /* semi-transparent dark overlay */
+            z-index: 9999;
+            display: none;
+            /* hidden by default */
+            justify-content: center;
+            align-items: center;
         }
-        
-        .form-container { 
-            width: 80%; 
-            margin: 10px auto; 
-            padding: 20px; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
-            background-color: #f9f9f9; 
-        } 
-        
-        h2,h3 { 
-            text-align: center; 
-            margin-top: 40px; 
-            color: #020947; 
+
+        .spinner {
+            border: 10px solid #f3f3f3;
+            border-top: 10px solid #3498db;
+            /* Blue */
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+
+
+        #inputFormSection {
+            margin-top: 100px;
+            /* This ensures the form is below the navbar */
+        }
+
+        .form-container {
+            width: 80%;
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+        }
+
+        h2,
+        h3 {
+            text-align: center;
+            margin-top: 40px;
+            color: #020947;
             font-size: x-large;
             margin-bottom: 30px;
         }
-        
+
         /* Initial styles for blend elements */
-        .blend, .blend-entry { 
-            display: flex; 
-            align-items: center; 
-            margin-bottom: 10px; 
+        .blend,
+        .blend-entry {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
             gap: 10px;
-            width: 100%; 
-            opacity: 0; /* Initially hidden */
-            transform: translateY(30px); /* Start below the screen */
-            transition: transform 0.5s ease, opacity 0.5s ease; /* Slide in effect */
+            width: 100%;
+            opacity: 0;
+            /* Initially hidden */
+            transform: translateY(30px);
+            /* Start below the screen */
+            transition: transform 0.5s ease, opacity 0.5s ease;
+            /* Slide in effect */
         }
 
         /* When .show class is added, it becomes visible and slides into position */
-        .blend.show, .blend-entry.show { 
-            opacity: 1; /* Make visible */
-            transform: translateY(0); /* Slide into place */
+        .blend.show,
+        .blend-entry.show {
+            opacity: 1;
+            /* Make visible */
+            transform: translateY(0);
+            /* Slide into place */
         }
 
         /* Other existing styles for labels, inputs, buttons, etc. */
-        .blend label, .blend-entry label { 
-            flex: 1; 
+        .blend label,
+        .blend-entry label {
+            flex: 1;
         }
 
-        .blend select, .blend-entry select, .blend input, .blend-entry input { 
-            flex: 2; 
-            padding: 8px; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
+        .blend select,
+        .blend-entry select,
+        .blend input,
+        .blend-entry input {
+            flex: 2;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
 
-        .blend .remove-blend-btn, .blend-entry .remove-blend-btn { 
-            flex: 0.5; 
-            background-color: #e74c3c; 
-            color: white; 
-            border: none; 
-            padding: 8px 10px; 
-            cursor: pointer; 
-            border-radius: 4px; 
-            transition: background-color 0.3s; 
+        .blend .remove-blend-btn,
+        .blend-entry .remove-blend-btn {
+            flex: 0.5;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
         }
 
-        .blend .remove-blend-btn:hover, .blend-entry .remove-blend-btn:hover { 
-            background-color: #c0392b; 
+        .blend .remove-blend-btn:hover,
+        .blend-entry .remove-blend-btn:hover {
+            background-color: #c0392b;
         }
 
-        .add-blend-btn, #addCoalButton { 
-            display: block; 
-            width: 20%; 
-            padding: 10px; 
-            background-color: #020947; 
-            color: white; 
-            border: none; 
-            cursor: pointer; 
-            border-radius: 4px; 
-            text-align: center; 
+        .add-blend-btn,
+        #addCoalButton {
+            display: block;
+            width: 20%;
+            padding: 10px;
+            background-color: #020947;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            text-align: center;
             margin-top: 30px;
             margin-left: 40%;
-            transition: background-color 0.3s; 
+            transition: background-color 0.3s;
         }
 
-        .add-blend-btn:hover, #addCoalButton:hover {
-            background-color: #1e40af; 
+        .add-blend-btn:hover,
+        #addCoalButton:hover {
+            background-color: #1e40af;
         }
 
-        
-      
-        .form-section { 
-            width: 100%; 
-            margin: 20px 0; 
-        } 
-        
+
+
+        .form-section {
+            width: 100%;
+            margin: 20px 0;
+        }
+
         label {
             font-family: Arial, sans-serif;
             font-size: 16px;
@@ -124,39 +179,45 @@
             border-radius: 4px;
             background-color: #fff;
             width: 100%;
-            max-width: 300px; /* Limit width for better UI */
-        
+            max-width: 300px;
+            /* Limit width for better UI */
+
         }
-        
-        table { 
-            width: 90%; 
-            border-collapse: collapse; 
-            margin-bottom: 20px; 
+
+        table {
+            width: 90%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
             margin-top: 30px;
             margin-left: 40px;
-        } 
-        
-        th, td { 
-            padding: 10px; 
-            border: 1px solid #ddd; 
-            text-align: left; 
-            font-size: 1rem; 
-        } 
-        th { background-color: #f2f2f2; }
-            
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
         input[type="number"] {
-                width: calc(100% - 20px); 
-                padding: 8px; 
-                margin: 10px 0; 
-                box-sizing: border-box; 
-                border: 1px solid #ccc; 
-                border-radius: 4px; 
-                margin-inline: 5px; 
-                background-color: #ffffff;
-            
-            }  
-            
-        .submit-btn, #AgainButton { 
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-inline: 5px;
+            background-color: #ffffff;
+
+        }
+
+        .submit-btn,
+        #AgainButton {
             display: inline-block;
             width: 20%;
             padding: 10px 20px;
@@ -168,14 +229,16 @@
             margin-left: 20%;
             border-radius: 4px;
             text-align: center;
-            transition: background-color 0.3s; 
-        
-        } 
-        .submit-btn:hover, #AgainButton:hover{ 
-        background-color: #1e40af; 
+            transition: background-color 0.3s;
+
         }
-        
-        #tryAgainBtn { 
+
+        .submit-btn:hover,
+        #AgainButton:hover {
+            background-color: #1e40af;
+        }
+
+        #tryAgainBtn {
             display: inline-block;
             width: 17%;
             padding: 10px 20px;
@@ -188,15 +251,16 @@
             margin-right: 50px;
             border-radius: 4px;
             text-align: center;
-            transition: background-color 0.3s; 
-        
-        } 
+            transition: background-color 0.3s;
+
+        }
 
         #downloadBtn {
-            
+
             width: 17%;
             padding: 10px 20px;
-            background-color: #020947; /* Dark Blue */
+            background-color: #020947;
+            /* Dark Blue */
             color: white;
             border: none;
             cursor: pointer;
@@ -206,72 +270,83 @@
             transition: background-color 0.3s;
         }
 
-        .submit-btn:hover, #AgainButton:hover, #tryAgainBtn:hover, #downloadBtn:hover{ 
-        background-color: #1e40af; 
+        .submit-btn:hover,
+        #AgainButton:hover,
+        #tryAgainBtn:hover,
+        #downloadBtn:hover {
+            background-color: #1e40af;
         }
-            
+
         form h2 {
-                text-align: center;
-                margin-bottom: 20px;
-                color: #020947;
-            }
-        
+            text-align: center;
+            margin-bottom: 20px;
+            color: #020947;
+        }
+
         #resultSection {
-                display: none;  
-                font-family: Arial, sans-serif;  
-                padding: 20px;
-                background-color: #f9f9f9;
-                border-radius: 8px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            }
-            
+            display: none;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
         #result {
-                font-size: 20px;  /* Large font size */
-                line-height: 1.6;
-                color: #04050a;
-                margin-bottom: 20px;  
-            }
-            
-            #result p span {
-                font-weight: bold;  /* Bold text for the percentages */
-                color: #032a53;  /* Blue color for emphasis */
-            }
-        
-        .result-container { 
-            background-color: #ffffff; 
-            padding: 20px; 
-            border: 2px solid #ddd; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
-            margin-bottom: 30px;
-            margin-left: 20px; 
-        } 
-        
-        .proposed-result-container, .process-coke-container { 
-            background-color: #f8ffff; 
-            padding: 20px; 
-            border: 2px solid #ddd; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
-            margin-bottom: 30px;
-            margin-left: 20px; 
+            font-size: 20px;
+            /* Large font size */
+            line-height: 1.6;
+            color: #04050a;
+            margin-bottom: 20px;
         }
-        
-        .result-container , .proposed-result-container, .predicted-result-container, .process-coke-container h3 { 
-            margin-top: 0; 
-            color: #000000; 
-            text-align: center; 
+
+        #result p span {
+            font-weight: bold;
+            /* Bold text for the percentages */
+            color: #032a53;
+            /* Blue color for emphasis */
         }
-        
+
+        .result-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            margin-left: 20px;
+        }
+
+        .proposed-result-container,
+        .process-coke-container {
+            background-color: #f8ffff;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            margin-left: 20px;
+        }
+
+        .result-container,
+        .proposed-result-container,
+        .predicted-result-container,
+        .process-coke-container h3 {
+            margin-top: 0;
+            color: #000000;
+            text-align: center;
+        }
+
         .parameter-box {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Flexible grid for different screen sizes */
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            /* Flexible grid for different screen sizes */
             gap: 20px;
             padding: 10px;
             justify-content: center;
             margin-left: 10px;
         }
-        
+
         /* Individual grid items */
         .grid-item {
             background-color: #d6ebff;
@@ -281,43 +356,46 @@
             text-align: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
+
         .grid-item:hover {
             transform: scale(1.05);
             background-color: #bed9f3;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        
+
         .grid-item p {
             margin: 0 0 5px 0;
             font-weight: bold;
             color: #000000;
         }
-        
+
         .grid-item span {
             display: block;
             margin-top: 5px;
             color: #000000;
             font-weight: normal;
         }
-        
+
         /* Blend-specific styling */
         .blend-box {
-            background-color: #ffffff; 
-            padding: 20px; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
-            
+
         }
 
         .validPredictionText {
-            text-align: center; /* Center the text */
-            font-weight: bold; /* Bold text */
-            margin-left: 20px ; /* Optional: adds margin for spacing */
+            text-align: center;
+            /* Center the text */
+            font-weight: bold;
+            /* Bold text */
+            margin-left: 20px;
+            /* Optional: adds margin for spacing */
             margin-bottom: 20px;
         }
-        
+
         .blend-heading {
             text-align: center;
             font-size: 20px;
@@ -325,16 +403,16 @@
             color: #000000;
             margin-bottom: 15px;
         }
-        
+
         .blend-properties {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             padding: 10px;
             justify-content: center;
             margin-left: 10px;
         }
-        
+
         .grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -345,7 +423,7 @@
             background-color: #f9f9f9;
             border-radius: 10px;
         }
-        
+
         .property-box {
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -353,14 +431,14 @@
             background-color: #fff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
+
         .property-box h4 {
             text-align: center;
             margin-bottom: 10px;
             color: #333;
             font-size: 16px;
         }
-        
+
         .param-box {
             margin: 5px 0;
             padding: 5px;
@@ -378,7 +456,7 @@
             max-width: 800px;
             margin: auto;
         }
-        
+
         /* Input slider styles */
         .coke-param-slider {
             -webkit-appearance: none;
@@ -391,11 +469,11 @@
             opacity: 0.85;
             transition: opacity 0.15s ease-in-out;
         }
-        
+
         .coke-param-slider:hover {
             opacity: 1;
         }
-        
+
         /* Slider thumb styling */
         .coke-param-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -407,11 +485,11 @@
             cursor: pointer;
             transition: background 0.15s ease-in-out;
         }
-        
+
         .coke-param-slider::-webkit-slider-thumb:hover {
             background: #444444;
         }
-        
+
         .coke-param-slider::-moz-range-thumb {
             width: 20px;
             height: 20px;
@@ -420,11 +498,11 @@
             cursor: pointer;
             transition: background 0.15s ease-in-out;
         }
-        
+
         .coke-param-slider::-moz-range-thumb:hover {
             background: #444444;
         }
-        
+
         /* Value display next to sliders */
         span {
             display: inline-block;
@@ -433,13 +511,13 @@
             font-size: 15px;
             color: #555;
         }
-        
+
         /* Styling the table rows */
         .form-section tr:nth-child(even) {
             background-color: #f2f2f2;
         }
 
-       
+
 
         /* Mobile-specific adjustments (Media Queries) */
         @media screen and (max-width: 768px) {
@@ -448,7 +526,8 @@
                 width: 80%;
             }
 
-            .submit-btn, #AgainButton {
+            .submit-btn,
+            #AgainButton {
                 width: 80%;
                 margin-left: 10%;
             }
@@ -458,47 +537,59 @@
                 padding: 10px;
             }
 
-            h2, h3 {
-                font-size: 1.2rem; /* Smaller headings on mobile */
+            h2,
+            h3 {
+                font-size: 1.2rem;
+                /* Smaller headings on mobile */
             }
 
             .parameter-box {
-                grid-template-columns: 1fr; /* Single column on small screens */
+                grid-template-columns: 1fr;
+                /* Single column on small screens */
             }
-            
+
             .grid-container {
-                grid-template-columns: 1fr; /* Stack grid items in a single column */
+                grid-template-columns: 1fr;
+                /* Stack grid items in a single column */
             }
         }
-        
-        
-        
 
-         /* Label text for the total range */
-         #totalRangeContainer label {
-            font-size: 18px; /* Make the label font size reasonable */
-            font-weight: bold; /* Make the label bold */
-            color: #333; /* Dark text color for readability */
+
+
+
+        /* Label text for the total range */
+        #totalRangeContainer label {
+            font-size: 18px;
+            /* Make the label font size reasonable */
+            font-weight: bold;
+            /* Make the label bold */
+            color: #333;
+            /* Dark text color for readability */
             margin-top: 20px;
         }
+
         #totalRange {
-            font-size: 18px; 
-            font-weight: bold; /* Make the total bold */
-            color: #174c6b; /* Blue color for the total range value */
-            padding: 0 4px; 
-            border-radius: 4px; 
+            font-size: 18px;
+            font-weight: bold;
+            /* Make the total bold */
+            color: #174c6b;
+            /* Blue color for the total range value */
+            padding: 0 4px;
+            border-radius: 4px;
             margin-bottom: 20px;
-            background-color: #e7f3ff; 
+            background-color: #e7f3ff;
             text-align: center;
         }
 
         #totalproposedRange {
-            font-size: 18px; 
-            font-weight: bold; /* Make the total bold */
-            color: #174c6b; /* Blue color for the total range value */
-            padding: 0 4px; 
-            border-radius: 4px; 
-            background-color: #e7f3ff; 
+            font-size: 18px;
+            font-weight: bold;
+            /* Make the total bold */
+            color: #174c6b;
+            /* Blue color for the total range value */
+            padding: 0 4px;
+            border-radius: 4px;
+            background-color: #e7f3ff;
             text-align: center;
         }
 
@@ -506,7 +597,7 @@
             text-align: center;
             margin-top: 20px;
         }
-        
+
         .blend-buttons button {
             display: inline-block;
             width: 10%;
@@ -523,7 +614,7 @@
             font-size: 16px;
             font-weight: bold;
         }
-        
+
         .blend-buttons button:hover {
             background-color: #1e40af;
         }
@@ -537,16 +628,16 @@
             border: 2px solid #ddd;
             border-radius: 5px;
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            
+
         }
-        
+
         /* Focus state for processDropdown */
         #processDropdown:focus {
             border-color: #007bff;
             box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
             outline: none;
         }
-        
+
         #processDropdown option {
             padding: 10px;
         }
@@ -554,7 +645,7 @@
         .green {
             color: green;
         }
-        
+
         .red {
             color: red;
         }
@@ -566,9 +657,10 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        </style>
+    </style>
 
 </head>
+
 <body>
     <header>
         <nav class="navbar">
@@ -576,13 +668,15 @@
                 <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left">
             </div>
             <ul class="navbar-links">
-                <li><h1>SmartCoke</h1></li>
+                <li>
+                    <h1>SmartCoke</h1>
+                </li>
                 <li><a href="coal-properties.html">COAL PROPERTIES</a></li>
                 <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
                 <li><a href="cost-ai.html">COST AI</a></li>
                 <li><a href="training.html">TRAINING</a></li>
                 <li><a href="index.html">HOME</a></li>
-                
+
             </ul>
             <select id="language-select">
                 <option value="en">English</option>
@@ -591,201 +685,205 @@
                 <option value="fr">French</option>
                 <option value="de">German</option>
                 <option value="ru">Russian</option>
-                <option value ="it">Italian</option>
+                <option value="it">Italian</option>
                 <option value="ko">Korean</option>
                 <option value="ja">Japanese</option>
-                
+
             </select>
         </nav>
     </header>
 
-    <section id="inputFormSection"> 
-        <div class="form-container"> 
-    
-        <div class="range-tolerance-container">
-            <label for="currentCost">Current Cost per Ton (Rs.):</label>
-            <input type="number" id="currentCost" placeholder="Current Cost per Ton" readonly>
-            
-        </div>
-        
-        <form id="coalForm">  
-            <div id="coalBlends"  >
-                <h2>Coal Type</h2> 
-                <div class="blend-row">
-                
-                </div>
-            </div>   
-        <button type="button" class="add-blend-btn" onclick="addBlend()">Add Coal</button> 
-        <div id="totalRangeContainer">
-            <label>Total Current Range:<span id="totalRange"></span>%</label>
-            
-        </div>
+    <section id="inputFormSection">
+        <div class="form-container">
 
-        <div class="range-tolerance-container">
-            <label for="rangeTolerance">Coal Range (%):</label>
-            <input type="number" id="rangeTolerance" placeholder="Enter value" oninput="applyTolerance(this.value)">
-        </div>
+            <div class="range-tolerance-container">
+                <label for="currentCost">Current Cost per Ton (Rs.):</label>
+                <input type="number" id="currentCost" placeholder="Current Cost per Ton" readonly>
 
-        <div id="blendEntries">
-            <h2>Proposed Coal Blend Properties</h2>
-        </div>
-        <button type="button" id="addCoalButton">Add Coal</button>
-        <div id="totalRangeContainer">
-            <label>Total Current Range:<span id="totalproposedRange"></span>%</label>
-            
-        </div>
-
-        <h2>Desired Coke Parameters</h2>
-
-        <div class="form-section">
-                <table>    
-                    <tr>
-                        <td><label for="ash_slider">Ash</label></td>
-                        <td>
-                            <input type="range" id="ash_slider" name="ASH" step="0.01" class="coke-param-slider">
-                            <span id="ash_value"></span>
-                        </td>
-                        <td><label for="vm_slider">Volatile Matter</label></td>
-                        <td>
-                            <input type="range" id="vm_slider" name="VM" step="0.01" class="coke-param-slider">
-                            <span id="vm_value"></span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><label for="m40_slider">M_40MM</label></td>
-                        <td>
-                            <input type="range" id="m40_slider" name="M_40MM" step="0.01" class="coke-param-slider">
-                            <span id="m40_value"></span>
-                        </td>
-                        <td><label for="m10_slider">M_10MM</label></td>
-                        <td>
-                            <input type="range" id="m10_slider" name="M_10MM" step="0.01" class="coke-param-slider">
-                            <span id="m10_value"></span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><label for="csr_slider">CSR</label></td>
-                        <td>
-                            <input type="range" id="csr_slider" name="CSR" step="0.01" class="coke-param-slider">
-                            <span id="csr_value"></span>
-                        </td>
-                        <td><label for="cri_slider">CRI</label></td>
-                        <td>
-                            <input type="range" id="cri_slider" name="CRI" step="0.01" class="coke-param-slider">
-                            <span id="cri_value"></span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><label for="ams_slider">AMS</label></td>
-                        <td>
-                            <input type="range" id="ams_slider" name="AMS" step="0.01" class="coke-param-slider">
-                            <span id="ams_value"></span>
-                        </td>
-                    </tr>
-                </table>
             </div>
 
-    <h2>Process Parameters</h2>
-    <label for="processDropdown">Choose Process Type:</label>
-    <select id="processDropdown" name="processDropdown" onchange="updateProcessParameters()">
-        <option value="">Select Process Parameter Type</option>
-        <option value="1">Recovery Top Charge COB</option>
-        <option value="2">Recovery Stamp Charge COB</option>
-        <option value="3">Non-Recovery Stamp Charge</option>
-    </select>
-    <div class="form-section">
-        <div id="processParameters">
-            
-        </div>
-    </div>
+            <form id="coalForm">
+                <div id="coalBlends">
+                    <h2>Coal Type</h2>
+                    <div class="blend-row">
 
-    <button type="submit" class="submit-btn">Submit</button>
-    <button type="button" id="AgainButton" onclick="resetForm()">Reset</button>
-    </form>
-    </div>
+                    </div>
+                </div>
+                <button type="button" class="add-blend-btn" onclick="addBlend()">Add Coal</button>
+                <div id="totalRangeContainer">
+                    <label>Total Current Range:<span id="totalRange"></span>%</label>
+
+                </div>
+
+                <div class="range-tolerance-container">
+                    <label for="rangeTolerance">Coal Range (%):</label>
+                    <input type="number" id="rangeTolerance" placeholder="Enter value"
+                        oninput="applyTolerance(this.value)">
+                </div>
+
+                <div id="blendEntries">
+                    <h2>Proposed Coal Blend Properties</h2>
+                </div>
+                <button type="button" id="addCoalButton">Add Coal</button>
+                <div id="totalRangeContainer">
+                    <label>Total Current Range:<span id="totalproposedRange"></span>%</label>
+
+                </div>
+
+                <h2>Desired Coke Parameters</h2>
+
+                <div class="form-section">
+                    <table>
+                        <tr>
+                            <td><label for="ash_slider">Ash</label></td>
+                            <td>
+                                <input type="range" id="ash_slider" name="ASH" step="0.01" class="coke-param-slider">
+                                <span id="ash_value"></span>
+                            </td>
+                            <td><label for="vm_slider">Volatile Matter</label></td>
+                            <td>
+                                <input type="range" id="vm_slider" name="VM" step="0.01" class="coke-param-slider">
+                                <span id="vm_value"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label for="m40_slider">M_40MM</label></td>
+                            <td>
+                                <input type="range" id="m40_slider" name="M_40MM" step="0.01" class="coke-param-slider">
+                                <span id="m40_value"></span>
+                            </td>
+                            <td><label for="m10_slider">M_10MM</label></td>
+                            <td>
+                                <input type="range" id="m10_slider" name="M_10MM" step="0.01" class="coke-param-slider">
+                                <span id="m10_value"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label for="csr_slider">CSR</label></td>
+                            <td>
+                                <input type="range" id="csr_slider" name="CSR" step="0.01" class="coke-param-slider">
+                                <span id="csr_value"></span>
+                            </td>
+                            <td><label for="cri_slider">CRI</label></td>
+                            <td>
+                                <input type="range" id="cri_slider" name="CRI" step="0.01" class="coke-param-slider">
+                                <span id="cri_value"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label for="ams_slider">AMS</label></td>
+                            <td>
+                                <input type="range" id="ams_slider" name="AMS" step="0.01" class="coke-param-slider">
+                                <span id="ams_value"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <h2>Process Parameters</h2>
+                <label for="processDropdown">Choose Process Type:</label>
+                <select id="processDropdown" name="processDropdown" onchange="updateProcessParameters()">
+                    <option value="">Select Process Parameter Type</option>
+                    <option value="1">Recovery Top Charge COB</option>
+                    <option value="2">Recovery Stamp Charge COB</option>
+                    <option value="3">Non-Recovery Stamp Charge</option>
+                </select>
+                <div class="form-section">
+                    <div id="processParameters">
+
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">Submit</button>
+                <button type="button" id="AgainButton" onclick="resetForm()">Reset</button>
+            </form>
+        </div>
     </section>
 
     <section id="resultSection" style="display: none;">
         <div id="result"></div>
-    </section> 
+    </section>
+    <div id="fullPageLoader">
+        <div class="spinner"></div>
+    </div>
 
-<script>
+    <script>
 
-    async function sendDataToBackend(data) {
-    try {
-        const response = await fetch('http://3.111.23.36:5000/ai', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
+        async function sendDataToBackend(data) {
+            try {
+                const response = await fetch('http://3.111.23.36:5000/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const jsonData = await response.json();
+                console.log("Response from AI:", jsonData);
+                return jsonData.response;
+            } catch (error) {
+                console.error("Error sending request:", error.message);
+            }
         }
 
-        const jsonData = await response.json();
-        console.log("Response from AI:", jsonData);
-        return jsonData.response;
-    } catch (error) {
-        console.error("Error sending request:", error.message);
-    }
-}
-    
 
-    function updateTotalRange() {
-        totalCurrentRange = 0;
-        const ranges = document.querySelectorAll('input[id^="currentrange"]');
-        ranges.forEach(range => {
-            const rangeValue = parseFloat(range.value) || 0;
-            totalCurrentRange += rangeValue;
-        });
-        document.getElementById("totalRange").textContent = totalCurrentRange;
-    }
-
-    function updateProposedTotalRange() {
-        totalCurrentRange = 0;
-        const ranges = document.querySelectorAll('input[id^="currentRange"]');
-        ranges.forEach(range => {
-            const rangeValue = parseFloat(range.value) || 0;
-            totalCurrentRange += rangeValue;
-        });
-        document.getElementById("totalproposedRange").textContent = totalCurrentRange;
-    }
-
-    async function loadCoalTypes() {
-        try {
-            const response = await fetch('http://3.111.23.36:5000/get_coal_types_cost');
-            const data = await response.json();
-            const coalTypes = data.coal_types;
-
-            // Store coal properties globally
-            window.coalProperties = data.coal_properties;
-
-            // Return dropdown options
-            return coalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
-        } catch (error) {
-            console.error("Error loading coal types:", error);
-            return '';
+        function updateTotalRange() {
+            totalCurrentRange = 0;
+            const ranges = document.querySelectorAll('input[id^="currentrange"]');
+            ranges.forEach(range => {
+                const rangeValue = parseFloat(range.value) || 0;
+                totalCurrentRange += rangeValue;
+            });
+            document.getElementById("totalRange").textContent = totalCurrentRange;
         }
-    }
 
-    async function addBlend() {
-        const MAX_COALS = 10;
-        const currentCoals = document.querySelectorAll('.blend').length;
-    
-        if (currentCoals >= MAX_COALS) {
-            alert("You can only add up to 10 coal types.");
-            return;
+        function updateProposedTotalRange() {
+            totalCurrentRange = 0;
+            const ranges = document.querySelectorAll('input[id^="currentRange"]');
+            ranges.forEach(range => {
+                const rangeValue = parseFloat(range.value) || 0;
+                totalCurrentRange += rangeValue;
+            });
+            document.getElementById("totalproposedRange").textContent = totalCurrentRange;
         }
-    
-        const index = currentCoals;
-        const dropdownOptions = await loadCoalTypes();
-    
-        const blendDiv = document.createElement("div");
-        blendDiv.className = "blend";
-        blendDiv.innerHTML = `
+
+        async function loadCoalTypes() {
+            try {
+                const response = await fetch('http://3.111.23.36:5000/get_coal_types_cost');
+                const data = await response.json();
+                const coalTypes = data.coal_types;
+
+                // Store coal properties globally
+                window.coalProperties = data.coal_properties;
+
+                // Return dropdown options
+                return coalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
+            } catch (error) {
+                console.error("Error loading coal types:", error);
+                return '';
+            }
+        }
+
+        async function addBlend() {
+            const MAX_COALS = 10;
+            const currentCoals = document.querySelectorAll('.blend').length;
+
+            if (currentCoals >= MAX_COALS) {
+                alert("You can only add up to 10 coal types.");
+                return;
+            }
+
+            const index = currentCoals;
+            const dropdownOptions = await loadCoalTypes();
+
+            const blendDiv = document.createElement("div");
+            blendDiv.className = "blend";
+            blendDiv.innerHTML = `
             <label for="country${index}">Coal Type:</label>
             <select name="country${index}" id="country${index}" onchange="updateCoalCost()">
                 <option value="">Select Coal Type</option>
@@ -800,28 +898,28 @@
             </label>
             <button type="button" class="remove-blend-btn" onclick="removeBlend(this)">X</button>
         `;
-        
-        document.getElementById("coalBlends").appendChild(blendDiv);
-        setTimeout(() => {
-            blendDiv.classList.add("show");
-        }, 5);
-    
-        const currentRangeInput = blendDiv.querySelector(`#currentrange${index}`);
-        currentRangeInput.addEventListener("input", updateTotalRange);
-    }
-        
+
+            document.getElementById("coalBlends").appendChild(blendDiv);
+            setTimeout(() => {
+                blendDiv.classList.add("show");
+            }, 5);
+
+            const currentRangeInput = blendDiv.querySelector(`#currentrange${index}`);
+            currentRangeInput.addEventListener("input", updateTotalRange);
+        }
+
         function toggleLockRange(index) {
             const lockCheckbox = document.querySelector(`#lockRange${index}`);
             const currentRangeInput = document.querySelector(`#currentrange${index}`);
             const minInput = document.querySelector(`input[name="minPercentage${index}"]`);
             const maxInput = document.querySelector(`input[name="maxPercentage${index}"]`);
-        
+
             if (lockCheckbox.checked) {
                 // Lock min and max to the current range
                 const currentValue = parseFloat(currentRangeInput.value) || 0;
                 minInput.value = currentValue;
                 maxInput.value = currentValue;
-        
+
                 // Disable the min and max inputs
                 minInput.disabled = true;
                 maxInput.disabled = true;
@@ -831,44 +929,44 @@
                 maxInput.disabled = false;
             }
         }
-        
+
         function applyTolerance(tolerance) {
             const blendInputs = document.querySelectorAll('.blend');
-        
+
             blendInputs.forEach((blend, index) => {
                 const rangeInput = blend.querySelector(`#currentrange${index}`);
                 const minInput = blend.querySelector(`input[name="minPercentage${index}"]`);
                 const maxInput = blend.querySelector(`input[name="maxPercentage${index}"]`);
                 const lockCheckbox = blend.querySelector(`#lockRange${index}`);
-        
+
                 // Skip updating min/max if the lock checkbox is checked
                 if (lockCheckbox.checked) return;
-        
+
                 const currentValue = parseFloat(rangeInput.value) || 0; // Get current range or default to 0
                 const toleranceValue = parseFloat(tolerance) || 0; // Ensure tolerance is a number
-                
+
                 // Update min and max percentage fields
                 minInput.value = Math.max(0, currentValue - toleranceValue); // Ensure no negative percentages
                 maxInput.value = Math.min(100, currentValue + toleranceValue); // Cap at 100%
             });
         }
-        
-        
+
+
         function removeBlend(button) {
             button.parentElement.remove();
             updateCoalCost(); // Recalculate the total cost after removal
         }
-        
+
         function updateCoalCost() {
             let totalCost = 0;
-    
+
             document.querySelectorAll('.blend').forEach(blend => {
                 const select = blend.querySelector('select');
                 const rangeInput = blend.querySelector('input[type="number"]');
-    
+
                 const selectedCoal = select.value;
                 const range = parseFloat(rangeInput.value) || 0;
-    
+
                 if (selectedCoal && range > 0 && window.coalProperties) {
                     const coalData = window.coalProperties.find(row => row[0] === selectedCoal);
                     if (coalData) {
@@ -877,18 +975,18 @@
                     }
                 }
             });
-    
+
             document.getElementById('currentCost').value = totalCost.toFixed(2);
         }
-        
+
         window.addEventListener('DOMContentLoaded', loadCoalTypes);
-            
+
         function removeBlend(button) {
             button.parentElement.remove();
         }
-    
-        
-    
+
+
+
         document.addEventListener('DOMContentLoaded', () => {
             fetch('http://3.111.23.36:5000/get_ranges')
                 .then(response => response.json())
@@ -897,13 +995,13 @@
                     Object.entries(data).forEach(([key, range]) => {
                         const slider = document.getElementById(`${key}_slider`);
                         const valueDisplay = document.getElementById(`${key}_value`);
-    
+
                         if (slider && range) {
                             slider.min = range.lower;
                             slider.max = range.upper;
                             slider.value = range.default || range.lower; // Set default value
                             valueDisplay.textContent = slider.value;
-    
+
                             // Update value display on input change
                             slider.addEventListener('input', () => {
                                 valueDisplay.textContent = slider.value;
@@ -913,7 +1011,7 @@
                 })
                 .catch(error => console.error('Error fetching ranges:', error));
         });
-    
+
         async function loadProposedCoalTypes() {
             try {
                 const response = await fetch('http://3.111.23.36:5000/get_proposed_coal_types');
@@ -924,7 +1022,7 @@
                     acc[item.type] = parseFloat(item.cost);
                     return acc;
                 }, {});
-    
+
                 // Return dropdown options
                 return coalInfo.map(item => `<option value="${item.type}">${item.type}</option>`).join('');
             } catch (error) {
@@ -932,19 +1030,19 @@
                 return '';
             }
         }
-    
+
         async function addProposedCoalBlend() {
             const MAX_COALS = 10;
             const currentProposedCoals = document.querySelectorAll('.blend-entry').length;
-    
+
             if (currentProposedCoals >= MAX_COALS) {
                 alert("You can only add up to 10 proposed coal types.");
                 return;
             }
-    
+
             const index = currentProposedCoals;
             const dropdownOptions = await loadProposedCoalTypes();
-    
+
             const entryDiv = document.createElement("div");
             entryDiv.className = "blend-entry";
             entryDiv.innerHTML = `
@@ -956,44 +1054,44 @@
                 <input type="number" name="currentRange${index}" id="currentRange${index}" placeholder="Current Range (%)">
                 <button type="button" class="remove-blend-btn" onclick="removeBlend(this)">X</button>
             `;
-    
+
             document.getElementById("blendEntries").appendChild(entryDiv);
             setTimeout(() => {
                 entryDiv.classList.add("show");
             }, 5);
-    
+
             const currentRangeInput = entryDiv.querySelector(`#currentRange${index}`);
             currentRangeInput.addEventListener("input", updateProposedTotalRange);
         }
-    
+
         document.getElementById('addCoalButton').addEventListener('click', addProposedCoalBlend);
-    
+
         // Preload proposed coal types on DOM load
         window.addEventListener('DOMContentLoaded', loadProposedCoalTypes);
-    
+
         function calculateProposedBlendCost() {
             let totalCost = 0;
-        
+
             // Get all selected coal types and their inputted current ranges
             document.querySelectorAll('.blend-entry').forEach(entry => {
                 const selectedCoal = entry.querySelector('select').value;
                 const currentRange = parseFloat(entry.querySelector('input[type="number"]').value) || 0;
-        
+
                 if (selectedCoal && coalCostMap[selectedCoal]) {
                     totalCost += (coalCostMap[selectedCoal] * currentRange) / 100;
                 }
             });
-        
+
             return totalCost.toFixed(2);
         }
 
         function updateProcessParameters() {
             const processType = document.getElementById("processDropdown").value;
             const processParametersDiv = document.getElementById("processParameters");
-    
+
             // Clear the existing parameters
             processParametersDiv.innerHTML = '';
-    
+
             if (processType === "1") {
                 // Recovery Top Charge COB
                 processParametersDiv.innerHTML = `
@@ -1060,224 +1158,219 @@
                 `;
             }
         }
-             
+
         function resetForm() {
             window.location.href = 'cost-ai.html';
-            
+
         }
-    
-    
+
+
         document.getElementById("coalForm").addEventListener("submit", async function (event) {
-            event.preventDefault(); 
-    
-            const blends = [];
-            let totalMinPercentage = 0;
-            let totalMaxPercentage = 0;
-            document.querySelectorAll(".blend").forEach(blend => {
-                const coalType = blend.querySelector("select").value;
-                const minPercentage = parseFloat(blend.querySelector("input[name^='minPercentage']").value);
-                const maxPercentage = parseFloat(blend.querySelector("input[name^='maxPercentage']").value);
-                blends.push({
-                    coalType: coalType,
-                    minPercentage: minPercentage,
-                    maxPercentage: maxPercentage
+            event.preventDefault();
+
+            const loader = document.getElementById("fullPageLoader");
+            loader.style.display = "flex"; // Show full-page loader
+
+            try {
+                // All your existing form logic...
+                const blends = [];
+                let totalMinPercentage = 0;
+                let totalMaxPercentage = 0;
+
+                document.querySelectorAll(".blend").forEach(blend => {
+                    const coalType = blend.querySelector("select").value;
+                    const minPercentage = parseFloat(blend.querySelector("input[name^='minPercentage']").value);
+                    const maxPercentage = parseFloat(blend.querySelector("input[name^='maxPercentage']").value);
+                    blends.push({ coalType, minPercentage, maxPercentage });
+
+                    totalMinPercentage += minPercentage;
+                    totalMaxPercentage += maxPercentage;
                 });
-    
-                totalMinPercentage += minPercentage;
-                totalMaxPercentage += maxPercentage;
-            });
-    
-            if (totalMinPercentage > 100) {
-                alert("The total of all Min Percentages should be less than or equal to 100.");
-                return;
-            }
-    
-            if (totalMaxPercentage < 100) {
-                alert("The total of all Max Percentages should be greater than or equal to 100.");
-                return;
-            }
-    
-            const blendcoal = [];
-            let totalCurrentRange = 0;
-            const blendEntries = document.getElementsByClassName('blend-entry'); 
-    
-            for (let i = 0; i < blendEntries.length; i++) {
-                const typeSelect = blendEntries[i].querySelector('select');
-                const currentRangeInput = blendEntries[i].querySelector('input');
-                if (typeSelect && currentRangeInput) {
-                    const type = typeSelect.value;
-                    const currentRange = parseFloat(currentRangeInput.value);
-                    if (type && !isNaN(currentRange)) {
-                        blendcoal.push({ type, currentRange });
-                        totalCurrentRange += currentRange;
+
+                if (totalMinPercentage > 100) {
+                    alert("The total of all Min Percentages should be less than or equal to 100.");
+                    loader.style.display = "none";
+                    return;
+                }
+
+                if (totalMaxPercentage < 100) {
+                    alert("The total of all Max Percentages should be greater than or equal to 100.");
+                    loader.style.display = "none";
+                    return;
+                }
+
+                const blendcoal = [];
+                let totalCurrentRange = 0;
+                const blendEntries = document.getElementsByClassName('blend-entry');
+
+                for (let i = 0; i < blendEntries.length; i++) {
+                    const typeSelect = blendEntries[i].querySelector('select');
+                    const currentRangeInput = blendEntries[i].querySelector('input');
+                    if (typeSelect && currentRangeInput) {
+                        const type = typeSelect.value;
+                        const currentRange = parseFloat(currentRangeInput.value);
+                        if (type && !isNaN(currentRange)) {
+                            blendcoal.push({ type, currentRange });
+                            totalCurrentRange += currentRange;
+                        }
                     }
                 }
-            }
-    
-            
-              if (blendcoal.length > 0 && totalCurrentRange !== 100) {
-                alert("The current range of Proposed Coal blend must add up to 100.");
-                return;
-            }
-    
-            // Collect desired coke parameters
-            const cokeParameters = {};
-            document.querySelectorAll(".coke-param-slider").forEach((input) => {
-                cokeParameters[input.name] = parseFloat(input.value) || 0;
-            });
-    
-            // Collect process type and parameters
-            const processType = document.getElementById("processDropdown").value;
-            // Collect parameters based on the selected process type
-            const processParameters = [];
-            document.querySelectorAll(`#processParameters input[name]`).forEach((input) => {
-                if (input.name) {
-                    value = parseFloat(input.value) || 0;
+
+                if (blendcoal.length > 0 && totalCurrentRange !== 100) {
+                    alert("The current range of Proposed Coal blend must add up to 100.");
+                    loader.style.display = "none";
+                    return;
                 }
-                processParameters.push(value);
-            });
-    
-            
-            const formData = {
-                blends,
-                cokeParameters,
-                processType,
-                blendcoal: blendcoal.length > 0 ? blendcoal : [],
-                processParameters
-               
-            };
-    
-            const response = await fetch("http://3.111.23.36:5000/cost", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(formData)
-            });     
-    
-        try {
-            const [percentPredictResponse] = await Promise.all([
-            response    
-            ]);
-    
-            const result = await response.json();
-           
-            displayResults(result, cokeParameters, processParameters, processType);
-           
-           
-        } catch (error) {
-            console.error('Error:', error);
-           
-        }
-    });
 
-    const coalPropertyNames = [
-                'Blended Coal Ash (%)', 'Blended Coal VM (%)', 'Blended Coal Moisture (%)',
-                'Max. Contraction', 'Max. Expansion', 'Max. fluidity', 'Crushing index < 3.15 mm',
-                'Crushing Index < 0.5mm', 'Softening temperature (°C)',
-                'Resolidification temp range Min (°C)', 'Resolidification temp range Max (°C)',
-                'Plastic range (°C)', 'Sulphur (%)', 'Phosphorous (%)', 'CSN'
-            ];
+                const cokeParameters = {};
+                document.querySelectorAll(".coke-param-slider").forEach((input) => {
+                    cokeParameters[input.name] = parseFloat(input.value) || 0;
+                });
 
-    const propertyNames = [
+                const processType = document.getElementById("processDropdown").value;
+
+                const processParameters = [];
+                document.querySelectorAll(`#processParameters input[name]`).forEach((input) => {
+                    if (input.name) {
+                        value = parseFloat(input.value) || 0;
+                        processParameters.push(value);
+                    }
+                });
+
+                const formData = {
+                    blends,
+                    cokeParameters,
+                    processType,
+                    blendcoal: blendcoal.length > 0 ? blendcoal : [],
+                    processParameters
+                };
+
+                const response = await fetch("http://3.111.23.36:5000/cost", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const [percentPredictResponse] = await Promise.all([response]);
+                const result = await response.json();
+
+                displayResults(result, cokeParameters, processParameters, processType);
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                loader.style.display = "none"; // Hide loader at the end
+            }
+        });
+
+        const coalPropertyNames = [
+            'Blended Coal Ash (%)', 'Blended Coal VM (%)', 'Blended Coal Moisture (%)',
+            'Max. Contraction', 'Max. Expansion', 'Max. fluidity', 'Crushing index < 3.15 mm',
+            'Crushing Index < 0.5mm', 'Softening temperature (°C)',
+            'Resolidification temp range Min (°C)', 'Resolidification temp range Max (°C)',
+            'Plastic range (°C)', 'Sulphur (%)', 'Phosphorous (%)', 'CSN'
+        ];
+
+        const propertyNames = [
             'ASH (%)', 'VOLATILE MATTER (%)', 'MOISTURE (%)', 'S_100MM', 'S_80MM (%)',
             'S_50MM', 'S_40MM', 'S_30MM', 'S_MINUS_30MM', 'M_40MM (%)', 'M_10MM (%)',
             'M_MINUS_10MM (%)', 'CSR (%)', 'CRI (%)', 'AMS'
         ];
 
-    const visibleIndices = [
+        const visibleIndices = [
             'ASH (%)', 'VOLATILE MATTER (%)', 'M_40MM (%)', 'M_10MM (%)', 'CSR (%)',
             'CRI (%)', 'AMS'
         ];
-    
-    
-    function toggleBlendDisplay(blendNumber, result) {
-        const propertiesSection = document.querySelector('.proposed-result-container');
-        const existingBlend = document.getElementById(`blend${blendNumber}-details`);
-    
-        if (existingBlend) {
-            existingBlend.remove();
-        } else {
-            
-            const blendContainer = document.createElement('div');
-            blendContainer.classList.add('result-container');
-            blendContainer.id = `blend${blendNumber}-details`;
-    
-            // Blend Title
-            const blendTitle = document.createElement('h2');
-            blendTitle.textContent = `Blend ${blendNumber}`;
-            blendContainer.appendChild(blendTitle);
-    
-            // Blended Coal Parameters Section
-            const blendedCoalTitle = document.createElement('h3');
-            blendedCoalTitle.textContent = 'Blended Coal Parameters';
-            blendContainer.appendChild(blendedCoalTitle);
-    
-            const blendedCoalBox = document.createElement('div');
-            blendedCoalBox.classList.add('parameter-box');
-    
-            
-    
-            (result[`blend${blendNumber}`]?.blendedcoal || []).forEach((value, index) => {
-                const gridItem = document.createElement('div');
-                gridItem.classList.add('grid-item');
-                gridItem.innerHTML = `<p>${coalPropertyNames[index]}</p><span>${value.toFixed(2)}</span>`;
-                blendedCoalBox.appendChild(gridItem);
-            });
-    
-            blendContainer.appendChild(blendedCoalBox);
-    
-            // Coke Parameters Section
-            const cokeParametersTitle = document.createElement('h3');
-            cokeParametersTitle.textContent = 'Coke Parameters';
-            blendContainer.appendChild(cokeParametersTitle);
-    
-            const parameterBox = document.createElement('div');
-            parameterBox.classList.add('parameter-box');
-    
-    
-            (result[`blend${blendNumber}`]?.properties || []).forEach((value, index) => {
-                if (visibleIndices.includes(propertyNames[index])) {
+
+
+        function toggleBlendDisplay(blendNumber, result) {
+            const propertiesSection = document.querySelector('.proposed-result-container');
+            const existingBlend = document.getElementById(`blend${blendNumber}-details`);
+
+            if (existingBlend) {
+                existingBlend.remove();
+            } else {
+
+                const blendContainer = document.createElement('div');
+                blendContainer.classList.add('result-container');
+                blendContainer.id = `blend${blendNumber}-details`;
+
+                // Blend Title
+                const blendTitle = document.createElement('h2');
+                blendTitle.textContent = `Blend ${blendNumber}`;
+                blendContainer.appendChild(blendTitle);
+
+                // Blended Coal Parameters Section
+                const blendedCoalTitle = document.createElement('h3');
+                blendedCoalTitle.textContent = 'Blended Coal Parameters';
+                blendContainer.appendChild(blendedCoalTitle);
+
+                const blendedCoalBox = document.createElement('div');
+                blendedCoalBox.classList.add('parameter-box');
+
+
+
+                (result[`blend${blendNumber}`]?.blendedcoal || []).forEach((value, index) => {
                     const gridItem = document.createElement('div');
                     gridItem.classList.add('grid-item');
-                    gridItem.innerHTML = `<p>${propertyNames[index]}</p><span>${isNaN(value) ? value : value.toFixed(2)}</span>`;
-                    parameterBox.appendChild(gridItem);
-                }
-            });
-    
-            blendContainer.appendChild(parameterBox);
-            propertiesSection.appendChild(blendContainer);
+                    gridItem.innerHTML = `<p>${coalPropertyNames[index]}</p><span>${value.toFixed(2)}</span>`;
+                    blendedCoalBox.appendChild(gridItem);
+                });
+
+                blendContainer.appendChild(blendedCoalBox);
+
+                // Coke Parameters Section
+                const cokeParametersTitle = document.createElement('h3');
+                cokeParametersTitle.textContent = 'Coke Parameters';
+                blendContainer.appendChild(cokeParametersTitle);
+
+                const parameterBox = document.createElement('div');
+                parameterBox.classList.add('parameter-box');
+
+
+                (result[`blend${blendNumber}`]?.properties || []).forEach((value, index) => {
+                    if (visibleIndices.includes(propertyNames[index])) {
+                        const gridItem = document.createElement('div');
+                        gridItem.classList.add('grid-item');
+                        gridItem.innerHTML = `<p>${propertyNames[index]}</p><span>${isNaN(value) ? value : value.toFixed(2)}</span>`;
+                        parameterBox.appendChild(gridItem);
+                    }
+                });
+
+                blendContainer.appendChild(parameterBox);
+                propertiesSection.appendChild(blendContainer);
+            }
         }
-    }
-    
-    function displayResults(result, cokeParameters, processParameters, processType) {
-        const resultSection = document.getElementById('resultSection');
-        resultSection.innerHTML = '';
-    
-        const title = document.createElement('h3');
-        title.textContent = 'Predicted Coal Blends and Costs';
-        title.style.marginTop = '100px';
-        resultSection.appendChild(title);
 
-        const coalTypes = Array.from(document.querySelectorAll('.blend select')).map(select => select.value || `Coal Type ${select.id.replace('country', '')}`);
-        const currentRanges = Array.from(document.querySelectorAll('.blend input[id^=currentrange]')).map(input => input.value || '0');
-        const proposedBlendCoal = Array.from(document.querySelectorAll('.blend-entry')).map(entry => {
-            const type = entry.querySelector('select').value || 'Unknown';
-            const range = parseFloat(entry.querySelector('input[id^=currentRange]').value) || 0;
-            return { type, range };
-        });
+        function displayResults(result, cokeParameters, processParameters, processType) {
+            const resultSection = document.getElementById('resultSection');
+            resultSection.innerHTML = '';
 
-        const showProposed = proposedBlendCoal.some(coal => coal.range > 0);
+            const title = document.createElement('h3');
+            title.textContent = 'Predicted Coal Blends and Costs';
+            title.style.marginTop = '100px';
+            resultSection.appendChild(title);
 
-        updateCoalCost();
-        const currentCost = document.getElementById('currentCost').value || '0.00';
+            const coalTypes = Array.from(document.querySelectorAll('.blend select')).map(select => select.value || `Coal Type ${select.id.replace('country', '')}`);
+            const currentRanges = Array.from(document.querySelectorAll('.blend input[id^=currentrange]')).map(input => input.value || '0');
+            const proposedBlendCoal = Array.from(document.querySelectorAll('.blend-entry')).map(entry => {
+                const type = entry.querySelector('select').value || 'Unknown';
+                const range = parseFloat(entry.querySelector('input[id^=currentRange]').value) || 0;
+                return { type, range };
+            });
 
-        const table = document.createElement('table');
-        table.classList.add('blend-table');
+            const showProposed = proposedBlendCoal.some(coal => coal.range > 0);
 
-        // Table Header
-        const headerRow = document.createElement('tr');
-        headerRow.innerHTML = `
+            updateCoalCost();
+            const currentCost = document.getElementById('currentCost').value || '0.00';
+
+            const table = document.createElement('table');
+            table.classList.add('blend-table');
+
+            // Table Header
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = `
             <th>Coal Type</th>
             <th>Current Blend (%)</th>
             <th>Blend 1 (Best Quality)</th>
@@ -1285,13 +1378,13 @@
             <th>Blend 3 (Optimized Blend)</th>
             ${showProposed ? '<th>Proposed Blend (%)</th>' : ''}
         `;
-        table.appendChild(headerRow);
+            table.appendChild(headerRow);
 
-        // Data Rows
-        coalTypes.forEach((coalType, i) => {
-            const proposedCoal = proposedBlendCoal.find(coal => coal.type === coalType) || { range: 0 };
-            const row = document.createElement('tr');
-            row.innerHTML = `
+            // Data Rows
+            coalTypes.forEach((coalType, i) => {
+                const proposedCoal = proposedBlendCoal.find(coal => coal.type === coalType) || { range: 0 };
+                const row = document.createElement('tr');
+                row.innerHTML = `
                 <td>${coalType}</td>
                 <td>${parseFloat(currentRanges[i])}%</td>
                 <td>${(result.blend1?.composition[i] || 0)}%</td>
@@ -1299,15 +1392,15 @@
                 <td>${(result.blend3?.composition[i] || 0)}%</td>
                 ${showProposed ? `<td>${proposedCoal.range}%</td>` : ''}
             `;
-            table.appendChild(row);
-        });
+                table.appendChild(row);
+            });
 
-        // Extra proposed coals not in coalTypes
-        if (showProposed) {
-            proposedBlendCoal.forEach(proposedCoal => {
-                if (!coalTypes.includes(proposedCoal.type)) {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
+            // Extra proposed coals not in coalTypes
+            if (showProposed) {
+                proposedBlendCoal.forEach(proposedCoal => {
+                    if (!coalTypes.includes(proposedCoal.type)) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
                         <td>${proposedCoal.type}</td>
                         <td>-</td>
                         <td>-</td>
@@ -1315,15 +1408,15 @@
                         <td>-</td>
                         <td>${proposedCoal.range}%</td>
                     `;
-                    table.appendChild(row);
-                }
-            });
-        }
+                        table.appendChild(row);
+                    }
+                });
+            }
 
-        // Cost Row
-        const proposedCost = calculateProposedBlendCost();
-        const costRow = document.createElement('tr');
-        costRow.innerHTML = `
+            // Cost Row
+            const proposedCost = calculateProposedBlendCost();
+            const costRow = document.createElement('tr');
+            costRow.innerHTML = `
             <td>Cost per Ton (Rs.)</td>
             <td>${parseFloat(currentCost).toFixed(2)}</td>
             <td>${(result.blend1?.cost || 0).toFixed(2)}</td>
@@ -1331,11 +1424,11 @@
             <td>${(result.blend3?.cost || 0).toFixed(2)}</td>
             ${showProposed ? `<td>${proposedCost}</td>` : ''}
         `;
-        table.appendChild(costRow);
+            table.appendChild(costRow);
 
-        // Difference Row
-        const diffRow = document.createElement('tr');
-        diffRow.innerHTML = `
+            // Difference Row
+            const diffRow = document.createElement('tr');
+            diffRow.innerHTML = `
             <td>Difference (Rs.)</td>
             <td></td>
             <td>${Math.abs(parseFloat(currentCost) - (result.blend1?.cost || 0)).toFixed(2)}</td>
@@ -1344,467 +1437,468 @@
             ${showProposed ? `<td>${Math.abs(parseFloat(currentCost) - proposedCost).toFixed(2)}</td>` : ''}
         `;
 
-        diffRow.cells[2].className = parseFloat(currentCost) > (result.blend1?.cost || 0) ? 'green' : 'red';
-        diffRow.cells[3].className = parseFloat(currentCost) > (result.blend2?.cost || 0) ? 'green' : 'red';
-        diffRow.cells[4].className = parseFloat(currentCost) > (result.blend3?.cost || 0) ? 'green' : 'red';
-        if (showProposed) {
-            diffRow.cells[5].className = parseFloat(currentCost) > proposedCost ? 'green' : 'red';
-        }
-        table.appendChild(diffRow);
-
-        resultSection.appendChild(table);
-
-    
-        // Add buttons for Blend 1, Blend 2, Blend 3
-        const buttonContainer = document.createElement('div');
-        buttonContainer.classList.add('blend-buttons');
-    
-        ['Blend 1', 'Blend 2', 'Blend 3'].forEach((blendName, index) => {
-            const button = document.createElement('button');
-            button.textContent = blendName;
-            button.onclick = () => toggleBlendDisplay(index + 1, result);
-            buttonContainer.appendChild(button);
-        });
-    
-        resultSection.appendChild(buttonContainer);
-    
-        // Container to hold blend details
-        const propertiesSection = document.createElement('div');
-        propertiesSection.classList.add('proposed-result-container');
-        resultSection.appendChild(propertiesSection);
-    
-    
-        console.log(result.ProposedCoal?.Blend2);
-        console.log(result.ProposedCoal?.Coke2);
-    
-        const proposedresultContainer = document.createElement('div');
-        proposedresultContainer.classList.add('proposed-result-container');
-    
-        // Proposed Coal Container
-        const proposedCoalContainer = document.createElement('div');
-        proposedCoalContainer.classList.add('result-box'); 
-        const proposedCoalTitle = document.createElement('h3');
-        proposedCoalTitle.textContent = 'Proposed Blended Coal Parameters';
-        proposedCoalContainer.appendChild(proposedCoalTitle);
-    
-        const proposedCoalBox = document.createElement('div');
-        proposedCoalBox.classList.add('parameter-box');
-    
-        const coalblendNames = [
-            'Blended Coal Ash (%)', 'Blended Coal VM (%)', 'Blended Coal Moisture (%)', 'Max. Contraction', 
-            'Max. Expansion', 'Max. fluidity', 'Crushing index < 3.15mm', 'Crushing Index < 0.5mm', 
-            'Softening temperature (°C)', 'Resolidification temp range Min (°C)', 
-            'Resolidification temp range Max (°C)', 'Plastic range (°C)', 'Sulphur (%)', 'Phosphorous (%)', 'CSN'
-        ];
-    
-        if (Array.isArray(result.ProposedCoal?.Blend2)) {
-            const proposedCoalFormattedResults = result.ProposedCoal.Blend2.map((param, index) => {
-                return Object.entries(param)
-                    .map(([key, value], entryIndex) => {
-                        const coalblendName = coalblendNames[entryIndex] || key;
-                        return `<div class="grid-item"><p>${coalblendName}: <span>${value.toFixed ? value.toFixed(2) : value}</span></p></div>`;
-                    })
-                    .join('');
-            }).join('');
-            proposedCoalBox.innerHTML = proposedCoalFormattedResults;
-        } else {
-            proposedCoalBox.innerHTML = '<p>No coal blend data available.</p>';
-        }
-    
-        proposedCoalContainer.appendChild(proposedCoalBox);
-    
-        // Proposed Coke Container
-        const proposedCokeContainer = document.createElement('div');
-        const proposedCokeTitle = document.createElement('h3');
-        proposedCokeTitle.textContent = 'Proposed Coke Parameters';
-        proposedCokeContainer.appendChild(proposedCokeTitle);
-    
-        const proposedCokeBox = document.createElement('div');
-        proposedCokeBox.classList.add('parameter-box');
-    
-        const parameterNames = [
-            'ASH (%)', 'VOLATILE MATTER (%)', 'MOISTURE', 'S_100MM', 'S_80MM (%)', 'S_50MM', 'S_40MM', 
-            'S_30MM', 'S_MINUS_30MM', 'M_40MM (%)', 'M_10MM (%)', 'M_MINUS_10MM (%)', 
-            'CSR (%)', 'CRI (%)', 'AMS'
-        ];
-
-        const parametersToDisplay = [
-            'ASH (%)', 'VOLATILE MATTER (%)', 'M_40MM (%)', 'M_10MM (%)', 'CSR (%)', 'CRI (%)', 'AMS'
-             ];
-
-        if (Array.isArray(result.ProposedCoal?.Coke2)) {
-            const proposedCokeFormattedResults = result.ProposedCoal.Coke2.map(param => {
-                return Object.entries(param)
-                    .filter(([key, value], entryIndex) => {
-                        const parameterName = parameterNames[entryIndex] || key;
-                        return parametersToDisplay.includes(parameterName);
-                    })
-                    .map(([key, value], entryIndex) => {
-                        const parameterName = parametersToDisplay[entryIndex];
-                        return `<div class="grid-item"><p>${parameterName}: <span>${value.toFixed ? value.toFixed(2) : value}</span></p></div>`;
-                    })
-                    .join('');
-            }).join('');
-
-            proposedCokeBox.innerHTML = proposedCokeFormattedResults;
-        } else {
-            proposedCokeBox.innerHTML = '<p>No coke data available.</p>';
-        }
-    
-        proposedCokeContainer.appendChild(proposedCokeBox);
-    
-        // Append both containers to the main result container
-        proposedresultContainer.appendChild(proposedCoalContainer);
-        proposedresultContainer.appendChild(proposedCokeContainer);
-    
-        // Append the main container to the result section
-        resultSection.appendChild(proposedresultContainer);
-
-        const processcokeContainer = document.createElement('div');
-        processcokeContainer.classList.add('process-coke-container');
-        const cokeParamsSection = document.createElement('div');
-        cokeParamsSection.classList.add('desired-coke-parameters-section');
-    
-        // Title for the Desired Coke Parameters
-        const cokeParamsTitle = document.createElement('h3');
-        cokeParamsTitle.textContent = 'Desired Coke Parameters';
-        cokeParamsSection.appendChild(cokeParamsTitle);
-    
-        const cokeParamsBox = document.createElement('div');
-        cokeParamsBox.classList.add('parameter-box');
-        const cokeParamNames = [
-            'ASH', 'VM','M_40MM', 'M_10MM', 'CSR', 'CRI', 'AMS'];
-    
-        // Display the desired coke parameter values
-        cokeParamNames.forEach((paramName, index) => {
-            const gridItem = document.createElement('div');
-            gridItem.classList.add('grid-item');
-            gridItem.innerHTML = `<p>${paramName}</p><span>${cokeParameters[paramName] ? cokeParameters[paramName].toFixed(2) : 'N/A'}</span>`;
-            cokeParamsBox.appendChild(gridItem);
-        });
-    
-        cokeParamsSection.appendChild(cokeParamsBox);
-        processcokeContainer.appendChild(cokeParamsSection);
-    
-        // process parameters
-    
-        const processParamsSection = document.createElement('div');
-        processParamsSection.classList.add('process-parameters-section');
-    
-        const processParamsTitle = document.createElement('h3');
-        processParamsTitle.textContent = 'Process Parameters';
-        processParamsSection.appendChild(processParamsTitle);
-    
-        const processParamsBox = document.createElement('div');
-        processParamsBox.classList.add('parameter-box');
-    
-        // Get the process parameters from the input form
-        const processParamNames = {
-            '1': [
-                {name: 'charging_tonnage', unit: 'tons'}, 
-                {name: 'moisture_content', unit: '%'}, 
-                {name: 'bulk_density', unit: 'g/cm³'}, 
-                {name: 'charging_temperature', unit: '°C'}, 
-                {name: 'battery_operating_temperature', unit: '°C'}, 
-                {name: 'cross_wall_temperature', unit: '°C'}, 
-                {name: 'push_force', unit: 'Amp'}, 
-                {name: 'pri', unit: 'kPa'}, 
-                {name: 'coke_per_push', unit: 'kg'}, 
-                {name: 'gross_coke_yield', unit: '%'}, 
-                {name: 'gcm_pressure', unit: 'Pa'}, 
-                {name: 'gcm_temperature', unit: '°C'}, 
-                {name: 'coking_time', unit: 'hrs'}, 
-                {name: 'coke_end_temperature', unit: '°C'}, 
-                {name: 'quenching_time', unit: 'min'}
-            ],
-            '2': [
-                {name: 'charging_tonnage', unit: 'tons'}, 
-                {name: 'moisture_content', unit: '%'}, 
-                {name: 'bulk_density', unit: 'g/cm³'}, 
-                {name: 'charging_temperature', unit: '°C'}, 
-                {name: 'battery_operating_temperature', unit: '°C'}, 
-                {name: 'cross_wall_temperature', unit: '°C'}, 
-                {name: 'push_force', unit: 'Amp'}, 
-                {name: 'pri', unit: 'kPa'}, 
-                {name: 'coke_per_push', unit: 'kg'}, 
-                {name: 'gross_coke_yield', unit: '%'}, 
-                {name: 'gcm_pressure', unit: 'Pa'}, 
-                {name: 'gcm_temperature', unit: '°C'}, 
-                {name: 'coking_time', unit: 'hrs'}, 
-                {name: 'coke_end_temperature', unit: '°C'}, 
-                {name: 'quenching_time', unit: 'min'}
-            ],
-            '3': [
-                {name: 'charging_tonnage', unit: 'tons'}, 
-                {name: 'moisture_content', unit: '%'}, 
-                {name: 'bulk_density', unit: 'g/cm³'}, 
-                {name: 'charging_temperature', unit: '°C'}, 
-                {name: 'battery_operating_temperature', unit: '°C'}, 
-                {name: 'push_force', unit: 'Amp'}, 
-                {name: 'pri', unit: 'kPa'}, 
-                {name: 'coke_per_push', unit: 'kg'}, 
-                {name: 'gross_coke_yield', unit: '%'}, 
-                {name: 'header_temperature', unit: '°C'}, 
-                {name: 'coking_time', unit: 'hrs'}, 
-                {name: 'coke_end_temperature', unit: '°C'}, 
-                {name: 'quenching_time', unit: 'min'}
-            ]
-        };
-    
-        const selectedParams = processParamNames[processType] || [];
-        
-        selectedParams.forEach(param => {
-            const paramValue = document.querySelector(`input[name="${param.name}"]`)?.value || 'N/A';
-            const paramName = param.name.replace(/_/g, ' ').toUpperCase();
-            const unit = param.unit;
-            const gridItem = document.createElement('div');
-            gridItem.classList.add('grid-item');
-            
-            gridItem.innerHTML = `<p>${paramName}</p><span>${paramValue} ${unit}</span>`;
-            processParamsBox.appendChild(gridItem);
-        });
-    
-        processParamsSection.appendChild(processParamsBox);
-        processcokeContainer.appendChild(processParamsSection);
-
-        resultSection.appendChild(processcokeContainer);
-    
-    
-        const tryAgainButton = document.createElement('button');
-        tryAgainButton.type = 'button';
-        tryAgainButton.id = 'tryAgainBtn';
-        tryAgainButton.textContent = 'Try Again';
-        tryAgainButton.onclick = resetForm;
-        resultSection.appendChild(tryAgainButton);
-    
-        const downloadButton = document.createElement('button');
-        downloadButton.type = 'button';
-        downloadButton.id = 'downloadBtn';
-        downloadButton.textContent = 'Download Results';
-
-        // Create the dropdown menu
-        const formatSelect = document.createElement('select');
-        formatSelect.id = 'formatSelect';
-
-        const pdfOption = document.createElement('option');
-        pdfOption.value = 'pdf';
-        pdfOption.textContent = 'Download as PDF';
-
-        const excelOption = document.createElement('option');
-        excelOption.value = 'excel';
-        excelOption.textContent = 'Download as Excel';
-
-        formatSelect.appendChild(pdfOption);
-        formatSelect.appendChild(excelOption);
-
-        resultSection.appendChild(formatSelect);
-        resultSection.appendChild(downloadButton);
-        
-
-        // Event listener for download
-        downloadButton.addEventListener('click', function () {
-            const selectedFormat = formatSelect.value;
-            const resultSection = document.getElementById("resultSection"); // Ensure this exists
-            if (!resultSection) {
-                console.error("Error: resultSection not found!");
-                return;
+            diffRow.cells[2].className = parseFloat(currentCost) > (result.blend1?.cost || 0) ? 'green' : 'red';
+            diffRow.cells[3].className = parseFloat(currentCost) > (result.blend2?.cost || 0) ? 'green' : 'red';
+            diffRow.cells[4].className = parseFloat(currentCost) > (result.blend3?.cost || 0) ? 'green' : 'red';
+            if (showProposed) {
+                diffRow.cells[5].className = parseFloat(currentCost) > proposedCost ? 'green' : 'red';
             }
-            
-            if (selectedFormat === 'pdf') {
-                downloadAsPDF(resultSection);
-            } else if (selectedFormat === 'excel') {
-                downloadAsExcel(resultSection);
-            }
-        });
+            table.appendChild(diffRow);
 
-        function downloadAsPDF(resultSection) {
-            var opt = {
-                margin: 0,
-                filename: 'results.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-
-            html2pdf().from(resultSection).set(opt).save();
-        }
-
-        function downloadAsExcel(resultSection) {
-            // Create the workbook
-            const wb = XLSX.utils.book_new();
-        
-            // Table Data
-            const table = resultSection.querySelector("table");
-            if (!table) {
-                console.error("No table found in result section for Excel download.");
-                return;
-            }
-        
-            const tableData = XLSX.utils.table_to_sheet(table);
-            XLSX.utils.book_append_sheet(wb, tableData, "Results Table");
-        
-            // Blends 1, 2, 3 Parameters
-            for (let blendNumber = 1; blendNumber <= 3; blendNumber++) {
-                const blend = result[`blend${blendNumber}`];
-                if (blend) {
-                    const combinedData = [
-                        ['Blended Coal Parameter', 'Value'],
-                        ...blend.blendedcoal.map((value, index) => [coalPropertyNames[index], value.toFixed(2)]),
-                        ['', ''],
-                        ['Coke Parameter', 'Value'],
-                        ...blend.properties
-                            .map((value, index) => [propertyNames[index], isNaN(value) ? value : value.toFixed(2)])
-                            .filter(([param]) => visibleIndices.includes(param))
-                    ];
-        
-                    // Log the data to verify it
-                    console.log(`combinedData for Blend ${blendNumber}:`, combinedData);
-        
-                    // Validate combinedData before passing it to aoa_to_sheet
-                    if (Array.isArray(combinedData) && Array.isArray(combinedData[0])) {
-                        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(combinedData), `Blend ${blendNumber}`);
-                    } else {
-                        console.error(`combinedData for Blend ${blendNumber} is not in the correct format: Expected an array of arrays`);
-                    }
-                }
-            }
+            resultSection.appendChild(table);
 
 
-            const proposedParameters = [
-                ['Proposed Blended Coal Parameters', 'Value'],
-                ...coalblendNames.map((param, index) => {
-                    const value = result.ProposedCoal?.Blend2?.[0]?.[param] || 'N/A';
-                    return [param, value.toFixed ? value.toFixed(2) : value];
-                }),
-                ['', ''],
-                ['Proposed Coke Parameters', 'Value'],
-                ...parameterNames.map((param, index) => {
-                    const value = result.ProposedCoal?.Coke2?.[0]?.[param] || 'N/A';
-                    return [param, value.toFixed ? value.toFixed(2) : value];
-                })
-            ];
+            // Add buttons for Blend 1, Blend 2, Blend 3
+            const buttonContainer = document.createElement('div');
+            buttonContainer.classList.add('blend-buttons');
 
-            // Validate proposedParameters before passing it to aoa_to_sheet
-            if (Array.isArray(proposedParameters) && Array.isArray(proposedParameters[0])) {
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(proposedParameters), "Proposed Parameters");
-            } else {
-                console.error('proposedParameters is not in the correct format: Expected an array of arrays');
-            }
-
-            const cokeParams = [
-                'ASH', 'VM', 'M_40MM', 'M_10MM', 'CSR', 'CRI', 'AMS'
-            ];
-        
-            // Desired Coke Parameters 
-            const desiredcokeParamsValues = cokeParams.map(param => {
-                const value = cokeParameters[param] ? cokeParameters[param].toFixed(2) : 'N/A';
-                return [param, value];
+            ['Blend 1', 'Blend 2', 'Blend 3'].forEach((blendName, index) => {
+                const button = document.createElement('button');
+                button.textContent = blendName;
+                button.onclick = () => toggleBlendDisplay(index + 1, result);
+                buttonContainer.appendChild(button);
             });
-        
-            desiredcokeParamsValues.unshift([' Desired Coke Parameter', 'Value']); 
-        
-            // Process Parameters (from processType)
+
+            resultSection.appendChild(buttonContainer);
+
+            // Container to hold blend details
+            const propertiesSection = document.createElement('div');
+            propertiesSection.classList.add('proposed-result-container');
+            resultSection.appendChild(propertiesSection);
+
+
+            console.log(result.ProposedCoal?.Blend2);
+            console.log(result.ProposedCoal?.Coke2);
+
+            const proposedresultContainer = document.createElement('div');
+            proposedresultContainer.classList.add('proposed-result-container');
+
+            // Proposed Coal Container
+            const proposedCoalContainer = document.createElement('div');
+            proposedCoalContainer.classList.add('result-box');
+            const proposedCoalTitle = document.createElement('h3');
+            proposedCoalTitle.textContent = 'Proposed Blended Coal Parameters';
+            proposedCoalContainer.appendChild(proposedCoalTitle);
+
+            const proposedCoalBox = document.createElement('div');
+            proposedCoalBox.classList.add('parameter-box');
+
+            const coalblendNames = [
+                'Blended Coal Ash (%)', 'Blended Coal VM (%)', 'Blended Coal Moisture (%)', 'Max. Contraction',
+                'Max. Expansion', 'Max. fluidity', 'Crushing index < 3.15mm', 'Crushing Index < 0.5mm',
+                'Softening temperature (°C)', 'Resolidification temp range Min (°C)',
+                'Resolidification temp range Max (°C)', 'Plastic range (°C)', 'Sulphur (%)', 'Phosphorous (%)', 'CSN'
+            ];
+
+            if (Array.isArray(result.ProposedCoal?.Blend2)) {
+                const proposedCoalFormattedResults = result.ProposedCoal.Blend2.map((param, index) => {
+                    return Object.entries(param)
+                        .map(([key, value], entryIndex) => {
+                            const coalblendName = coalblendNames[entryIndex] || key;
+                            return `<div class="grid-item"><p>${coalblendName}: <span>${value.toFixed ? value.toFixed(2) : value}</span></p></div>`;
+                        })
+                        .join('');
+                }).join('');
+                proposedCoalBox.innerHTML = proposedCoalFormattedResults;
+            } else {
+                proposedCoalBox.innerHTML = '<p>No coal blend data available.</p>';
+            }
+
+            proposedCoalContainer.appendChild(proposedCoalBox);
+
+            // Proposed Coke Container
+            const proposedCokeContainer = document.createElement('div');
+            const proposedCokeTitle = document.createElement('h3');
+            proposedCokeTitle.textContent = 'Proposed Coke Parameters';
+            proposedCokeContainer.appendChild(proposedCokeTitle);
+
+            const proposedCokeBox = document.createElement('div');
+            proposedCokeBox.classList.add('parameter-box');
+
+            const parameterNames = [
+                'ASH (%)', 'VOLATILE MATTER (%)', 'MOISTURE', 'S_100MM', 'S_80MM (%)', 'S_50MM', 'S_40MM',
+                'S_30MM', 'S_MINUS_30MM', 'M_40MM (%)', 'M_10MM (%)', 'M_MINUS_10MM (%)',
+                'CSR (%)', 'CRI (%)', 'AMS'
+            ];
+
+            const parametersToDisplay = [
+                'ASH (%)', 'VOLATILE MATTER (%)', 'M_40MM (%)', 'M_10MM (%)', 'CSR (%)', 'CRI (%)', 'AMS'
+            ];
+
+            if (Array.isArray(result.ProposedCoal?.Coke2)) {
+                const proposedCokeFormattedResults = result.ProposedCoal.Coke2.map(param => {
+                    return Object.entries(param)
+                        .filter(([key, value], entryIndex) => {
+                            const parameterName = parameterNames[entryIndex] || key;
+                            return parametersToDisplay.includes(parameterName);
+                        })
+                        .map(([key, value], entryIndex) => {
+                            const parameterName = parametersToDisplay[entryIndex];
+                            return `<div class="grid-item"><p>${parameterName}: <span>${value.toFixed ? value.toFixed(2) : value}</span></p></div>`;
+                        })
+                        .join('');
+                }).join('');
+
+                proposedCokeBox.innerHTML = proposedCokeFormattedResults;
+            } else {
+                proposedCokeBox.innerHTML = '<p>No coke data available.</p>';
+            }
+
+            proposedCokeContainer.appendChild(proposedCokeBox);
+
+            // Append both containers to the main result container
+            proposedresultContainer.appendChild(proposedCoalContainer);
+            proposedresultContainer.appendChild(proposedCokeContainer);
+
+            // Append the main container to the result section
+            resultSection.appendChild(proposedresultContainer);
+
+            const processcokeContainer = document.createElement('div');
+            processcokeContainer.classList.add('process-coke-container');
+            const cokeParamsSection = document.createElement('div');
+            cokeParamsSection.classList.add('desired-coke-parameters-section');
+
+            // Title for the Desired Coke Parameters
+            const cokeParamsTitle = document.createElement('h3');
+            cokeParamsTitle.textContent = 'Desired Coke Parameters';
+            cokeParamsSection.appendChild(cokeParamsTitle);
+
+            const cokeParamsBox = document.createElement('div');
+            cokeParamsBox.classList.add('parameter-box');
+            const cokeParamNames = [
+                'ASH', 'VM', 'M_40MM', 'M_10MM', 'CSR', 'CRI', 'AMS'];
+
+            // Display the desired coke parameter values
+            cokeParamNames.forEach((paramName, index) => {
+                const gridItem = document.createElement('div');
+                gridItem.classList.add('grid-item');
+                gridItem.innerHTML = `<p>${paramName}</p><span>${cokeParameters[paramName] ? cokeParameters[paramName].toFixed(2) : 'N/A'}</span>`;
+                cokeParamsBox.appendChild(gridItem);
+            });
+
+            cokeParamsSection.appendChild(cokeParamsBox);
+            processcokeContainer.appendChild(cokeParamsSection);
+
+            // process parameters
+
+            const processParamsSection = document.createElement('div');
+            processParamsSection.classList.add('process-parameters-section');
+
+            const processParamsTitle = document.createElement('h3');
+            processParamsTitle.textContent = 'Process Parameters';
+            processParamsSection.appendChild(processParamsTitle);
+
+            const processParamsBox = document.createElement('div');
+            processParamsBox.classList.add('parameter-box');
+
+            // Get the process parameters from the input form
             const processParamNames = {
                 '1': [
-                    {name: 'charging_tonnage', unit: 'tons'}, 
-                    {name: 'moisture_content', unit: '%'}, 
-                    {name: 'bulk_density', unit: 'g/cm³'}, 
-                    {name: 'charging_temperature', unit: '°C'}, 
-                    {name: 'battery_operating_temperature', unit: '°C'}, 
-                    {name: 'cross_wall_temperature', unit: '°C'}, 
-                    {name: 'push_force', unit: 'Amp'}, 
-                    {name: 'pri', unit: 'kPa'}, 
-                    {name: 'coke_per_push', unit: 'kg'}, 
-                    {name: 'gross_coke_yield', unit: '%'}, 
-                    {name: 'gcm_pressure', unit: 'Pa'}, 
-                    {name: 'gcm_temperature', unit: '°C'}, 
-                    {name: 'coking_time', unit: 'hrs'}, 
-                    {name: 'coke_end_temperature', unit: '°C'}, 
-                    {name: 'quenching_time', unit: 'min'}
+                    { name: 'charging_tonnage', unit: 'tons' },
+                    { name: 'moisture_content', unit: '%' },
+                    { name: 'bulk_density', unit: 'g/cm³' },
+                    { name: 'charging_temperature', unit: '°C' },
+                    { name: 'battery_operating_temperature', unit: '°C' },
+                    { name: 'cross_wall_temperature', unit: '°C' },
+                    { name: 'push_force', unit: 'Amp' },
+                    { name: 'pri', unit: 'kPa' },
+                    { name: 'coke_per_push', unit: 'kg' },
+                    { name: 'gross_coke_yield', unit: '%' },
+                    { name: 'gcm_pressure', unit: 'Pa' },
+                    { name: 'gcm_temperature', unit: '°C' },
+                    { name: 'coking_time', unit: 'hrs' },
+                    { name: 'coke_end_temperature', unit: '°C' },
+                    { name: 'quenching_time', unit: 'min' }
                 ],
                 '2': [
-                    {name: 'charging_tonnage', unit: 'tons'}, 
-                    {name: 'moisture_content', unit: '%'}, 
-                    {name: 'bulk_density', unit: 'g/cm³'}, 
-                    {name: 'charging_temperature', unit: '°C'}, 
-                    {name: 'battery_operating_temperature', unit: '°C'}, 
-                    {name: 'cross_wall_temperature', unit: '°C'}, 
-                    {name: 'push_force', unit: 'Amp'}, 
-                    {name: 'pri', unit: 'kPa'}, 
-                    {name: 'coke_per_push', unit: 'kg'}, 
-                    {name: 'gross_coke_yield', unit: '%'}, 
-                    {name: 'gcm_pressure', unit: 'Pa'}, 
-                    {name: 'gcm_temperature', unit: '°C'}, 
-                    {name: 'coking_time', unit: 'hrs'}, 
-                    {name: 'coke_end_temperature', unit: '°C'}, 
-                    {name: 'quenching_time', unit: 'min'}
+                    { name: 'charging_tonnage', unit: 'tons' },
+                    { name: 'moisture_content', unit: '%' },
+                    { name: 'bulk_density', unit: 'g/cm³' },
+                    { name: 'charging_temperature', unit: '°C' },
+                    { name: 'battery_operating_temperature', unit: '°C' },
+                    { name: 'cross_wall_temperature', unit: '°C' },
+                    { name: 'push_force', unit: 'Amp' },
+                    { name: 'pri', unit: 'kPa' },
+                    { name: 'coke_per_push', unit: 'kg' },
+                    { name: 'gross_coke_yield', unit: '%' },
+                    { name: 'gcm_pressure', unit: 'Pa' },
+                    { name: 'gcm_temperature', unit: '°C' },
+                    { name: 'coking_time', unit: 'hrs' },
+                    { name: 'coke_end_temperature', unit: '°C' },
+                    { name: 'quenching_time', unit: 'min' }
                 ],
                 '3': [
-                    {name: 'charging_tonnage', unit: 'tons'}, 
-                    {name: 'moisture_content', unit: '%'}, 
-                    {name: 'bulk_density', unit: 'g/cm³'}, 
-                    {name: 'charging_temperature', unit: '°C'}, 
-                    {name: 'battery_operating_temperature', unit: '°C'}, 
-                    {name: 'push_force', unit: 'Amp'}, 
-                    {name: 'pri', unit: 'kPa'}, 
-                    {name: 'coke_per_push', unit: 'kg'}, 
-                    {name: 'gross_coke_yield', unit: '%'}, 
-                    {name: 'header_temperature', unit: '°C'}, 
-                    {name: 'coking_time', unit: 'hrs'}, 
-                    {name: 'coke_end_temperature', unit: '°C'}, 
-                    {name: 'quenching_time', unit: 'min'}
+                    { name: 'charging_tonnage', unit: 'tons' },
+                    { name: 'moisture_content', unit: '%' },
+                    { name: 'bulk_density', unit: 'g/cm³' },
+                    { name: 'charging_temperature', unit: '°C' },
+                    { name: 'battery_operating_temperature', unit: '°C' },
+                    { name: 'push_force', unit: 'Amp' },
+                    { name: 'pri', unit: 'kPa' },
+                    { name: 'coke_per_push', unit: 'kg' },
+                    { name: 'gross_coke_yield', unit: '%' },
+                    { name: 'header_temperature', unit: '°C' },
+                    { name: 'coking_time', unit: 'hrs' },
+                    { name: 'coke_end_temperature', unit: '°C' },
+                    { name: 'quenching_time', unit: 'min' }
                 ]
             };
-        
-            const selectedParams = processParamNames[processType] || [];
-            const processParamsValues = selectedParams.map(param => {
-                const value = document.querySelector(`input[name="${param.name}"]`)?.value || 'N/A';
-                return [param.name.replace(/_/g, ' ').toUpperCase(), `${value} ${param.unit}`];
-            });
-        
-            processParamsValues.unshift(['Process Parameter', 'Value']); // Adding header
-            
-            const combinedCokeAndProcessData = [
-            ['Coke Parameter', 'Value'],
-            ...cokeParams.map(param => {
-                const value = cokeParameters[param] ? cokeParameters[param].toFixed(2) : 'N/A';
-                return [param, value];
-            }),
-    
-            
-            ['', ''],
-            
-            ['Process Parameter', 'Value'],
-            ...selectedParams.map(param => {
-                const value = document.querySelector(`input[name="${param.name}"]`)?.value || 'N/A';
-                return [param.name.replace(/_/g, ' ').toUpperCase(), `${value} ${param.unit}`];
-            })
-        ];
-    
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(combinedCokeAndProcessData), "Coke and Process Parameters");
-        
-        XLSX.writeFile(wb, 'results.xlsx');
-    }
-  
 
-        resultSection.appendChild(downloadButton);
-        
-        // Display the result section and hide the input form section
-        resultSection.style.display = 'block';
-        document.getElementById("inputFormSection").style.display = 'none';
-    }
-    
-    window.addEventListener('DOMContentLoaded', (event) => {
-        // Get all the navigation links
-        const navLinks = document.querySelectorAll('.navbar a');
-    
-        // Loop through each link to check if it matches the current page URL
-        navLinks.forEach(link => {
-            if (link.href === window.location.href) {
-                link.classList.add('active'); // Add 'active' class to the link that matches the URL
+            const selectedParams = processParamNames[processType] || [];
+
+            selectedParams.forEach(param => {
+                const paramValue = document.querySelector(`input[name="${param.name}"]`)?.value || 'N/A';
+                const paramName = param.name.replace(/_/g, ' ').toUpperCase();
+                const unit = param.unit;
+                const gridItem = document.createElement('div');
+                gridItem.classList.add('grid-item');
+
+                gridItem.innerHTML = `<p>${paramName}</p><span>${paramValue} ${unit}</span>`;
+                processParamsBox.appendChild(gridItem);
+            });
+
+            processParamsSection.appendChild(processParamsBox);
+            processcokeContainer.appendChild(processParamsSection);
+
+            resultSection.appendChild(processcokeContainer);
+
+
+            const tryAgainButton = document.createElement('button');
+            tryAgainButton.type = 'button';
+            tryAgainButton.id = 'tryAgainBtn';
+            tryAgainButton.textContent = 'Try Again';
+            tryAgainButton.onclick = resetForm;
+            resultSection.appendChild(tryAgainButton);
+
+            const downloadButton = document.createElement('button');
+            downloadButton.type = 'button';
+            downloadButton.id = 'downloadBtn';
+            downloadButton.textContent = 'Download Results';
+
+            // Create the dropdown menu
+            const formatSelect = document.createElement('select');
+            formatSelect.id = 'formatSelect';
+
+            const pdfOption = document.createElement('option');
+            pdfOption.value = 'pdf';
+            pdfOption.textContent = 'Download as PDF';
+
+            const excelOption = document.createElement('option');
+            excelOption.value = 'excel';
+            excelOption.textContent = 'Download as Excel';
+
+            formatSelect.appendChild(pdfOption);
+            formatSelect.appendChild(excelOption);
+
+            resultSection.appendChild(formatSelect);
+            resultSection.appendChild(downloadButton);
+
+
+            // Event listener for download
+            downloadButton.addEventListener('click', function () {
+                const selectedFormat = formatSelect.value;
+                const resultSection = document.getElementById("resultSection"); // Ensure this exists
+                if (!resultSection) {
+                    console.error("Error: resultSection not found!");
+                    return;
+                }
+
+                if (selectedFormat === 'pdf') {
+                    downloadAsPDF(resultSection);
+                } else if (selectedFormat === 'excel') {
+                    downloadAsExcel(resultSection);
+                }
+            });
+
+            function downloadAsPDF(resultSection) {
+                var opt = {
+                    margin: 0,
+                    filename: 'results.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+
+                html2pdf().from(resultSection).set(opt).save();
             }
+
+            function downloadAsExcel(resultSection) {
+                // Create the workbook
+                const wb = XLSX.utils.book_new();
+
+                // Table Data
+                const table = resultSection.querySelector("table");
+                if (!table) {
+                    console.error("No table found in result section for Excel download.");
+                    return;
+                }
+
+                const tableData = XLSX.utils.table_to_sheet(table);
+                XLSX.utils.book_append_sheet(wb, tableData, "Results Table");
+
+                // Blends 1, 2, 3 Parameters
+                for (let blendNumber = 1; blendNumber <= 3; blendNumber++) {
+                    const blend = result[`blend${blendNumber}`];
+                    if (blend) {
+                        const combinedData = [
+                            ['Blended Coal Parameter', 'Value'],
+                            ...blend.blendedcoal.map((value, index) => [coalPropertyNames[index], value.toFixed(2)]),
+                            ['', ''],
+                            ['Coke Parameter', 'Value'],
+                            ...blend.properties
+                                .map((value, index) => [propertyNames[index], isNaN(value) ? value : value.toFixed(2)])
+                                .filter(([param]) => visibleIndices.includes(param))
+                        ];
+
+                        // Log the data to verify it
+                        console.log(`combinedData for Blend ${blendNumber}:`, combinedData);
+
+                        // Validate combinedData before passing it to aoa_to_sheet
+                        if (Array.isArray(combinedData) && Array.isArray(combinedData[0])) {
+                            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(combinedData), `Blend ${blendNumber}`);
+                        } else {
+                            console.error(`combinedData for Blend ${blendNumber} is not in the correct format: Expected an array of arrays`);
+                        }
+                    }
+                }
+
+
+                const proposedParameters = [
+                    ['Proposed Blended Coal Parameters', 'Value'],
+                    ...coalblendNames.map((param, index) => {
+                        const value = result.ProposedCoal?.Blend2?.[0]?.[param] || 'N/A';
+                        return [param, value.toFixed ? value.toFixed(2) : value];
+                    }),
+                    ['', ''],
+                    ['Proposed Coke Parameters', 'Value'],
+                    ...parameterNames.map((param, index) => {
+                        const value = result.ProposedCoal?.Coke2?.[0]?.[param] || 'N/A';
+                        return [param, value.toFixed ? value.toFixed(2) : value];
+                    })
+                ];
+
+                // Validate proposedParameters before passing it to aoa_to_sheet
+                if (Array.isArray(proposedParameters) && Array.isArray(proposedParameters[0])) {
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(proposedParameters), "Proposed Parameters");
+                } else {
+                    console.error('proposedParameters is not in the correct format: Expected an array of arrays');
+                }
+
+                const cokeParams = [
+                    'ASH', 'VM', 'M_40MM', 'M_10MM', 'CSR', 'CRI', 'AMS'
+                ];
+
+                // Desired Coke Parameters 
+                const desiredcokeParamsValues = cokeParams.map(param => {
+                    const value = cokeParameters[param] ? cokeParameters[param].toFixed(2) : 'N/A';
+                    return [param, value];
+                });
+
+                desiredcokeParamsValues.unshift([' Desired Coke Parameter', 'Value']);
+
+                // Process Parameters (from processType)
+                const processParamNames = {
+                    '1': [
+                        { name: 'charging_tonnage', unit: 'tons' },
+                        { name: 'moisture_content', unit: '%' },
+                        { name: 'bulk_density', unit: 'g/cm³' },
+                        { name: 'charging_temperature', unit: '°C' },
+                        { name: 'battery_operating_temperature', unit: '°C' },
+                        { name: 'cross_wall_temperature', unit: '°C' },
+                        { name: 'push_force', unit: 'Amp' },
+                        { name: 'pri', unit: 'kPa' },
+                        { name: 'coke_per_push', unit: 'kg' },
+                        { name: 'gross_coke_yield', unit: '%' },
+                        { name: 'gcm_pressure', unit: 'Pa' },
+                        { name: 'gcm_temperature', unit: '°C' },
+                        { name: 'coking_time', unit: 'hrs' },
+                        { name: 'coke_end_temperature', unit: '°C' },
+                        { name: 'quenching_time', unit: 'min' }
+                    ],
+                    '2': [
+                        { name: 'charging_tonnage', unit: 'tons' },
+                        { name: 'moisture_content', unit: '%' },
+                        { name: 'bulk_density', unit: 'g/cm³' },
+                        { name: 'charging_temperature', unit: '°C' },
+                        { name: 'battery_operating_temperature', unit: '°C' },
+                        { name: 'cross_wall_temperature', unit: '°C' },
+                        { name: 'push_force', unit: 'Amp' },
+                        { name: 'pri', unit: 'kPa' },
+                        { name: 'coke_per_push', unit: 'kg' },
+                        { name: 'gross_coke_yield', unit: '%' },
+                        { name: 'gcm_pressure', unit: 'Pa' },
+                        { name: 'gcm_temperature', unit: '°C' },
+                        { name: 'coking_time', unit: 'hrs' },
+                        { name: 'coke_end_temperature', unit: '°C' },
+                        { name: 'quenching_time', unit: 'min' }
+                    ],
+                    '3': [
+                        { name: 'charging_tonnage', unit: 'tons' },
+                        { name: 'moisture_content', unit: '%' },
+                        { name: 'bulk_density', unit: 'g/cm³' },
+                        { name: 'charging_temperature', unit: '°C' },
+                        { name: 'battery_operating_temperature', unit: '°C' },
+                        { name: 'push_force', unit: 'Amp' },
+                        { name: 'pri', unit: 'kPa' },
+                        { name: 'coke_per_push', unit: 'kg' },
+                        { name: 'gross_coke_yield', unit: '%' },
+                        { name: 'header_temperature', unit: '°C' },
+                        { name: 'coking_time', unit: 'hrs' },
+                        { name: 'coke_end_temperature', unit: '°C' },
+                        { name: 'quenching_time', unit: 'min' }
+                    ]
+                };
+
+                const selectedParams = processParamNames[processType] || [];
+                const processParamsValues = selectedParams.map(param => {
+                    const value = document.querySelector(`input[name="${param.name}"]`)?.value || 'N/A';
+                    return [param.name.replace(/_/g, ' ').toUpperCase(), `${value} ${param.unit}`];
+                });
+
+                processParamsValues.unshift(['Process Parameter', 'Value']); // Adding header
+
+                const combinedCokeAndProcessData = [
+                    ['Coke Parameter', 'Value'],
+                    ...cokeParams.map(param => {
+                        const value = cokeParameters[param] ? cokeParameters[param].toFixed(2) : 'N/A';
+                        return [param, value];
+                    }),
+
+
+                    ['', ''],
+
+                    ['Process Parameter', 'Value'],
+                    ...selectedParams.map(param => {
+                        const value = document.querySelector(`input[name="${param.name}"]`)?.value || 'N/A';
+                        return [param.name.replace(/_/g, ' ').toUpperCase(), `${value} ${param.unit}`];
+                    })
+                ];
+
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(combinedCokeAndProcessData), "Coke and Process Parameters");
+
+                XLSX.writeFile(wb, 'results.xlsx');
+            }
+
+
+            resultSection.appendChild(downloadButton);
+
+            // Display the result section and hide the input form section
+            resultSection.style.display = 'block';
+            document.getElementById("inputFormSection").style.display = 'none';
+        }
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            // Get all the navigation links
+            const navLinks = document.querySelectorAll('.navbar a');
+
+            // Loop through each link to check if it matches the current page URL
+            navLinks.forEach(link => {
+                if (link.href === window.location.href) {
+                    link.classList.add('active'); // Add 'active' class to the link that matches the URL
+                }
+            });
         });
-    });
-</script>
+    </script>
 </body>
+
 </html>
