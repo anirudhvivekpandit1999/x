@@ -442,23 +442,23 @@ def cost():
  
             
         
-        D= np.loadtxt('./coal_percentages/coal_percentages.csv', delimiter=',')
+        D= np.loadtxt('coal_percentages.csv', delimiter=',')
 
-        P =  np.loadtxt('./Individual_coal_properties/Individual_coal_properties.csv', delimiter=',')
+        P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',')
         # coke_properties
-        Coke_properties = np.loadtxt('./Coke_properties/coke_properties.csv', delimiter=',')
+        Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
         
-        data = pd.read_csv('./individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')
+        data = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')
 
-        I = np.loadtxt('./individual_coal_prop.csv', delimiter=',', usecols=range(1, data.shape[1] - 2))
+        I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data.shape[1] - 2))
         
 
         if Option == 1:
-            Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Rec_Top_Char.csv', delimiter=',')
+            Process_parameters = np.loadtxt('Process_parameter_for_Rec_Top_Char.csv', delimiter=',')
         elif Option == 2:
-            Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Rec_Stam_Char.csv', delimiter=',')
+            Process_parameters = np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv', delimiter=',')
         elif Option == 3:
-            Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
+            Process_parameters = np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
             print("This was running")
         else:
             raise ValueError(f"Invalid option value: {Option}")
