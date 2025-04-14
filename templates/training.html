@@ -488,7 +488,7 @@
                     encryptedData: encryptedPayload,
                 });
 
-                const encryptedResponse = result.data.coalProperties;
+                const encryptedResponse = result?.data?.coalProperties ?? result?.data?.encryptedData;
                 //  const firstResultSet = encryptedResponse[0];
 
                 //  if (!encryptedResponse) {
@@ -546,18 +546,18 @@
         // });
 
         document.getElementById("download-template-btn").addEventListener("click", function () {
-  fetch("/download-template")
-    .then(response => response.blob())
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "template.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    });
-});
+            fetch("/download-template")
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "template.xlsx";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                });
+        });
 
         function updateProcessParameters() {
             const processType = document.getElementById("processDropdown").value;
@@ -639,19 +639,28 @@
                 try {
                     const result = await postEncrypted('http://13.232.169.135:3000/api/getTrainingData', { p_CompanyId: 1 });
                     const coalDropdowns = document.querySelectorAll('.coalDropdown');
-
+                    console.log(result);
                     // Populate dropdowns with coal data, displaying properties in curly brackets
                     coalDropdowns.forEach(dropdown => {
                         dropdown.innerHTML = '<option value="">Select Coal</option>'; // Clear existing options
-                        for (const coalName in result) {
-                            const coalProperties = result[coalName].properties;
-                            const formattedProperties = `{${coalProperties.join(', ')}}`; // Optional formatting
+
+                        result.forEach((coalData, index) => {
+                            console.log(coalData);
+                            // Get key-value pairs except some optional fields if needed
+                            const entries = Object.entries(coalData)
+                                .filter(([key, value]) => key !== "CoalId" && key !== "CoalName" && key !== "CompanyId"); // optional filters
+
+                            const formattedProperties = entries
+                                .map(([key, value]) => `${key}: ${value}`)
+                                .join(', ');
+
                             const option = document.createElement('option');
-                            option.value = coalName;
-                            option.textContent = `${coalName}`;
+                            option.value = coalData.CoalId || index; // or some unique identifier
+                            option.textContent = coalData.CoalName
+
                             dropdown.appendChild(option);
-                        }
-                    });
+                        });
+                    });;
                 } catch (error) {
                     console.error('Error loading coal data:', error);
                 }
