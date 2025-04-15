@@ -667,7 +667,7 @@ def cost():
         generate_combinations(index ,min_percentages_padded,max_percentages_padded , current_combination=[], current_sum=0)
                     
 
-        all_combinations = np.array(list(generate_combinations(0, [], 0,[],0)))
+        all_combinations = np.array(list(generate_combinations(0, min_percentages_padded, max_percentages_padded,[],0)))
         
         if(Option==3):
             proces_para = np.pad(proces_para, (0,2), mode='constant', constant_values=0)
