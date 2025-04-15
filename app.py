@@ -23,6 +23,7 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 from tensorflow.keras import layers  # type: ignore
 import traceback
+from functools import lru_cache  # Make sure this import is present
 
 
 app = Flask(__name__)
