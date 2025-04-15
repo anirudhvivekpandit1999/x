@@ -75,14 +75,17 @@ def initialize_data():
         data_store['Blended_coal'] = safe_load_csv(DATA_FILES['blended_coal'])
         data_store['Coke_properties'] = safe_load_csv(DATA_FILES['coke_properties'])
 
-        # Load coal costs - FIXED: Handle potential KeyError
+        # Load coal costs - FIXED: Handle potential KeyError properly
         print("\nLoading coal costs...")
         cost_data = pd.read_csv(DATA_FILES['coal_costs'], dtype=str, header=None)
         data_store['coal_costs'] = {}
         for _, row in cost_data.iterrows():
             try:
-                if len(row) >= 2:  # Ensure row has enough columns
-                    data_store['coal_costs'][row[0]] = float(row[-2])
+                row_list = row.tolist()  # Convert Series to list for safer indexing
+                if len(row_list) >= 2:  # Ensure row has enough columns
+                    # Using positive indexing instead of negative indexing
+                    cost_index = len(row_list) - 2  # Get second-to-last index
+                    data_store['coal_costs'][row_list[0]] = float(row_list[cost_index])
                 else:
                     print(f"Warning: Skipping row with insufficient columns: {row}")
             except (IndexError, ValueError) as e:
@@ -235,6 +238,71 @@ def train_models():
         traceback.print_exc()
         return False
 
+# Added this missing function that was referenced but not defined
+@lru_cache(maxsize=1024)
+def generate_combinations(min_percentages, max_percentages, step=5):
+    """Generate all valid combinations of coal percentages"""
+    n_coals = len(min_percentages)
+    valid_combinations = []
+    
+    # Generate ranges for each coal
+    ranges = [range(min_percentages[i], max_percentages[i] + 1, step) for i in range(n_coals)]
+    
+    # Generate all possible combinations
+    all_combinations = itertools.product(*ranges)
+    
+    # Filter valid combinations (sum to 100)
+    for comb in all_combinations:
+        if sum(comb) == 100:
+            valid_combinations.append(np.array(comb))
+    
+    return valid_combinations
+
+# Added this missing function that was referenced but not defined
+def process_user_blend(oneblends, process_params):
+    """Process user-provided blend"""
+    if not oneblends:
+        return None
+        
+    try:
+        # Verify initialization
+        if not data_store or not models or not scalers:
+            return {"error": "System not fully initialized"}
+            
+        # Convert user blend to numpy array
+        user_blend = np.array(oneblends, dtype=float)
+        
+        # Validate shape
+        if user_blend.shape[0] != 100:
+            return {"error": "User blend must sum to 100%"}
+            
+        # Pad if necessary
+        if user_blend.shape[0] < 14:
+            user_blend = np.pad(user_blend, (0, 14 - user_blend.shape[0]), 'constant')
+            
+        # Process blend through models
+        daily_vector = user_blend[:, None] * data_store['P']
+        daily_vector_scaled = scalers['input'].transform(daily_vector.reshape(1, -1))
+        
+        blended_coal = models['modelq'].predict(daily_vector_scaled)
+        blended_coal = scalers['output'].inverse_transform(blended_coal)
+        
+        # Calculate coke properties
+        conv_matrix = blended_coal + process_params
+        conv_matrix_scaled = scalers['input_phase2'].transform(conv_matrix)
+        coke_properties = models['rf_model'].predict(conv_matrix_scaled)
+        coke_properties = scalers['output_phase2'].inverse_transform(coke_properties)
+        
+        return {
+            "blend": user_blend.tolist(),
+            "blended_coal": blended_coal[0].tolist(),
+            "properties": coke_properties[0].tolist()
+        }
+        
+    except Exception as e:
+        print(f"Error processing user blend: {str(e)}")
+        traceback.print_exc()
+        return {"error": f"Error processing user blend: {str(e)}"}
 
 
 @app.route('/')
@@ -716,9 +784,28 @@ def cost():
         return jsonify({
             "error": str(e),
             "traceback": traceback.format_exc()
-        }), 500    
+        }), 500
 
-
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    try:
+        checks = {
+            "data_loaded": bool(data_store and None not in data_store.values()),
+            "models_loaded": bool(models and None not in models.values()),
+            "scalers_loaded": bool(scalers and None not in scalers.values())
+        }
+        
+        status = 200 if all(checks.values()) else 500
+        return jsonify({
+            "status": "healthy" if status == 200 else "degraded",
+            "checks": checks
+        }), status
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy",
+            "error": str(e)
+        }), 500
 #coal properties page 
 
 @app.route('/download-template-properties')
@@ -900,8 +987,6 @@ def startup():
         print(f"\n!!! Startup Failed !!!")
         print(f"Error: {str(e)}")
         traceback.print_exc()
-
-
 
 if __name__ == '__main__':
     startup()
