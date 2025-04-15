@@ -365,7 +365,12 @@ def generate_combinations(index,min_percentages_padded,max_percentages_padded , 
                 if min_percentages_padded[index] <= remaining <= max_percentages_padded[index]:
                     yield current_combination + [remaining]
                 return
-            for value in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
+            if index >= len(min_percentages_padded):
+                min_val = min_percentages_padded[index]
+                max_val = max_percentages_padded[index]
+                return (min_val,max_val)
+                
+            for value in range(min_val, max_val + 1):
                 if current_sum + value <= target_sum:
                     yield from generate_combinations(index + 1, current_combination + [value], current_sum + value,[],0)
 
