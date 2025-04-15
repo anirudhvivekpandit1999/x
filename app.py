@@ -367,7 +367,7 @@ def generate_combinations(index,min_percentages_padded,max_percentages_padded , 
                 return
             for value in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
                 if current_sum + value <= target_sum:
-                    yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
+                    yield from generate_combinations(index + 1, current_combination + [value], current_sum + value,[],0)
 
 @app.route('/cost', methods=['POST'])
 def cost():
