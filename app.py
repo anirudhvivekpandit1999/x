@@ -508,9 +508,14 @@ def cost():
         desired_coke_params = data.get("cokeParameters", {})
         oneblends = data.get('blendcoal', [])
         Option = int(data.get("processType", 1))
-        proces_para = np.array(list(data.get("processParameters", {}).values()))
         
-        # Pad percentages
+        # Handle processParameters properly
+        proces_para = data.get("processParameters", {})
+        if isinstance(proces_para, dict):
+            proces_para = list(proces_para.values())
+        proces_para = np.array(proces_para, dtype=float)
+        
+        # Pad arrays
         min_percentages_padded = np.pad(min_percentages, (0, 14 - len(min_percentages)), 'constant') 
         max_percentages_padded = np.pad(max_percentages, (0, 14 - len(max_percentages)), 'constant')
         
@@ -518,10 +523,17 @@ def cost():
             proces_para = np.pad(proces_para, (0, 2), 'constant')
         
         # Generate all valid combinations
-        all_combinations = generate_combinations(
-            tuple(min_percentages_padded),
-            tuple(max_percentages_padded)
-        )
+        def generate_combinations(index, current, current_sum):
+            if index == len(min_percentages_padded) - 1:
+                remaining = 100 - current_sum
+                if min_percentages_padded[index] <= remaining <= max_percentages_padded[index]:
+                    yield current + [remaining]
+                return
+            for val in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
+                if current_sum + val <= 100:
+                    yield from generate_combinations(index + 1, current + [val], current_sum + val)
+        
+        all_combinations = np.array(list(generate_combinations(0, [], 0)))
         
         # Process all combinations
         results = []
@@ -595,71 +607,71 @@ def cost():
         
         # Sort by quality
         valid_results.sort(key=lambda x: x['total_diff'], reverse=True)
-        sorted_predictions = [r['coke_properties'] for r in valid_results]
-        sorted_blends = [r['combination'] for r in valid_results]
-        sorted_blended_coal = [r['blended_coal'] for r in valid_results]
-        sorted_diff = [r['diffs'] for r in valid_results]
-        total_costs = [r['cost'] for r in valid_results]
         
         # Sort by cost
         sorted_by_cost = sorted(valid_results, key=lambda x: x['cost'])
-        sorted_blend_cost = [r['combination'] for r in sorted_by_cost]
-        sorted_prediction_cost = [r['coke_properties'] for r in sorted_by_cost]
-        sorted_total_cost = [r['cost'] for r in sorted_by_cost]
-        sorted_blended_coal_cost = [r['blended_coal'] for r in sorted_by_cost]
-        sorted_diff_cost = [r['diffs'] for r in sorted_by_cost]
         
         # Combine cost and quality
-        norm_costs = (np.array(total_costs) - min(total_costs)) / (max(total_costs) - min(total_costs))
-        norm_quals = (np.array([r['total_diff'] for r in valid_results]) - 
-                     min([r['total_diff'] for r in valid_results])) / \
-                    (max([r['total_diff'] for r in valid_results]) - 
-                     min([r['total_diff'] for r in valid_results]))
-        
+        costs = np.array([r['cost'] for r in valid_results])
+        quals = np.array([r['total_diff'] for r in valid_results])
+        norm_costs = (costs - costs.min()) / (costs.max() - costs.min())
+        norm_quals = (quals - quals.min()) / (quals.max() - quals.min())
         combined_scores = (min_max['cost_weightage'] * norm_costs + 
                          min_max['coke_quality'] * norm_quals)
         best_combined_idx = np.argmin(combined_scores)
         
         # Prepare the three recommended blends
-        blend_1 = valid_results[0]['combination']
-        blended_coal_1 = valid_results[0]['blended_coal']
-        blend_1_properties = valid_results[0]['coke_properties']
-        blend_1_cost = valid_results[0]['cost']
-        
-        blend_2 = sorted_by_cost[0]['combination']
-        blended_coal_2 = sorted_by_cost[0]['blended_coal']
-        blend_2_properties = sorted_by_cost[0]['coke_properties']
-        blend_2_cost = sorted_by_cost[0]['cost']
-        
-        blend_3 = valid_results[best_combined_idx]['combination']
-        blended_coal_3 = valid_results[best_combined_idx]['blended_coal']
-        blend_3_properties = valid_results[best_combined_idx]['coke_properties']
-        blend_3_cost = valid_results[best_combined_idx]['cost']
+        blend_1 = valid_results[0]
+        blend_2 = sorted_by_cost[0]
+        blend_3 = valid_results[best_combined_idx]
         
         # Process user blend if provided
-        proposed_coal = process_user_blend(oneblends, proces_para)
-        if isinstance(proposed_coal, dict) and 'error' in proposed_coal:
-            return jsonify(proposed_coal), 400
+        proposed_coal = {}
+        if oneblends:
+            user_values = np.array([blend['currentRange'] for blend in oneblends])
+            if user_values.sum() != 100:
+                return jsonify({"error": "The total of current range must add up to 100."}), 400
+            
+            user_values_padded = np.pad(user_values, (0, 14 - len(user_values)), 'constant')
+            
+            # Vectorized calculation
+            daily_vector = user_values_padded[:, None] * DATA['P']
+            daily_vector_scaled = SCALERS['input'].transform(daily_vector.reshape(1, -1))
+            
+            # Predict blended coal properties
+            blended_coal = MODELS['modelq'].predict(daily_vector_scaled)
+            blended_coal = SCALERS['output'].inverse_transform(blended_coal)
+            
+            # Predict coke properties
+            conv_matrix = blended_coal + proces_para
+            conv_matrix_scaled = SCALERS['input_phase2'].transform(conv_matrix)
+            coke_properties = MODELS['rf_model'].predict(conv_matrix_scaled)
+            coke_properties = SCALERS['output_phase2'].inverse_transform(coke_properties)
+            
+            proposed_coal = {
+                "Blend2": blended_coal[0].tolist(),
+                "Coke2": coke_properties[0].tolist()
+            }
         
-        # Prepare response (maintaining original structure)
+        # Prepare final response
         response = {
             "blend1": {
-                "composition": blend_1.tolist(),
-                "blendedcoal": blended_coal_1.tolist(),
-                "properties": blend_1_properties.tolist(),
-                "cost": float(blend_1_cost)
+                "composition": blend_1['combination'].tolist(),
+                "blendedcoal": blend_1['blended_coal'].tolist(),
+                "properties": blend_1['coke_properties'].tolist(),
+                "cost": float(blend_1['cost'])
             },
             "blend2": {
-                "composition": blend_2.tolist(),
-                "blendedcoal": blended_coal_2.tolist(),
-                "properties": blend_2_properties.tolist(),
-                "cost": float(blend_2_cost)
+                "composition": blend_2['combination'].tolist(),
+                "blendedcoal": blend_2['blended_coal'].tolist(),
+                "properties": blend_2['coke_properties'].tolist(),
+                "cost": float(blend_2['cost'])
             },
             "blend3": {
-                "composition": blend_3.tolist(),
-                "blendedcoal": blended_coal_3.tolist(),
-                "properties": blend_3_properties.tolist(),
-                "cost": float(blend_3_cost)
+                "composition": blend_3['combination'].tolist(),
+                "blendedcoal": blend_3['blended_coal'].tolist(),
+                "properties": blend_3['coke_properties'].tolist(),
+                "cost": float(blend_3['cost'])
             },
             "valid_predictions_count": len(valid_results),
             "ProposedCoal": proposed_coal or {
