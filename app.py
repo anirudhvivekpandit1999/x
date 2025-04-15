@@ -492,9 +492,9 @@ def load_models_and_data(Option):
     
     # Load or retrieve data matrices
     if 'data_matrices' not in load_models_and_data._data_cache:
-        D = np.loadtxt('./coal_percentages/coal_percentages.csv', delimiter=',')
-        P = np.loadtxt('./Individual_coal_properties/Individual_coal_properties.csv', delimiter=',')
-        coal_data = pd.read_csv('./individual_coal_prop.csv', dtype=str, header=None, on_bad_lines='skip')
+        D = np.loadtxt('coal_percentages.csv', delimiter=',')
+        P = np.loadtxt('Individual_coal_properties.csv', delimiter=',')
+        coal_data = pd.read_csv('individual_coal_prop.csv', dtype=str, header=None, on_bad_lines='skip')
         
         load_models_and_data._data_cache['data_matrices'] = (D, P, coal_data)
     
