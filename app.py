@@ -314,66 +314,9 @@ def get_ranges():
     except FileNotFoundError as e:
         return jsonify({'error': str(e)}), 404
         
-def read_min_max_values():
-            df = pd.read_csv('min-maxvalues.csv')
-            print(df);
-            return {
-                'ash': {
-                    'lower': df['ash_lower'].iloc[0],
-                    'upper': df['ash_upper'].iloc[0],
-                    'weight': df['ash_weight'].iloc[0]
-                },
-                'vm': {
-                    'lower': df['vm_lower'].iloc[0],
-                    'upper': df['vm_upper'].iloc[0],
-                    'weight': df['vm_weight'].iloc[0]
-                },
-                'm40': {
-                    'lower': df['m40_lower'].iloc[0],
-                    'upper': df['m40_upper'].iloc[0],
-                    'weight': df['m40_weight'].iloc[0]
-                },
-                'm10': {
-                    'lower': df['m10_lower'].iloc[0],
-                    'upper': df['m10_upper'].iloc[0],
-                    'weight': df['m10_weight'].iloc[0]
-                },
-                'csr': {
-                    'lower': df['csr_lower'].iloc[0],
-                    'upper': df['csr_upper'].iloc[0],
-                    'weight': df['csr_weight'].iloc[0]
-                },
-                'cri': {
-                    'lower': df['cri_lower'].iloc[0],
-                    'upper': df['cri_upper'].iloc[0],
-                    'weight': df['cri_weight'].iloc[0]
-                },
-                'ams': {
-                    'lower': df['ams_lower'].iloc[0],
-                    'upper': df['ams_upper'].iloc[0],
-                    'weight': df['ams_weight'].iloc[0]
-                },
-                'cost_weightage': df['cost_weightage'].iloc[0],
-                'coke_quality': df['coke_quality'].iloc[0]
-            }
-        
+
 #model for cost ai page
-def generate_combinations(index,min_percentages_padded,max_percentages_padded , current_combination, current_sum):
-            target_sum = 100
-            if index == len(min_percentages_padded) - 1:
-                remaining = target_sum - current_sum
-                if min_percentages_padded[index] <= remaining <= max_percentages_padded[index]:
-                    yield current_combination + [remaining]
-                return
-            if index >= len(min_percentages_padded):
-                
-                return 
-            min_val = min_percentages_padded[index]
-            max_val = max_percentages_padded[index]
-                
-            for value in range(min_val, max_val + 1):
-                if current_sum + value <= target_sum:
-                    yield from generate_combinations(index + 1, current_combination + [value], current_sum + value,[],0)
+
 
 @app.route('/cost', methods=['POST'])
 def cost():
@@ -670,10 +613,19 @@ def cost():
         mse = np.mean((y_test - y_pred) ** 2)
         
     
-        generate_combinations(index ,min_percentages_padded,max_percentages_padded , current_combination=[], current_sum=0)
+        def generate_combinations(index, current_combination, current_sum):
+            target_sum = 100
+            if index == len(min_percentages_padded) - 1:
+                remaining = target_sum - current_sum
+                if min_percentages_padded[index] <= remaining <= max_percentages_padded[index]:
+                    yield current_combination + [remaining]
+                return
+            for value in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
+                if current_sum + value <= target_sum:
+                    yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
                     
 
-        all_combinations = np.array(list(generate_combinations(0, min_percentages_padded, max_percentages_padded,[],0)))
+        all_combinations = np.array(list(generate_combinations(0, [], 0)))
         
         if(Option==3):
             proces_para = np.pad(proces_para, (0,2), mode='constant', constant_values=0)
@@ -714,6 +666,48 @@ def cost():
         
         
         
+        def read_min_max_values():
+            df = pd.read_csv('min-maxvalues.csv')
+            print(df);
+            return {
+                'ash': {
+                    'lower': df['ash_lower'].iloc[0],
+                    'upper': df['ash_upper'].iloc[0],
+                    'weight': df['ash_weight'].iloc[0]
+                },
+                'vm': {
+                    'lower': df['vm_lower'].iloc[0],
+                    'upper': df['vm_upper'].iloc[0],
+                    'weight': df['vm_weight'].iloc[0]
+                },
+                'm40': {
+                    'lower': df['m40_lower'].iloc[0],
+                    'upper': df['m40_upper'].iloc[0],
+                    'weight': df['m40_weight'].iloc[0]
+                },
+                'm10': {
+                    'lower': df['m10_lower'].iloc[0],
+                    'upper': df['m10_upper'].iloc[0],
+                    'weight': df['m10_weight'].iloc[0]
+                },
+                'csr': {
+                    'lower': df['csr_lower'].iloc[0],
+                    'upper': df['csr_upper'].iloc[0],
+                    'weight': df['csr_weight'].iloc[0]
+                },
+                'cri': {
+                    'lower': df['cri_lower'].iloc[0],
+                    'upper': df['cri_upper'].iloc[0],
+                    'weight': df['cri_weight'].iloc[0]
+                },
+                'ams': {
+                    'lower': df['ams_lower'].iloc[0],
+                    'upper': df['ams_upper'].iloc[0],
+                    'weight': df['ams_weight'].iloc[0]
+                },
+                'cost_weightage': df['cost_weightage'].iloc[0],
+                'coke_quality': df['coke_quality'].iloc[0]
+            }
             
         min_max_values = read_min_max_values()
         
