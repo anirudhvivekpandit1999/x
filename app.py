@@ -358,7 +358,7 @@ def read_min_max_values():
             }
         
 #model for cost ai page
-def generate_combinations(index, current_combination, current_sum,min_percentages_padded,max_percentages_padded):
+def generate_combinations(index,min_percentages_padded,max_percentages_padded , current_combination, current_sum):
             target_sum = 100
             if index == len(min_percentages_padded) - 1:
                 remaining = target_sum - current_sum
