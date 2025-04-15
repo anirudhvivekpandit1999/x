@@ -314,7 +314,49 @@ def get_ranges():
     except FileNotFoundError as e:
         return jsonify({'error': str(e)}), 404
         
-
+def read_min_max_values():
+            df = pd.read_csv('min-maxvalues.csv')
+            print(df);
+            return {
+                'ash': {
+                    'lower': df['ash_lower'].iloc[0],
+                    'upper': df['ash_upper'].iloc[0],
+                    'weight': df['ash_weight'].iloc[0]
+                },
+                'vm': {
+                    'lower': df['vm_lower'].iloc[0],
+                    'upper': df['vm_upper'].iloc[0],
+                    'weight': df['vm_weight'].iloc[0]
+                },
+                'm40': {
+                    'lower': df['m40_lower'].iloc[0],
+                    'upper': df['m40_upper'].iloc[0],
+                    'weight': df['m40_weight'].iloc[0]
+                },
+                'm10': {
+                    'lower': df['m10_lower'].iloc[0],
+                    'upper': df['m10_upper'].iloc[0],
+                    'weight': df['m10_weight'].iloc[0]
+                },
+                'csr': {
+                    'lower': df['csr_lower'].iloc[0],
+                    'upper': df['csr_upper'].iloc[0],
+                    'weight': df['csr_weight'].iloc[0]
+                },
+                'cri': {
+                    'lower': df['cri_lower'].iloc[0],
+                    'upper': df['cri_upper'].iloc[0],
+                    'weight': df['cri_weight'].iloc[0]
+                },
+                'ams': {
+                    'lower': df['ams_lower'].iloc[0],
+                    'upper': df['ams_upper'].iloc[0],
+                    'weight': df['ams_weight'].iloc[0]
+                },
+                'cost_weightage': df['cost_weightage'].iloc[0],
+                'coke_quality': df['coke_quality'].iloc[0]
+            }
+        
 #model for cost ai page
 
 
@@ -442,23 +484,23 @@ def cost():
  
             
         
-        D= np.loadtxt('./coal_percentages/coal_percentages.csv', delimiter=',')
+        D= np.loadtxt('coal_percentages.csv', delimiter=',')
 
-        P =  np.loadtxt('./Individual_coal_properties/Individual_coal_properties.csv', delimiter=',')
+        P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',')
         # coke_properties
-        Coke_properties = np.loadtxt('./Coke_properties/coke_properties.csv', delimiter=',')
+        Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
         
-        data = pd.read_csv('./individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')
+        data = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')
 
-        I = np.loadtxt('./individual_coal_prop.csv', delimiter=',', usecols=range(1, data.shape[1] - 2))
+        I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data.shape[1] - 2))
         
 
         if Option == 1:
-            Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Rec_Top_Char.csv', delimiter=',')
+            Process_parameters = np.loadtxt('Process_parameter_for_Rec_Top_Char.csv', delimiter=',')
         elif Option == 2:
-            Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Rec_Stam_Char.csv', delimiter=',')
+            Process_parameters = np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv', delimiter=',')
         elif Option == 3:
-            Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
+            Process_parameters = np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
             print("This was running")
         else:
             raise ValueError(f"Invalid option value: {Option}")
@@ -666,48 +708,6 @@ def cost():
         
         
         
-        def read_min_max_values():
-            df = pd.read_csv('min-maxvalues.csv')
-            print(df);
-            return {
-                'ash': {
-                    'lower': df['ash_lower'].iloc[0],
-                    'upper': df['ash_upper'].iloc[0],
-                    'weight': df['ash_weight'].iloc[0]
-                },
-                'vm': {
-                    'lower': df['vm_lower'].iloc[0],
-                    'upper': df['vm_upper'].iloc[0],
-                    'weight': df['vm_weight'].iloc[0]
-                },
-                'm40': {
-                    'lower': df['m40_lower'].iloc[0],
-                    'upper': df['m40_upper'].iloc[0],
-                    'weight': df['m40_weight'].iloc[0]
-                },
-                'm10': {
-                    'lower': df['m10_lower'].iloc[0],
-                    'upper': df['m10_upper'].iloc[0],
-                    'weight': df['m10_weight'].iloc[0]
-                },
-                'csr': {
-                    'lower': df['csr_lower'].iloc[0],
-                    'upper': df['csr_upper'].iloc[0],
-                    'weight': df['csr_weight'].iloc[0]
-                },
-                'cri': {
-                    'lower': df['cri_lower'].iloc[0],
-                    'upper': df['cri_upper'].iloc[0],
-                    'weight': df['cri_weight'].iloc[0]
-                },
-                'ams': {
-                    'lower': df['ams_lower'].iloc[0],
-                    'upper': df['ams_upper'].iloc[0],
-                    'weight': df['ams_weight'].iloc[0]
-                },
-                'cost_weightage': df['cost_weightage'].iloc[0],
-                'coke_quality': df['coke_quality'].iloc[0]
-            }
             
         min_max_values = read_min_max_values()
         
