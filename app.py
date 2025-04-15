@@ -358,7 +358,16 @@ def read_min_max_values():
             }
         
 #model for cost ai page
-
+def generate_combinations(index, current_combination, current_sum,min_percentages_padded,max_percentages_padded):
+            target_sum = 100
+            if index == len(min_percentages_padded) - 1:
+                remaining = target_sum - current_sum
+                if min_percentages_padded[index] <= remaining <= max_percentages_padded[index]:
+                    yield current_combination + [remaining]
+                return
+            for value in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
+                if current_sum + value <= target_sum:
+                    yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
 
 @app.route('/cost', methods=['POST'])
 def cost():
@@ -655,16 +664,7 @@ def cost():
         mse = np.mean((y_test - y_pred) ** 2)
         
     
-        def generate_combinations(index, current_combination, current_sum):
-            target_sum = 100
-            if index == len(min_percentages_padded) - 1:
-                remaining = target_sum - current_sum
-                if min_percentages_padded[index] <= remaining <= max_percentages_padded[index]:
-                    yield current_combination + [remaining]
-                return
-            for value in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
-                if current_sum + value <= target_sum:
-                    yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
+        generate_combinations(index, current_combination, current_sum,min_percentages_padded,max_percentages_padded) # type: ignore
                     
 
         all_combinations = np.array(list(generate_combinations(0, [], 0)))
