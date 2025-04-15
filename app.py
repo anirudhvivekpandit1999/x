@@ -664,7 +664,7 @@ def cost():
         mse = np.mean((y_test - y_pred) ** 2)
         
     
-        generate_combinations(index ,min_percentages_padded,max_percentages_padded , current_combination=0, current_sum=0)
+        generate_combinations(index ,min_percentages_padded,max_percentages_padded , current_combination=[], current_sum=0)
                     
 
         all_combinations = np.array(list(generate_combinations(0, [], 0)))
