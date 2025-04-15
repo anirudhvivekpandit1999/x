@@ -496,6 +496,11 @@ def get_ranges():
 @app.route('/cost', methods=['POST'])
 def cost():
     try:
+        try:
+            initialize_app()
+            print("Data check complete")
+        except Exception as e:
+            print(f"Data loading failed: {str(e)}")
         data = request.json  
         if not data:
             raise ValueError("No data received in the request") 
