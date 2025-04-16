@@ -663,7 +663,7 @@ def cost():
         blend1 = input__scaler.transform(blend1)
         coke = rf_model.predict(blend1)
         predictions=output__scaler.inverse_transform(coke)
-        
+        print("666 predictions" , predictions);
         
         
         def read_min_max_values():
