@@ -863,7 +863,13 @@ def cost():
         # -----------------------------------------------------------------------------
         # Combine Cost and Performance
         # -----------------------------------------------------------------------------
-        normalized_costs = (total_costs - np.min(total_costs)) / (np.max(total_costs) - np.min(total_costs))
+        if total_costs is None or len(total_costs) == 0:
+            return jsonify({"error": "No cost data available", "total_costs": []}), 400
+        else:
+            normalized_costs = (total_costs - np.min(total_costs)) / (np.max(total_costs) - np.min(total_costs))
+        print("sorted_blends:", sorted_blends)
+        print("coal_types:", coal_types)
+        print("CSV Head:\n", data.head())   
         normalized_differences = (
             (total_differences - np.min(total_differences))
             / (np.max(total_differences) - np.min(total_differences))
