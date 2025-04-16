@@ -813,6 +813,7 @@ def cost():
 
 
         total_differences = [sum(diff) for diff in differences]
+        print("total differences" , total_differences);
         sorted_indices = np.argsort(total_differences)[::-1]
         
        
