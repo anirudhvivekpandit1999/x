@@ -316,7 +316,51 @@ def get_ranges():
         
 
 #model for cost ai page
-
+def read_min_max_values():
+            df = pd.read_csv('min-maxvalues.csv')
+            print(df);
+            return {
+                'ash': {
+                    'lower': df['ash_lower'].iloc[0],
+                    'upper': df['ash_upper'].iloc[0],
+                    'weight': df['ash_weight'].iloc[0]
+                },
+                'vm': {
+                    'lower': df['vm_lower'].iloc[0],
+                    'upper': df['vm_upper'].iloc[0],
+                    'weight': df['vm_weight'].iloc[0]
+                },
+                'm40': {
+                    'lower': df['m40_lower'].iloc[0],
+                    'upper': df['m40_upper'].iloc[0],
+                    'weight': df['m40_weight'].iloc[0]
+                },
+                'm10': {
+                    'lower': df['m10_lower'].iloc[0],
+                    'upper': df['m10_upper'].iloc[0],
+                    'weight': df['m10_weight'].iloc[0]
+                },
+                'csr': {
+                    'lower': df['csr_lower'].iloc[0],
+                    'upper': df['csr_upper'].iloc[0],
+                    'weight': df['csr_weight'].iloc[0]
+                },
+                'cri': {
+                    'lower': df['cri_lower'].iloc[0],
+                    'upper': df['cri_upper'].iloc[0],
+                    'weight': df['cri_weight'].iloc[0]
+                },
+                'ams': {
+                    'lower': df['ams_lower'].iloc[0],
+                    'upper': df['ams_upper'].iloc[0],
+                    'weight': df['ams_weight'].iloc[0]
+                },
+                'cost_weightage': df['cost_weightage'].iloc[0],
+                'coke_quality': df['coke_quality'].iloc[0]
+            }
+            
+min_max_values = read_min_max_values()
+        
 
 @app.route('/cost', methods=['POST'])
 def cost():
@@ -666,50 +710,6 @@ def cost():
         print("666 predictions" , predictions);
         
         
-        def read_min_max_values():
-            df = pd.read_csv('min-maxvalues.csv')
-            print(df);
-            return {
-                'ash': {
-                    'lower': df['ash_lower'].iloc[0],
-                    'upper': df['ash_upper'].iloc[0],
-                    'weight': df['ash_weight'].iloc[0]
-                },
-                'vm': {
-                    'lower': df['vm_lower'].iloc[0],
-                    'upper': df['vm_upper'].iloc[0],
-                    'weight': df['vm_weight'].iloc[0]
-                },
-                'm40': {
-                    'lower': df['m40_lower'].iloc[0],
-                    'upper': df['m40_upper'].iloc[0],
-                    'weight': df['m40_weight'].iloc[0]
-                },
-                'm10': {
-                    'lower': df['m10_lower'].iloc[0],
-                    'upper': df['m10_upper'].iloc[0],
-                    'weight': df['m10_weight'].iloc[0]
-                },
-                'csr': {
-                    'lower': df['csr_lower'].iloc[0],
-                    'upper': df['csr_upper'].iloc[0],
-                    'weight': df['csr_weight'].iloc[0]
-                },
-                'cri': {
-                    'lower': df['cri_lower'].iloc[0],
-                    'upper': df['cri_upper'].iloc[0],
-                    'weight': df['cri_weight'].iloc[0]
-                },
-                'ams': {
-                    'lower': df['ams_lower'].iloc[0],
-                    'upper': df['ams_upper'].iloc[0],
-                    'weight': df['ams_weight'].iloc[0]
-                },
-                'cost_weightage': df['cost_weightage'].iloc[0],
-                'coke_quality': df['coke_quality'].iloc[0]
-            }
-            
-        min_max_values = read_min_max_values()
         
        
         desired_ash = desired_coke_params["ASH"]
