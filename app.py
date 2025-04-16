@@ -546,6 +546,7 @@ def cost():
         
         # modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
         # 
+        # 
         y_pred = modelq.predict(input_test_scaled)
         y_pred = output_scaler.inverse_transform(y_pred)
         mse = np.mean((target_test - y_pred) ** 2)
@@ -826,26 +827,15 @@ def cost():
         sorted_blended_coal_properties = [blended_coal_properties[i] for i in sorted_indices]
         
                 
-        
+        coal_costs = []
         for i, blend in enumerate(sorted_blends):
-            coal_costs = []
             coal_type_costs = []
             for j, coal_type in enumerate(coal_types):
                 if j < len(blend):
-                    try:
-                        # Check if coal_type exists in CSV
-                        cost_row = data.loc[data[0] == coal_type]
-                        if not cost_row.empty:
-                            coal_type_cost = float(cost_row[data.columns[-2]].values[0])
-                            coal_type_costs.append(coal_type_cost)
-                        else:
-                            print(f"⚠️ No matching coal_type in CSV: {coal_type}")
-                    except Exception as e:
-                        print(f"❌ Error getting cost for {coal_type}: {e}")
-            if coal_type_costs:
-                coal_costs.append(coal_type_costs)
-
-        print("✅ Final coal_costs:", coal_costs)
+                    # Map the coal type to the CSV file and retrieve the cost
+                    coal_type_cost = float(data.loc[data[0] == coal_type, data.columns[-2]].values[0])
+                    coal_type_costs.append(coal_type_cost)
+            coal_costs.append(coal_type_costs)
 
         total_costs = [sum(float(blend[i]) * coal_costs[j][i] / 100 for i in range(min(len(blend), len(coal_costs[j])))) for j, blend in enumerate(sorted_blends)] 
        
@@ -864,13 +854,7 @@ def cost():
         # -----------------------------------------------------------------------------
         # Combine Cost and Performance
         # -----------------------------------------------------------------------------
-        if total_costs is None or len(total_costs) == 0:
-            return jsonify({"error": "No cost data available", "total_costs": []}), 400
-        else:
-            normalized_costs = (total_costs - np.min(total_costs)) / (np.max(total_costs) - np.min(total_costs))
-        print("sorted_blends:", sorted_blends)
-        print("coal_types:", coal_types)
-        print("CSV Head:\n", data.head())   
+        normalized_costs = (total_costs - np.min(total_costs)) / (np.max(total_costs) - np.min(total_costs))
         normalized_differences = (
             (total_differences - np.min(total_differences))
             / (np.max(total_differences) - np.min(total_differences))
