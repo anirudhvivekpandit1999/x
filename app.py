@@ -319,11 +319,10 @@ def get_ranges():
 
 
 @app.route('/cost', methods=['POST'])
-def cost():
+def cost(data):
     
-        data = request.json  
-        if not data:
-            raise ValueError("No data received in the request") 
+        
+        
         coal_blends = data.get("blends")
         coal_types = [blk["coalType"] for blk in coal_blends]
         min_percentages = [int(blk["minPercentage"]) for blk in coal_blends]
@@ -342,15 +341,11 @@ def cost():
             if user_input_values.sum() != 100:
                 return jsonify({"error": "The total of current range must add up to 100."}), 400
             user_input_values_padded = np.pad(user_input_values, (0, 14 - len(user_input_values)), mode='constant')
-            user_input_values_padded = np.array(user_input_values_padded)
-            user_input_values_padded = np.array(user_input_values_padded).reshape(1, -1)
-            print("D-tensor-1", user_input_values_padded)
-            
         else:
             # If blendcoal data is missing, don't do anything (leave the padded zero array)
             pass
         
-        print("D-tensor", user_input_values_padded)
+        
         Option = data.get("processType")
         print(f"Option (type: {type(Option)}):", Option)
         
@@ -360,7 +355,6 @@ def cost():
             raise ValueError(f"Invalid option value: {Option} (could not convert to integer)")
         
         proces_para= data.get("processParameters", {})
-        
         print("model Process Parameters:", proces_para)
 
         file_path = 'submitted_training_coal_data.csv'
@@ -463,155 +457,44 @@ def cost():
         else:
             raise ValueError(f"Invalid option value: {Option}")
             
-        D_tensor = tf.constant(D, dtype=tf.float32)
-        P_tensor = tf.constant(P, dtype=tf.float32)
+            # Perform model training for RandomForestRegressor on coal properties
+            # Assuming you have the required data loaded as variables like Blended_coal_parameters, Coke_properties
+        B = np.dot(D, P)
+        B = B / 100
+        Blended_coal_parameters =  np.loadtxt('blended_coal_data.csv', delimiter=',')
         
-        daily_vectors = []
-        for i in range(D_tensor.shape[0]):
-            row_vector = []
-            for j in range(P_tensor.shape[1]):
-                product_vector = tf.multiply(D_tensor[i], P_tensor[:, j])
-                row_vector.append(product_vector)
-            daily_vectors.append(tf.stack(row_vector))
+        B = np.append(B, blendX, axis=0)
+        Blended_coal_parameters = np.append(Blended_coal_parameters, blendY, axis=0)
+        if (Option==3):
+            Process_parameters = np.pad(Process_parameters, ((0, 0), (0, 2)), mode='constant', constant_values=0)
+            print("This is running")
+
+        Process_parameters= np.append(Process_parameters, process_par, axis=0)
+        Conv_matrix=Blended_coal_parameters+Process_parameters
+
+        Coke_properties = np.append(Coke_properties, coke_output, axis=0)
+                
         
-        daily_vectors_tensor = tf.stack(daily_vectors)
-        input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
-        
-        daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(52, -1)
-        Blended_coal_parameters = np.loadtxt('blended_coal_data.csv', delimiter=',')
-        
-        input_train, input_test, target_train, target_test = train_test_split(
-            daily_vectors_tensor.numpy(), Blended_coal_parameters, test_size=0.2, random_state=42
+        X_train, X_test, y_train, y_test = train_test_split(B, Blended_coal_parameters, test_size=0.2, random_state=42)
+        scaler = StandardScaler()
+        modelq = RandomForestRegressor(
+        n_estimators=500,
+        random_state=42,
         )
         
-        # Scaling
-        input_scaler = MinMaxScaler()
-        output_scaler = MinMaxScaler()
-        
-        input_train_reshaped = input_train.reshape(input_train.shape[0], -1)
-        input_test_reshaped = input_test.reshape(input_test.shape[0], -1)
-        
-        input_train_scaled = input_scaler.fit_transform(input_train_reshaped)
-        input_test_scaled = input_scaler.transform(input_test_reshaped)
-        input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
-        input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
-        
-        
-        target_train_scaled = output_scaler.fit_transform(target_train)
-        target_test_scaled = output_scaler.transform(target_test)
-        
-        input_train_scaled = input_train_scaled.reshape(input_train.shape)
-        input_test_scaled = input_test_scaled.reshape(input_test.shape)
-        input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
-        input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
-        
-        # Define model
-        modelq = keras.Sequential([
-            layers.Input(shape=(14, 15)),
-            layers.Flatten(),
-            layers.BatchNormalization(),
-            layers.Dense(512, activation='relu'),
-            layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-        
-            layers.Dense(256, activation='tanh'),
-            layers.Dropout(0.3),
-            layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
-            layers.Dropout(0.3),
-        
-            layers.Dense(128, activation='relu'),
-            layers.BatchNormalization(),
-            layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-        
-            layers.Dense(64, activation='relu'),
-            layers.Dropout(0.2),
-        
-            layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
-            layers.Dropout(0.25),
-        
-            layers.Dense(32, activation='relu'),
-            layers.BatchNormalization(),
-        
-            layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-            layers.Dense(15, activation='linear')
-        ])
-        
-        modelq.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
-                    loss='mse',
-                    metrics=['mae'])
-        modelq.summary()
-        
-        
-        modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
-        y_pred = modelq.predict(input_test_scaled)
-        y_pred = output_scaler.inverse_transform(y_pred)
-        mse = np.mean((target_test - y_pred) ** 2)
-        
-        if Option == 3:
-            Process_parameters = np.pad(Process_parameters, ((0, 0), (0, 2)), mode='constant', constant_values=0)
-        
-        Conv_matrix = Blended_coal_parameters + Process_parameters
+        modelq.fit(X_train, y_train)
+
+        y_pred = modelq.predict(X_test)
+        mse = np.mean((y_test - y_pred) ** 2)
         
         X_train, X_test, y_train, y_test = train_test_split(Conv_matrix, Coke_properties, test_size=0.2, random_state=42)
         
-        # Scaling second phase
-        
-        input__scaler = MinMaxScaler()
-        output__scaler = MinMaxScaler()
-        input_train_reshaped = X_train.reshape(X_train.shape[0], -1)
-        input_test_reshaped = X_test.reshape(X_test.shape[0], -1)
-        
-        input_train_scaled = input__scaler.fit_transform(input_train_reshaped)
-        input_test_scaled = input__scaler.transform(input_test_reshaped)
-        
-        target_train_scaled = output__scaler.fit_transform(y_train)
-        target_test_scaled = output__scaler.transform(y_test)
-        # # Define second model
-        rf_model= keras.Sequential([
-            layers.Input(shape=(15, 1)),
-            layers.Flatten(),
-            layers.BatchNormalization(),
-            layers.Dense(512, activation='relu'),
-            layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-        
-            layers.Dense(256, activation='tanh'),
-            layers.Dropout(0.3),
-            layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
-            layers.Dropout(0.3),
-        
-            layers.Dense(128, activation='relu'),
-            layers.BatchNormalization(),
-            layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-        
-            layers.Dense(64, activation='relu'),
-            layers.Dropout(0.2),
-        
-            layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
-            layers.Dropout(0.25),
-        
-            layers.Dense(32, activation='relu'),
-            layers.BatchNormalization(),
-        
-            layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-            layers.Dense(15, activation='linear')
-        ])
-        
-        rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
-                    loss='mse',
-                    metrics=['mae'])
-        rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
-        
-        
-        
-        y_pred = rf_model.predict(input_test_scaled)
-        y_pred = output_scaler.inverse_transform(y_pred)
-        mse = np.mean((y_test - y_pred) ** 2)
-        
+
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+        rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+        rf_model.fit(X_train, y_train)
+        y_pred = rf_model.predict(X_test)
     
         def generate_combinations(index, current_combination, current_sum):
             target_sum = 100
@@ -619,58 +502,31 @@ def cost():
                 remaining = target_sum - current_sum
                 if min_percentages_padded[index] <= remaining <= max_percentages_padded[index]:
                     yield current_combination + [remaining]
-                    print(current_combination+[remaining]);
                 return
             for value in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
                 if current_sum + value <= target_sum:
                     yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
-                    print("x");
                     
 
         all_combinations = np.array(list(generate_combinations(0, [], 0)))
-        
         if(Option==3):
             proces_para = np.pad(proces_para, (0,2), mode='constant', constant_values=0)
-            
-        D_ = all_combinations
-        P_ = P
         
-        # Compute daily vectors
-        D_tensor = tf.constant(D_, dtype=tf.float32)
-        P_tensor = tf.constant(P_, dtype=tf.float32)
+        b1=np.dot(all_combinations, I)
+        b1=b1/100
         
-        daily_vectors = []
-        for i in range(D_tensor.shape[0]):
-            row_vector = []
-            for j in range(P_tensor.shape[1]):
-                product_vector = tf.multiply(D_tensor[i], P_tensor[:, j])
-                row_vector.append(product_vector)
-            daily_vectors.append(tf.stack(row_vector))
-        
-        daily_vectors_tensor = tf.stack(daily_vectors)
-        input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
-        
-        daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(daily_vectors_tensor.shape[0], -1)
-        b1=daily_vectors_flattened
-        
-        
-        
-        b1= b1.reshape(b1.shape[0], -1)
-        b1_scaled = input_scaler.transform(b1)
-        b1 = b1.reshape(-1, 14, 15)
         blend1=modelq.predict(b1)
-        blended_coal_properties=output_scaler.inverse_transform(blend1)
-        blend1=blend1+proces_para
-        blend1 = blend1.reshape(blend1.shape[0], -1)
-        blend1 = input__scaler.transform(blend1)
+        print(blend1.shape)
+        blended_coal_properties=blend1
+        blend1=blend1+ proces_para
+
         coke = rf_model.predict(blend1)
-        predictions=output__scaler.inverse_transform(coke)
-        
+        print(coke[0])
+        predictions=coke
         
         
         def read_min_max_values():
             df = pd.read_csv('min-maxvalues.csv')
-            print(df);
             return {
                 'ash': {
                     'lower': df['ash_lower'].iloc[0],
@@ -924,48 +780,21 @@ def cost():
             }
         
         if np.any(user_input_values_padded != 0):
-            D_tensor = tf.constant(user_input_values_padded, dtype=tf.float32)
-            print(D_tensor)
-            daily_vector_test = []
-            D_test = tf.constant(D_tensor)
-            P_test = tf.constant(P_tensor)
+        # Perform the coal blend prediction using the model if valid user data is present
+            Proposed = np.dot(user_input_values_padded, P)
+            Proposed = Proposed / 100
+            Proposed = Proposed.reshape(1, -1)
 
-
-            daily_vectors = []
-            for i in range(D_tensor.shape[0]):
-                row_vector = []
-                for j in range(P_tensor.shape[1]):
-                    product_vector = tf.multiply(tf.cast(D_tensor[i], tf.float32), tf.cast(P_tensor[:, j], tf.float32))
-                    row_vector.append(product_vector)
-                daily_vectors.append(tf.stack(row_vector))
-            daily_vectors_tensor = tf.stack(daily_vectors)
-            input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
-
-
-            daily_vectors_tensor.shape
-            daily_vectors_tensor_test=daily_vectors_tensor
-            daily_vectors_tensor_test_reshaped = daily_vectors_tensor_test.numpy().reshape(1, -1)
-            
-            daily_vectors_tensor_test_scaled = input_scaler.transform(daily_vectors_tensor_test_reshaped)
-            print("Shape before reshaping:", daily_vectors_tensor_test_scaled.shape)
-            daily_vectors_tensor_test_scaled = daily_vectors_tensor_test_scaled.reshape(-1, 14, 15)
-            prediction_scaled = modelq.predict(daily_vectors_tensor_test_scaled)
-            prediction = output_scaler.inverse_transform(prediction_scaled)
-
-            print("Predicted values:", prediction)
-            
-            Conv =proces_para+prediction
-            # blend1 = blend1.reshape(blend1.shape[0], -1)
-            blend1 = input__scaler.transform(Conv)
-            coke = rf_model.predict(Conv)
-            predictions=output__scaler.inverse_transform(coke)
-            
-            print(predictions)
+            # Predict the blended coal and coke properties based on the user input
+            blend2 = modelq.predict(Proposed)
+            print(blend2)
+            coke2 = rf_model.predict(blend2)
+            print(coke2)
             
             # Add the predicted proposed coal and coke values to the response
             response["ProposedCoal"] = {
-                "Blend2": prediction.tolist(),
-                "Coke2": predictions.tolist()
+                "Blend2": blend2.tolist(),
+                "Coke2": coke2.tolist()
             }
         else:
         # If no valid blendcoal data is provided, indicate that no prediction is made
@@ -973,8 +802,6 @@ def cost():
                 "error": "No valid blendcoal data provided, unable to make predictions."
             }       
         return jsonify(response), 200
-
-    
 
 
 #coal properties page 
