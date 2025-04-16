@@ -749,9 +749,13 @@ def cost():
             for i, prediction in enumerate(predictions):
                 print("750ln prediction" , prediction);
                 print ("ln751 " , predictions);
-                print("ash min " , ash_min);
-                print("ash min precition " , prediction[0]);
-                print("ash max" , ash_max);
+                print("vm min " , vm_min);
+                print("vm min precition " , prediction[1]);
+                print("vm max" , vm_max);
+                print("m40 min" , m40_min);
+                print("m40 prediction" , prediction[2]);
+                print("m40 max" , m40_max);
+                
                 # Check if all values are within the specified range
                 if (
                     ash_min <= prediction[0] <= ash_max and  # ASH
