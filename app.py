@@ -831,6 +831,7 @@ def cost():
                     # Map the coal type to the CSV file and retrieve the cost
                     coal_type_cost = float(data.loc[data[0] == coal_type, data.columns[-2]].values[0])
                     coal_type_costs.append(coal_type_cost)
+                    print[coal_type_costs];
             coal_costs.append(coal_type_costs)
 
         total_costs = [sum(float(blend[i]) * coal_costs[j][i] / 100 for i in range(min(len(blend), len(coal_costs[j])))) for j, blend in enumerate(sorted_blends)] 
