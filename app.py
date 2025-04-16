@@ -604,7 +604,7 @@ def cost():
         rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                     loss='mse',
                     metrics=['mae'])
-        rf_model.fit(input_train_scaled, target_train_scaled, epochs=1, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
+        # # rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
         
         
         
@@ -750,6 +750,7 @@ def cost():
                 print("750ln prediction" , prediction);
                 print ("ln751 " , predictions);
                 print("ash min " , ash_min);
+                print("ash min precition " , ash_max);
                 # Check if all values are within the specified range
                 if (
                     ash_min <= prediction[0] <= ash_max and  # ASH
