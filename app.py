@@ -763,6 +763,9 @@ def cost():
                     invalid_indices.append(i)
             # Separate valid and invalid predictions, combinations, and blended coal properties
             valid_predictions = predictions[valid_indices]
+            print("predictions 2 " , predictions );
+            print("valid indices" , valid_indices);
+        
             valid_combinations = combinations[valid_indices]
             valid_blended_coal_properties = [blended_coal_properties[i] for i in valid_indices]
             invalid_predictions = predictions[invalid_indices]
