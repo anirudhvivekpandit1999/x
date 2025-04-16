@@ -604,7 +604,7 @@ def cost():
         rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                     loss='mse',
                     metrics=['mae'])
-        rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
+        rf_model.fit(input_train_scaled, target_train_scaled, epochs=1, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
         
         
         
