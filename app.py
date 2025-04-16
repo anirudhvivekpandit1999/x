@@ -818,6 +818,7 @@ def cost():
        
 
         sorted_predictions = predictions[sorted_indices]
+        print("sorted indices",sorted_indices);
         sorted_blends = all_combinations[sorted_indices]
         sorted_diff = [differences[i] for i in sorted_indices]
         sorted_blended_coal_properties = [blended_coal_properties[i] for i in sorted_indices]
