@@ -793,6 +793,7 @@ def cost():
         ) = filter_valid_and_invalid(predictions, all_combinations, blended_coal_properties, min_max_values)
         
         predictions = valid_predictions
+        print("valid predictions " , valid_predictions)
         all_combinations = valid_combinations
         blended_coal_properties = valid_blended_coal_properties
         
@@ -800,7 +801,7 @@ def cost():
 
         differences = []
         print("predictions",predictions)
-        print("prediction" , prediction)
+        
         for prediction in predictions:
             diff = []
             diff.append(((desired_ash - prediction[0]) / desired_ash) * min_max_values['ash']['weight'])
