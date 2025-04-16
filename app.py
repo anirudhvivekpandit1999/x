@@ -319,10 +319,10 @@ def get_ranges():
 
 
 @app.route('/cost', methods=['POST'])
-def cost(data):
+def cost():
     
         
-        
+        data = request.get_json();
         coal_blends = data.get("blends")
         coal_types = [blk["coalType"] for blk in coal_blends]
         min_percentages = [int(blk["minPercentage"]) for blk in coal_blends]
