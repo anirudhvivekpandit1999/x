@@ -747,6 +747,8 @@ def cost():
             valid_indices = []
             invalid_indices = []
             for i, prediction in enumerate(predictions):
+                print("750ln prediction" , prediction);
+                print ("ln751 " , predictions);
                 # Check if all values are within the specified range
                 if (
                     ash_min <= prediction[0] <= ash_max and  # ASH
