@@ -826,8 +826,9 @@ def cost():
         sorted_blended_coal_properties = [blended_coal_properties[i] for i in sorted_indices]
         
                 
-        coal_costs = []
+        
         for i, blend in enumerate(sorted_blends):
+            coal_costs = []
             coal_type_costs = []
             for j, coal_type in enumerate(coal_types):
                 if j < len(blend):
