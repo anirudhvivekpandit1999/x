@@ -810,7 +810,8 @@ def cost():
             diff.append(((prediction[14] - desired_ams) / desired_ams) * min_max_values['ams']['weight'])
 
             differences.append(diff)
-
+         
+        print("differences" , differences);
 
         total_differences = [sum(diff) for diff in differences]
         print("total differences" , total_differences);
