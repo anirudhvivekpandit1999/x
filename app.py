@@ -535,13 +535,13 @@ def cost():
         input_train_reshaped = input_train.reshape(input_train.shape[0], -1)
         input_test_reshaped = input_test.reshape(input_test.shape[0], -1)
         
-        
+        input_train_scaled = input_scaler.fit_transform(input_train_reshaped)
         input_test_scaled = input_scaler.transform(input_test_reshaped)
         input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
         input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
         
         
-        
+        target_train_scaled = output_scaler.fit_transform(target_train)
         target_test_scaled = output_scaler.transform(target_test)
         
         input_train_scaled = input_train_scaled.reshape(input_train.shape)
@@ -588,6 +588,7 @@ def cost():
         modelq.summary()
         
         
+        # modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
         y_pred = modelq.predict(input_test_scaled)
         y_pred = output_scaler.inverse_transform(y_pred)
         mse = np.mean((target_test - y_pred) ** 2)
@@ -606,8 +607,10 @@ def cost():
         input_train_reshaped = X_train.reshape(X_train.shape[0], -1)
         input_test_reshaped = X_test.reshape(X_test.shape[0], -1)
         
+        input_train_scaled = input__scaler.fit_transform(input_train_reshaped)
         input_test_scaled = input__scaler.transform(input_test_reshaped)
         
+        target_train_scaled = output__scaler.fit_transform(y_train)
         target_test_scaled = output__scaler.transform(y_test)
         # # Define second model
         rf_model= keras.Sequential([
@@ -645,6 +648,7 @@ def cost():
         rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                     loss='mse',
                     metrics=['mae'])
+        # # rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
         
         
         
