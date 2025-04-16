@@ -831,10 +831,20 @@ def cost():
             coal_type_costs = []
             for j, coal_type in enumerate(coal_types):
                 if j < len(blend):
-                    # Map the coal type to the CSV file and retrieve the cost
-                    coal_type_cost = float(data.loc[data[0] == coal_type, data.columns[-2]].values[0])
-                    coal_type_costs.append(coal_type_cost)
-            coal_costs.append(coal_type_costs)
+                    try:
+                        # Check if coal_type exists in CSV
+                        cost_row = data.loc[data[0] == coal_type]
+                        if not cost_row.empty:
+                            coal_type_cost = float(cost_row[data.columns[-2]].values[0])
+                            coal_type_costs.append(coal_type_cost)
+                        else:
+                            print(f"⚠️ No matching coal_type in CSV: {coal_type}")
+                    except Exception as e:
+                        print(f"❌ Error getting cost for {coal_type}: {e}")
+            if coal_type_costs:
+                coal_costs.append(coal_type_costs)
+
+        print("✅ Final coal_costs:", coal_costs)
 
         total_costs = [sum(float(blend[i]) * coal_costs[j][i] / 100 for i in range(min(len(blend), len(coal_costs[j])))) for j, blend in enumerate(sorted_blends)] 
        
