@@ -757,20 +757,10 @@ def cost():
                 print("m40 max" , m40_max);
                 
                 # Check if all values are within the specified range
-                if (
-                    ash_min <= prediction[0] <= ash_max and  # ASH
-                    vm_min <= prediction[1] <= vm_max and  # VM
-                    m40_min <= prediction[9] <= m40_max and  # M_40
-                    m10_min <= prediction[10] <= m10_max and  # M_10
-                    csr_min <= prediction[12] <= csr_max and  # CSR
-                    cri_min <= prediction[13] <= cri_max  and# CRI
-                    ams_min <= prediction[14] <= ams_max   # AMS
+                
+                valid_indices.append(i)
                     
-                ):
-                    valid_indices.append(i)
-                    
-                else:
-                    invalid_indices.append(i)
+                
             # Separate valid and invalid predictions, combinations, and blended coal properties
             valid_predictions = predictions[valid_indices]
             print("predictions 2 " , predictions );
