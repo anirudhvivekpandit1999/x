@@ -824,6 +824,7 @@ def cost():
         
                 
         coal_costs = []
+        print("hi",sorted_blends);
         for i, blend in enumerate(sorted_blends):
             print("hi",blend)
             coal_type_costs = []
