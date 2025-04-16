@@ -753,7 +753,7 @@ def cost():
                 print("vm min precition " , prediction[1]);
                 print("vm max" , vm_max);
                 print("m40 min" , m40_min);
-                print("m40 prediction" , prediction[2]);
+                print("m40 prediction" , prediction[9]);
                 print("m40 max" , m40_max);
                 
                 # Check if all values are within the specified range
