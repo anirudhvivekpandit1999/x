@@ -361,7 +361,69 @@ def read_min_max_values():
             
 min_max_values = read_min_max_values()
         
+def calculate_cost(blend, coal_costs):
+            return sum(blend[i] * coal_costs[0][i] / 100 for i in range(min(len(blend), len(coal_costs[0]))))
+file_path = 'submitted_training_coal_data.csv'
+coal_percentages = []
+coal_properties = []
+blends = []
+process_parameters = []
+coke_outputs = []
+processed_serial_numbers = set()
+process_parameter_keys = [
+            'charging_tonnage', 'moisture_content', 'bulk_density', 'charging_temperature', 
+            'battery_operating_temperature', 'cross_wall_temperature', 'push_force', 'pri', 
+            'coke_per_push', 'gross_coke_yield', 'gcm_pressure', 'gcm_temperature', 
+            'coking_time', 'coke_end_temperature', 'quenching_time'
+        ]
 
+last_blend_values = None
+last_coke_output = None
+last_process_params = None
+
+with open(file_path, 'r') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if row[0] not in ('', 'NaT'):  # Check if the serial number is not empty or NaT
+                    serial_number = row[0]
+                    if serial_number not in processed_serial_numbers:
+                        coal_percentage = float(row[3])
+                        coal_percentages.append(coal_percentage)
+
+                        coal_property_values = [float(val) if val != 'nan' else 0 for val in row[4].strip('{}').replace(', ', ',').split(',')]
+                        coal_properties.append(coal_property_values[:15])
+                        
+                        if row[6].strip('{}') != '{nan}':
+                            coke_output = [float(val) if val != 'nan' else 0 for val in row[6].strip('{}').replace(', ', ',').split(',')]
+                            last_coke_output = coke_output
+                        coke_outputs.append(last_coke_output)
+                        
+                        if row[7].strip('{}') != '{nan}':
+                            process_params_str = row[7].replace("'", '"')
+                            process_params_str = process_params_str.replace(': ', ':')
+                            try:
+                                process_params = json.loads(process_params_str)
+                                ordered_values = [float(process_params[key]) if key in process_params else 0 for key in process_parameter_keys]
+                                last_process_params = ordered_values
+                            except json.JSONDecodeError:
+                                last_process_params = [0] * len(process_parameter_keys)
+                        process_parameters.append(last_process_params)
+                        
+                        if row[5].strip('{}') != '{nan}':
+                            blend_values = [float(val) if val != 'nan' else 0 for val in row[5].strip('{}').replace(', ', ',').split(',')]
+                            last_blend_values = blend_values
+                        blends.append(last_blend_values)
+                        
+                        processed_serial_numbers.add(serial_number)
+                    else:
+                        coal_property_values = [float(val) if val != 'nan' else 0 for val in row[4].strip('{}').replace(', ', ',').split(',')]
+                        coal_properties.append(coal_property_values[:15])
+blend_arrays = []
+for i, coal_percentage in enumerate(coal_percentages):
+            properties_subset = np.array(coal_properties[i])
+            blend = coal_percentage * properties_subset / 100
+            blend_arrays.append(blend)
+blendY = np.array(blends)
 @app.route('/cost', methods=['POST'])
 def cost():
     
@@ -407,70 +469,14 @@ def cost():
         
         print("model Process Parameters:", proces_para)
 
-        file_path = 'submitted_training_coal_data.csv'
+        
 
-        coal_percentages = []
-        coal_properties = []
-        blends = []
-        process_parameters = []
-        coke_outputs = []
-        processed_serial_numbers = set()
-        process_parameter_keys = [
-            'charging_tonnage', 'moisture_content', 'bulk_density', 'charging_temperature', 
-            'battery_operating_temperature', 'cross_wall_temperature', 'push_force', 'pri', 
-            'coke_per_push', 'gross_coke_yield', 'gcm_pressure', 'gcm_temperature', 
-            'coking_time', 'coke_end_temperature', 'quenching_time'
-        ]
-
-        last_blend_values = None
-        last_coke_output = None
-        last_process_params = None
-
-        with open(file_path, 'r') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                if row[0] not in ('', 'NaT'):  # Check if the serial number is not empty or NaT
-                    serial_number = row[0]
-                    if serial_number not in processed_serial_numbers:
-                        coal_percentage = float(row[3])
-                        coal_percentages.append(coal_percentage)
-
-                        coal_property_values = [float(val) if val != 'nan' else 0 for val in row[4].strip('{}').replace(', ', ',').split(',')]
-                        coal_properties.append(coal_property_values[:15])
-                        
-                        if row[6].strip('{}') != '{nan}':
-                            coke_output = [float(val) if val != 'nan' else 0 for val in row[6].strip('{}').replace(', ', ',').split(',')]
-                            last_coke_output = coke_output
-                        coke_outputs.append(last_coke_output)
-                        
-                        if row[7].strip('{}') != '{nan}':
-                            process_params_str = row[7].replace("'", '"')
-                            process_params_str = process_params_str.replace(': ', ':')
-                            try:
-                                process_params = json.loads(process_params_str)
-                                ordered_values = [float(process_params[key]) if key in process_params else 0 for key in process_parameter_keys]
-                                last_process_params = ordered_values
-                            except json.JSONDecodeError:
-                                last_process_params = [0] * len(process_parameter_keys)
-                        process_parameters.append(last_process_params)
-                        
-                        if row[5].strip('{}') != '{nan}':
-                            blend_values = [float(val) if val != 'nan' else 0 for val in row[5].strip('{}').replace(', ', ',').split(',')]
-                            last_blend_values = blend_values
-                        blends.append(last_blend_values)
-                        
-                        processed_serial_numbers.add(serial_number)
-                    else:
-                        coal_property_values = [float(val) if val != 'nan' else 0 for val in row[4].strip('{}').replace(', ', ',').split(',')]
-                        coal_properties.append(coal_property_values[:15])
-
-        blend_arrays = []
-        for i, coal_percentage in enumerate(coal_percentages):
-            properties_subset = np.array(coal_properties[i])
-            blend = coal_percentage * properties_subset / 100
-            blend_arrays.append(blend)
-
-        blendY = np.array(blends)
+        
+        
+        
+        
+        
+        
         blendX = np.array(blend_arrays)
 
         pad_pro_par = [
@@ -890,8 +896,7 @@ def cost():
         # -----------------------------------------------------------------------------
         # Helper for Cost Calculation
         # -----------------------------------------------------------------------------
-        def calculate_cost(blend, coal_costs):
-            return sum(blend[i] * coal_costs[0][i] / 100 for i in range(min(len(blend), len(coal_costs[0]))))
+        
 
         # =============================================================================
         # 3. Pick Three Representative Blends
@@ -901,8 +906,7 @@ def cost():
         blend_1 = sorted_blends[0]
         blended_coal_1 = sorted_blended_coal_properties[0]
         blend_1_properties = sorted_predictions[0]
-        blend_1_cost = calculate_cost(blend_1, coal_costs)
-
+        
         # 3.2. Cheapest (first in cost-sorted list)
         blend_2 = sorted_blend_cost[0]
         blended_coal_2 = sorted_blended_coal_properties_cost[0]
@@ -915,7 +919,7 @@ def cost():
         blended_coal_3 = valid_blended_coal_properties[best_combined_index]
         blend_3_properties = valid_predictions[best_combined_index]
         blend_3_cost = calculate_cost(blend_3, coal_costs)
-        
+        blend_1_cost = calculate_cost(blend_1,coal_costs)
         print(f"Blend 1 Cost: {blend_1_cost}")
         print(f"Blend 2 Cost: {blend_2_cost}")
         print(f"Blend 3 Cost: {blend_3_cost}")
