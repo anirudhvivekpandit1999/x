@@ -605,7 +605,7 @@ def cost():
                     loss='mse',
                     metrics=['mae'])
         # # rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
-        
+        rf_model.summary();
         
         
         y_pred = rf_model.predict(input_test_scaled)
