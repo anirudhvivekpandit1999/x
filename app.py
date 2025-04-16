@@ -619,7 +619,7 @@ def cost():
                 remaining = target_sum - current_sum
                 if min_percentages_padded[index] <= remaining <= max_percentages_padded[index]:
                     yield current_combination + [remaining]
-                    print(current_combination+1);
+                    print(current_combination+[remaining]);
                 return
             for value in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
                 if current_sum + value <= target_sum:
