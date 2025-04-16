@@ -750,7 +750,8 @@ def cost():
                 print("750ln prediction" , prediction);
                 print ("ln751 " , predictions);
                 print("ash min " , ash_min);
-                print("ash min precition " , ash_max);
+                print("ash min precition " , prediction[0]);
+                print("ash max" , ash_max);
                 # Check if all values are within the specified range
                 if (
                     ash_min <= prediction[0] <= ash_max and  # ASH
