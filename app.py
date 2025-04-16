@@ -799,6 +799,8 @@ def cost():
         
 
         differences = []
+        print("predictions",predictions)
+        print("prediction" , prediction)
         for prediction in predictions:
             diff = []
             diff.append(((desired_ash - prediction[0]) / desired_ash) * min_max_values['ash']['weight'])
