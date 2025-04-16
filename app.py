@@ -749,6 +749,7 @@ def cost():
             for i, prediction in enumerate(predictions):
                 print("750ln prediction" , prediction);
                 print ("ln751 " , predictions);
+                print("ash min " , ash_min);
                 # Check if all values are within the specified range
                 if (
                     ash_min <= prediction[0] <= ash_max and  # ASH
@@ -761,6 +762,7 @@ def cost():
                     
                 ):
                     valid_indices.append(i)
+                    
                 else:
                     invalid_indices.append(i)
             # Separate valid and invalid predictions, combinations, and blended coal properties
