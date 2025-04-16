@@ -624,7 +624,7 @@ def cost():
             for value in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
                 if current_sum + value <= target_sum:
                     yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
-                    print(x);
+                    print("x");
                     
 
         all_combinations = np.array(list(generate_combinations(0, [], 0)))
