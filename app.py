@@ -544,7 +544,7 @@ def cost():
         modelq.summary()
         
         
-        modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
+        # modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
         y_pred = modelq.predict(input_test_scaled)
         y_pred = output_scaler.inverse_transform(y_pred)
         mse = np.mean((target_test - y_pred) ** 2)
@@ -604,7 +604,7 @@ def cost():
         rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                     loss='mse',
                     metrics=['mae'])
-        rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
+        # # rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
         
         
         
@@ -663,7 +663,7 @@ def cost():
         blend1 = input__scaler.transform(blend1)
         coke = rf_model.predict(blend1)
         predictions=output__scaler.inverse_transform(coke)
-        
+        print("666 predictions" , predictions);
         
         
         def read_min_max_values():
@@ -747,6 +747,15 @@ def cost():
             valid_indices = []
             invalid_indices = []
             for i, prediction in enumerate(predictions):
+                print("750ln prediction" , prediction);
+                print ("ln751 " , predictions);
+                print("vm min " , vm_min);
+                print("vm min precition " , prediction[1]);
+                print("vm max" , vm_max);
+                print("m40 min" , m40_min);
+                print("m40 prediction" , prediction[9]);
+                print("m40 max" , m40_max);
+                
                 # Check if all values are within the specified range
                 if (
                     ash_min <= prediction[0] <= ash_max and  # ASH
@@ -759,10 +768,14 @@ def cost():
                     
                 ):
                     valid_indices.append(i)
+                    
                 else:
                     invalid_indices.append(i)
             # Separate valid and invalid predictions, combinations, and blended coal properties
             valid_predictions = predictions[valid_indices]
+            print("predictions 2 " , predictions );
+            print("valid indices" , valid_indices);
+        
             valid_combinations = combinations[valid_indices]
             valid_blended_coal_properties = [blended_coal_properties[i] for i in valid_indices]
             invalid_predictions = predictions[invalid_indices]
@@ -793,12 +806,15 @@ def cost():
         ) = filter_valid_and_invalid(predictions, all_combinations, blended_coal_properties, min_max_values)
         
         predictions = valid_predictions
+        print("valid predictions " , valid_predictions)
         all_combinations = valid_combinations
         blended_coal_properties = valid_blended_coal_properties
         
         
 
         differences = []
+        print("predictions",predictions)
+        
         for prediction in predictions:
             diff = []
             diff.append(((desired_ash - prediction[0]) / desired_ash) * min_max_values['ash']['weight'])
@@ -810,27 +826,34 @@ def cost():
             diff.append(((prediction[14] - desired_ams) / desired_ams) * min_max_values['ams']['weight'])
 
             differences.append(diff)
-
+         
+        print("differences" , differences);
 
         total_differences = [sum(diff) for diff in differences]
+        print("total differences" , total_differences);
         sorted_indices = np.argsort(total_differences)[::-1]
         
        
 
         sorted_predictions = predictions[sorted_indices]
+        print("sorted indices",sorted_indices);
         sorted_blends = all_combinations[sorted_indices]
         sorted_diff = [differences[i] for i in sorted_indices]
         sorted_blended_coal_properties = [blended_coal_properties[i] for i in sorted_indices]
         
                 
         coal_costs = []
+        print("hi",sorted_blends);
         for i, blend in enumerate(sorted_blends):
+            print("hi",blend)
             coal_type_costs = []
             for j, coal_type in enumerate(coal_types):
+               
                 if j < len(blend):
                     # Map the coal type to the CSV file and retrieve the cost
                     coal_type_cost = float(data.loc[data[0] == coal_type, data.columns[-2]].values[0])
                     coal_type_costs.append(coal_type_cost)
+                    print(coal_type_costs);
             coal_costs.append(coal_type_costs)
 
         total_costs = [sum(float(blend[i]) * coal_costs[j][i] / 100 for i in range(min(len(blend), len(coal_costs[j])))) for j, blend in enumerate(sorted_blends)] 
