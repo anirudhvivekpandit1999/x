@@ -538,15 +538,13 @@ def cost():
             layers.Dense(15, activation='linear')
         ])
         
-        # modelq.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
-        #             loss='mse',
-        #             metrics=['mae'])
-        # modelq.summary()
+        modelq.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
+                    loss='mse',
+                    metrics=['mae'])
+        modelq.summary()
         
         
-        # modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
-        # 
-        # 
+        modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
         y_pred = modelq.predict(input_test_scaled)
         y_pred = output_scaler.inverse_transform(y_pred)
         mse = np.mean((target_test - y_pred) ** 2)
@@ -603,10 +601,10 @@ def cost():
             layers.Dense(15, activation='linear')
         ])
         
-        # rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
-        #             loss='mse',
-        #             metrics=['mae'])
-        # rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
+        rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
+                    loss='mse',
+                    metrics=['mae'])
+        rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
         
         
         
@@ -621,12 +619,10 @@ def cost():
                 remaining = target_sum - current_sum
                 if min_percentages_padded[index] <= remaining <= max_percentages_padded[index]:
                     yield current_combination + [remaining]
-                    print(current_combination+[remaining]);
                 return
             for value in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
                 if current_sum + value <= target_sum:
                     yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
-                    print("x");
                     
 
         all_combinations = np.array(list(generate_combinations(0, [], 0)))
