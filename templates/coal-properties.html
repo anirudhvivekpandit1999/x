@@ -454,7 +454,7 @@
 
     async function fetchCoalData() {
       try {
-        const result = await postEncrypted("http://172.31.41.239:3000/api/getCoalProperties", { companyId: 1 })
+        const result = await postEncrypted("http://127.0.0.1:3000/api/getCoalProperties", { companyId: 1 })
         console.log("🚀 Data fetched successfully:", result);
         const data = result[0];
         coalData = data.CoalData.CoalProperties;
