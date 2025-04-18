@@ -437,8 +437,8 @@ for i in range(len(coke_output)):
 D= np.loadtxt('coal_percentages.csv', delimiter=',')  
 P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',')  
 Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
-data = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')       
-I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data.shape[1] - 2)) 
+data1 = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')       
+I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data1.shape[1] - 2)) 
 D_tensor = tf.constant(D, dtype=tf.float32)
 P_tensor = tf.constant(P, dtype=tf.float32)
 daily_vectors = []
