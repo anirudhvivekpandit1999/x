@@ -361,8 +361,7 @@ def read_min_max_values():
             
 min_max_values = read_min_max_values()
         
-def calculate_cost(blend, coal_costs):
-            return sum(blend[i] * coal_costs[0][i] / 100 for i in range(min(len(blend), len(coal_costs[0]))))
+
 file_path = 'submitted_training_coal_data.csv'
 coal_percentages = []
 coal_properties = []
@@ -967,6 +966,8 @@ def cost():
 
         # 3.3. Best combined (from original arrays, using best_combined_index)
         # Fix 2: Use original arrays so the index lines up.
+        def calculate_cost(blend, coal_costs):
+            return sum(blend[i] * coal_costs[0][i] / 100 for i in range(min(len(blend), len(coal_costs[0]))))
         blend_3 = all_combinations[best_combined_index]
         blended_coal_3 = valid_blended_coal_properties[best_combined_index]
         blend_3_properties = valid_predictions[best_combined_index]
