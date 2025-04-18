@@ -885,7 +885,13 @@ def cost():
         print(f"Filtered sorted indices: {filtered_sorted_indices}")
         print(f"Sorted predictions shape: {sorted_predictions.shape}")
         print("sorted indices",sorted_indices);
+        sorted_indices = sorted_indices[sorted_indices < len(all_combinations)]
         sorted_blends = all_combinations[sorted_indices]
+        print("all_combinations.shape:", all_combinations.shape)
+        print("sorted_indices:", sorted_indices)
+        print("max index in sorted_indices:", np.max(sorted_indices))
+
+
         sorted_diff = [differences[i] for i in sorted_indices]
         sorted_blended_coal_properties = [blended_coal_properties[i] for i in sorted_indices]
         
