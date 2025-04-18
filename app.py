@@ -876,7 +876,14 @@ def cost():
         
        
 
-        sorted_predictions = predictions[sorted_indices]
+        # Safe filtering to avoid IndexError
+        filtered_sorted_indices = [i for i in sorted_indices if 0 <= i < len(predictions)]
+
+# Apply the safe indices
+        sorted_predictions = predictions[filtered_sorted_indices]
+
+        print(f"Filtered sorted indices: {filtered_sorted_indices}")
+        print(f"Sorted predictions shape: {sorted_predictions.shape}")
         print("sorted indices",sorted_indices);
         sorted_blends = all_combinations[sorted_indices]
         sorted_diff = [differences[i] for i in sorted_indices]
