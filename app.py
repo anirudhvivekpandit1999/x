@@ -936,7 +936,11 @@ def cost():
         cost_weight = min_max_values['cost_weightage']
         performance_weight = min_max_values['coke_quality']
 
+        min_len = min(len(normalized_costs), len(normalized_differences))
+        normalized_costs = normalized_costs[:min_len]
+        normalized_differences = normalized_differences[:min_len]
         combined_scores = (cost_weight * normalized_costs) + (performance_weight * normalized_differences)
+
 
         # best_combined_index refers to the ORIGINAL arrays (not sorted)
         best_combined_index = np.argmin(combined_scores)
