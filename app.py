@@ -424,6 +424,144 @@ for i, coal_percentage in enumerate(coal_percentages):
             blend = coal_percentage * properties_subset / 100
             blend_arrays.append(blend)
 blendY = np.array(blends)
+blendX = np.array(blend_arrays)
+pad_pro_par = [
+            np.pad(row, (0, max(0, blendY.shape[1] - len(row))), 'constant') if len(row) < 15 else row
+            for row in process_parameters
+        ]
+process_par = np.array(pad_pro_par)
+conv_matrix = blendY + process_par
+coke_output = [np.array(row) for row in coke_outputs]
+for i in range(len(coke_output)):
+            coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
+D= np.loadtxt('coal_percentages.csv', delimiter=',')  
+P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',')  
+Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
+data = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')       
+I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data.shape[1] - 2)) 
+D_tensor = tf.constant(D, dtype=tf.float32)
+P_tensor = tf.constant(P, dtype=tf.float32)
+daily_vectors = []
+for i in range(D_tensor.shape[0]):
+            row_vector = []
+            for j in range(P_tensor.shape[1]):
+                product_vector = tf.multiply(D_tensor[i], P_tensor[:, j])
+                row_vector.append(product_vector)
+            daily_vectors.append(tf.stack(row_vector))
+daily_vectors_tensor = tf.stack(daily_vectors)        
+input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
+daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(52, -1) 
+Blended_coal_parameters = np.loadtxt('blended_coal_data.csv', delimiter=',')
+input_train, input_test, target_train, target_test = train_test_split(
+            daily_vectors_tensor.numpy(), Blended_coal_parameters, test_size=0.2, random_state=42
+        )       
+input_scaler = MinMaxScaler()
+output_scaler = MinMaxScaler()
+        
+input_train_reshaped = input_train.reshape(input_train.shape[0], -1)
+input_test_reshaped = input_test.reshape(input_test.shape[0], -1)
+        
+input_train_scaled = input_scaler.fit_transform(input_train_reshaped)
+input_test_scaled = input_scaler.transform(input_test_reshaped)
+input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
+input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
+        
+        
+target_train_scaled = output_scaler.fit_transform(target_train)
+target_test_scaled = output_scaler.transform(target_test)
+        
+input_train_scaled = input_train_scaled.reshape(input_train.shape)
+input_test_scaled = input_test_scaled.reshape(input_test.shape)
+input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
+input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
+        
+        # Define model
+modelq = keras.Sequential([
+layers.Input(shape=(14, 15)),
+layers.Flatten(),
+layers.BatchNormalization(),
+layers.Dense(512, activation='relu'),
+layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
+layers.LayerNormalization(),
+        
+layers.Dense(256, activation='tanh'),
+layers.Dropout(0.3),
+layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
+layers.Dropout(0.3),
+        
+layers.Dense(128, activation='relu'),
+layers.BatchNormalization(),
+layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
+layers.LayerNormalization(),
+        
+layers.Dense(64, activation='relu'),
+layers.Dropout(0.2),
+        
+layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
+layers.Dropout(0.25),
+        
+layers.Dense(32, activation='relu'),
+layers.BatchNormalization(),
+        
+layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
+layers.LayerNormalization(),
+layers.Dense(15, activation='linear')
+        ])
+        
+modelq.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
+                    loss='mse',
+                    metrics=['mae'])
+modelq.summary()
+        
+        
+        # modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
+y_pred = modelq.predict(input_test_scaled)
+y_pred = output_scaler.inverse_transform(y_pred)
+mse = np.mean((target_test - y_pred) ** 2)
+input__scaler = MinMaxScaler()
+output__scaler = MinMaxScaler()        
+rf_model= keras.Sequential([
+            layers.Input(shape=(15, 1)),
+            layers.Flatten(),
+            layers.BatchNormalization(),
+            layers.Dense(512, activation='relu'),
+            layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
+            layers.LayerNormalization(),
+        
+            layers.Dense(256, activation='tanh'),
+            layers.Dropout(0.3),
+            layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
+            layers.Dropout(0.3),
+        
+            layers.Dense(128, activation='relu'),
+            layers.BatchNormalization(),
+            layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
+            layers.LayerNormalization(),
+        
+            layers.Dense(64, activation='relu'),
+            layers.Dropout(0.2),
+        
+            layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
+            layers.Dropout(0.25),
+        
+            layers.Dense(32, activation='relu'),
+            layers.BatchNormalization(),
+        
+            layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
+            layers.LayerNormalization(),
+            layers.Dense(15, activation='linear')
+        ])
+        
+rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
+                    loss='mse',
+                    metrics=['mae'])
+P_ = P
+P_tensor = tf.constant(P_, dtype=tf.float32)
+daily_vectors = []
+differences = []
+coal_costs = []
+        
+        
 @app.route('/cost', methods=['POST'])
 def cost():
     
@@ -477,30 +615,26 @@ def cost():
         
         
         
-        blendX = np.array(blend_arrays)
+        
 
-        pad_pro_par = [
-            np.pad(row, (0, max(0, blendY.shape[1] - len(row))), 'constant') if len(row) < 15 else row
-            for row in process_parameters
-        ]
-        process_par = np.array(pad_pro_par)
-        conv_matrix = blendY + process_par
+        
+       
+        
 
-        coke_output = [np.array(row) for row in coke_outputs]
-        for i in range(len(coke_output)):
-            coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
+        
+        
  
             
         
-        D= np.loadtxt('coal_percentages.csv', delimiter=',')
-
-        P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',')
-        # coke_properties
-        Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
         
-        data = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')
 
-        I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data.shape[1] - 2))
+        
+        # coke_properties
+        
+        
+        
+
+        
         
 
         if Option == 1:
@@ -513,91 +647,21 @@ def cost():
         else:
             raise ValueError(f"Invalid option value: {Option}")
             
-        D_tensor = tf.constant(D, dtype=tf.float32)
-        P_tensor = tf.constant(P, dtype=tf.float32)
         
-        daily_vectors = []
-        for i in range(D_tensor.shape[0]):
-            row_vector = []
-            for j in range(P_tensor.shape[1]):
-                product_vector = tf.multiply(D_tensor[i], P_tensor[:, j])
-                row_vector.append(product_vector)
-            daily_vectors.append(tf.stack(row_vector))
         
-        daily_vectors_tensor = tf.stack(daily_vectors)
-        input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
         
-        daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(52, -1)
-        Blended_coal_parameters = np.loadtxt('blended_coal_data.csv', delimiter=',')
         
-        input_train, input_test, target_train, target_test = train_test_split(
-            daily_vectors_tensor.numpy(), Blended_coal_parameters, test_size=0.2, random_state=42
-        )
+        
+        
+        
+        
+        
+        
+        
+        
         
         # Scaling
-        input_scaler = MinMaxScaler()
-        output_scaler = MinMaxScaler()
         
-        input_train_reshaped = input_train.reshape(input_train.shape[0], -1)
-        input_test_reshaped = input_test.reshape(input_test.shape[0], -1)
-        
-        input_train_scaled = input_scaler.fit_transform(input_train_reshaped)
-        input_test_scaled = input_scaler.transform(input_test_reshaped)
-        input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
-        input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
-        
-        
-        target_train_scaled = output_scaler.fit_transform(target_train)
-        target_test_scaled = output_scaler.transform(target_test)
-        
-        input_train_scaled = input_train_scaled.reshape(input_train.shape)
-        input_test_scaled = input_test_scaled.reshape(input_test.shape)
-        input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
-        input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
-        
-        # Define model
-        modelq = keras.Sequential([
-            layers.Input(shape=(14, 15)),
-            layers.Flatten(),
-            layers.BatchNormalization(),
-            layers.Dense(512, activation='relu'),
-            layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-        
-            layers.Dense(256, activation='tanh'),
-            layers.Dropout(0.3),
-            layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
-            layers.Dropout(0.3),
-        
-            layers.Dense(128, activation='relu'),
-            layers.BatchNormalization(),
-            layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-        
-            layers.Dense(64, activation='relu'),
-            layers.Dropout(0.2),
-        
-            layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
-            layers.Dropout(0.25),
-        
-            layers.Dense(32, activation='relu'),
-            layers.BatchNormalization(),
-        
-            layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-            layers.Dense(15, activation='linear')
-        ])
-        
-        modelq.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
-                    loss='mse',
-                    metrics=['mae'])
-        modelq.summary()
-        
-        
-        # modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
-        y_pred = modelq.predict(input_test_scaled)
-        y_pred = output_scaler.inverse_transform(y_pred)
-        mse = np.mean((target_test - y_pred) ** 2)
         
         if Option == 3:
             Process_parameters = np.pad(Process_parameters, ((0, 0), (0, 2)), mode='constant', constant_values=0)
@@ -608,8 +672,7 @@ def cost():
         
         # Scaling second phase
         
-        input__scaler = MinMaxScaler()
-        output__scaler = MinMaxScaler()
+        
         input_train_reshaped = X_train.reshape(X_train.shape[0], -1)
         input_test_reshaped = X_test.reshape(X_test.shape[0], -1)
         
@@ -619,41 +682,6 @@ def cost():
         target_train_scaled = output__scaler.fit_transform(y_train)
         target_test_scaled = output__scaler.transform(y_test)
         # # Define second model
-        rf_model= keras.Sequential([
-            layers.Input(shape=(15, 1)),
-            layers.Flatten(),
-            layers.BatchNormalization(),
-            layers.Dense(512, activation='relu'),
-            layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-        
-            layers.Dense(256, activation='tanh'),
-            layers.Dropout(0.3),
-            layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
-            layers.Dropout(0.3),
-        
-            layers.Dense(128, activation='relu'),
-            layers.BatchNormalization(),
-            layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-        
-            layers.Dense(64, activation='relu'),
-            layers.Dropout(0.2),
-        
-            layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
-            layers.Dropout(0.25),
-        
-            layers.Dense(32, activation='relu'),
-            layers.BatchNormalization(),
-        
-            layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
-            layers.LayerNormalization(),
-            layers.Dense(15, activation='linear')
-        ])
-        
-        rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
-                    loss='mse',
-                    metrics=['mae'])
         # # rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
         
         
@@ -681,13 +709,13 @@ def cost():
             proces_para = np.pad(proces_para, (0,2), mode='constant', constant_values=0)
             
         D_ = all_combinations
-        P_ = P
+        
         
         # Compute daily vectors
         D_tensor = tf.constant(D_, dtype=tf.float32)
-        P_tensor = tf.constant(P_, dtype=tf.float32)
         
-        daily_vectors = []
+        
+        
         for i in range(D_tensor.shape[0]):
             row_vector = []
             for j in range(P_tensor.shape[1]):
@@ -818,7 +846,7 @@ def cost():
         
         
 
-        differences = []
+        
         print("predictions",predictions)
         
         for prediction in predictions:
@@ -848,7 +876,7 @@ def cost():
         sorted_blended_coal_properties = [blended_coal_properties[i] for i in sorted_indices]
         
                 
-        coal_costs = []
+        
         print("hi",sorted_blends);
         for i, blend in enumerate(sorted_blends):
             print("hi",blend)
