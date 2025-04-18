@@ -811,7 +811,13 @@ def cost():
             print("predictions 2 " , predictions );
             print("valid indices" , valid_indices);
         
+            valid_indices = [i for i in valid_indices if i < len(combinations)]
             valid_combinations = combinations[valid_indices]
+            print(f"Total combinations: {len(combinations)}")
+            print(f"Filtered valid indices: {valid_indices}")
+            print(f"Filtered count: {len(valid_indices)}")
+
+
             valid_blended_coal_properties = [blended_coal_properties[i] for i in valid_indices]
             invalid_predictions = predictions[invalid_indices]
             invalid_combinations = combinations[invalid_indices]
