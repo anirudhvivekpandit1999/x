@@ -984,7 +984,7 @@ def cost():
             P_test = tf.constant(P_tensor)
 
 
-            daily_vectors = []
+            
             for i in range(D_tensor.shape[0]):
                 row_vector = []
                 for j in range(P_tensor.shape[1]):
