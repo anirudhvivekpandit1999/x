@@ -637,7 +637,7 @@
             // Fetch coal data from Flask when the page is loaded
             (async () => {
                 try {
-                    const result = await postEncrypted('http://13.232.169.135:3000/api/getTrainingData', { p_CompanyId: 1 });
+                    const result = await postEncrypted('http://192.168.10.21:3000/api/getTrainingData', { p_CompanyId: 1 });
                     const coalDropdowns = document.querySelectorAll('.coalDropdown');
                     console.log(result);
                     // Populate dropdowns with coal data, displaying properties in curly brackets
@@ -741,7 +741,7 @@
                 coalContainer.appendChild(newRow);
 
                 try {
-                    const response = await postEncrypted('http://13.232.169.135:3000/api/getTrainingData', { p_CompanyId: 1 });
+                    const response = await postEncrypted('http://192.168.10.21:3000/api/getTrainingData', { p_CompanyId: 1 });
                     console.log(response)
                     const dropdown = newRow.querySelector('.coalDropdown');
                     dropdown.innerHTML = '<option value="">Select Coal</option>';
@@ -851,7 +851,7 @@
                     };
 
                     try {
-                        const result = await postEncrypted('http://127.0.0.1:5000/api/inserttrainingdata', formattedData);
+                        const result = await postEncrypted('http://192.168.10.21:5000/api/inserttrainingdata', formattedData);
                         alert(result.message);
                         location.reload();
                     } catch (error) {
