@@ -763,13 +763,15 @@ def cost():
         tt19 = t19 - t18;
         print("19",tt19);
         
-        
-        for i in range(D_tensor.shape[0]):
-            row_vector = []
-            for j in range(P_tensor.shape[1]):
-                product_vector = tf.multiply(D_tensor[i], P_tensor[:, j])
-                row_vector.append(product_vector)
-            daily_vectors.append(tf.stack(row_vector))
+        # Reshape for broadcasting
+        D_expanded = tf.expand_dims(D_tensor, 2)  # shape: [n, d, 1]
+        P_expanded = tf.expand_dims(P_tensor, 0)  # shape: [1, d, m]
+
+# Element-wise multiplication
+        daily_vectors = tf.multiply(D_expanded, P_expanded)  # shape: [n, d, m]
+
+# Transpose to shape: [n, m, d]
+        daily_vectors = tf.transpose(daily_vectors, perm=[0, 2, 1])
         t20 = time.time();
         tt20 = t20 - t19 ;
         print("20",tt20);
