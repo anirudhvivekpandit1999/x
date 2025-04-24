@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import csv
 import os
+import time
 import io, json
 from io import BytesIO
 from datetime import datetime
@@ -318,7 +319,7 @@ def get_ranges():
 #model for cost ai page
 def read_min_max_values():
             df = pd.read_csv('min-maxvalues.csv')
-            print(df);
+            
             return {
                 'ash': {
                     'lower': df['ash_lower'].iloc[0],
@@ -563,20 +564,33 @@ coal_costs = []
         
 @app.route('/cost', methods=['POST'])
 def cost():
-    
+        startTime = time.time();
+        print(startTime,"started process");
         data = request.json  
         if not data:
             raise ValueError("No data received in the request") 
         coal_blends = data.get("blends")
-        coal_types = [blk["coalType"] for blk in coal_blends]
-        min_percentages = [int(blk["minPercentage"]) for blk in coal_blends]
-        max_percentages = [int(blk["maxPercentage"]) for blk in coal_blends]
+        time1 = time.time();
+        totalTime = startTime-time1;
+        print(totalTime);
         
+        coal_types = [blk["coalType"] for blk in coal_blends]
+        time2 = time.time();
+        tt2 = time2 - time1;
+        print(tt2);
+        min_percentages = [int(blk["minPercentage"]) for blk in coal_blends]
+        t3 = time.time();
+        tt3 = t3 - time2;
+        print(tt3);
+        max_percentages = [int(blk["maxPercentage"]) for blk in coal_blends]
+        t4 = time.time();
+        tt4 = t4 - t3;
+        print(tt4);
         min_percentages_padded = np.pad(min_percentages, (0, 14 - len(min_percentages)), mode='constant') 
         max_percentages_padded = np.pad(max_percentages, (0, 14 - len(max_percentages)), mode='constant')
         desired_coke_params = data.get("cokeParameters")
         
-        print("desired coke Parameters:", desired_coke_params)
+        
         oneblends = data.get('blendcoal', [])
         user_input_values_padded = np.zeros(14)
 
@@ -587,25 +601,28 @@ def cost():
             user_input_values_padded = np.pad(user_input_values, (0, 14 - len(user_input_values)), mode='constant')
             user_input_values_padded = np.array(user_input_values_padded)
             user_input_values_padded = np.array(user_input_values_padded).reshape(1, -1)
-            print("D-tensor-1", user_input_values_padded)
+            
             
         else:
             # If blendcoal data is missing, don't do anything (leave the padded zero array)
             pass
+        t5 = time.time();
+        tt5 = t5 - t4;
+        print(tt5);
         
-        print("D-tensor", user_input_values_padded)
         Option = data.get("processType")
-        print(f"Option (type: {type(Option)}):", Option)
+        
         
         try:
             Option = int(Option) 
         except ValueError:
             raise ValueError(f"Invalid option value: {Option} (could not convert to integer)")
-        
+        t6 = time.time();
+        tt6 = t6-t5;
+        print(tt6);
         proces_para= data.get("processParameters", {})
         
-        print("model Process Parameters:", proces_para)
-
+        
         
 
         
@@ -642,10 +659,11 @@ def cost():
             Process_parameters = np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv', delimiter=',')
         elif Option == 3:
             Process_parameters = np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
-            print("This was running")
         else:
             raise ValueError(f"Invalid option value: {Option}")
-            
+        t7 = time.time();
+        tt7 = t7 - t6;
+        print("t6",t6);   
         
         
         
@@ -664,22 +682,46 @@ def cost():
         
         if Option == 3:
             Process_parameters = np.pad(Process_parameters, ((0, 0), (0, 2)), mode='constant', constant_values=0)
-        
+        t8 = time.time();
+        tt8 = t8-t7;
+        print("8",tt8);
         Conv_matrix = Blended_coal_parameters + Process_parameters
+        t9 = time.time();
+        tt9 = t9-t8;
+        print("9",tt9);
         
         X_train, X_test, y_train, y_test = train_test_split(Conv_matrix, Coke_properties, test_size=0.2, random_state=42)
-        
+        t10=time.time();
+        tt10 = t10- t9;
+        print("10",tt10);
         # Scaling second phase
         
         
         input_train_reshaped = X_train.reshape(X_train.shape[0], -1)
+        t11 = time.time();
+        tt11 = t11 - t10;
+        print("11",tt11);
         input_test_reshaped = X_test.reshape(X_test.shape[0], -1)
-        
+        t12 = time.time();
+        tt12 = t12 - t11;
+        print("12" , tt12);
         input_train_scaled = input__scaler.fit_transform(input_train_reshaped)
+        t13 = time.time();
+        tt13 = t13 - t12;
+        print("13",tt13);
         input_test_scaled = input__scaler.transform(input_test_reshaped)
-        
+        t14 = time.time();
+        tt14 = t14-t13;
+        print("14",tt14);
         target_train_scaled = output__scaler.fit_transform(y_train)
+        t15 = time.time();
+        tt15 = t15 - t14;
+        
+        print("15",tt15);
         target_test_scaled = output__scaler.transform(y_test)
+        t16 = time.time();
+        tt16 = t16-t15;
+        print("16",tt16);
         # # Define second model
         # # rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
         
@@ -701,18 +743,25 @@ def cost():
                 if current_sum + value <= target_sum:
                     yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
                     
+        
 
         all_combinations = np.array(list(generate_combinations(0, [], 0)))
-        
+        t17 = time.time();
+        tt17 = t17 - t16;
+        print("17" , tt17);
         if(Option==3):
             proces_para = np.pad(proces_para, (0,2), mode='constant', constant_values=0)
-            
+        t18 = time.time();
+        tt18 = t18- t17;
+        print("18" , tt18);    
         D_ = all_combinations
         
         
         # Compute daily vectors
         D_tensor = tf.constant(D_, dtype=tf.float32)
-        
+        t19 = time.time();
+        tt19 = t19 - t18;
+        print("19",tt19);
         
         
         for i in range(D_tensor.shape[0]):
@@ -721,26 +770,64 @@ def cost():
                 product_vector = tf.multiply(D_tensor[i], P_tensor[:, j])
                 row_vector.append(product_vector)
             daily_vectors.append(tf.stack(row_vector))
+        t20 = time.time();
+        tt20 = t20 - t19 ;
+        print("20",tt20);
         
         daily_vectors_tensor = tf.stack(daily_vectors)
+        t21 = time.time();
+        tt21 = t21 -t20;
+        print("21",tt21);
         input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
-        
+        t22 = time.time();
+        tt22 = t22 -t21;
+        print("22",tt22);
         daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(daily_vectors_tensor.shape[0], -1)
+        t23 = time.time();
+        tt23 = t23 -t22;
+        print("23",tt23);
         b1=daily_vectors_flattened
         
         
         
         b1= b1.reshape(b1.shape[0], -1)
+        t24 = time.time();
+        tt24 = t24 -t23;
+        print("24",tt24);
         b1_scaled = input_scaler.transform(b1)
+        t25 = time.time();
+        tt25 = t25 -t24;
+        print("25",tt25);
         b1 = b1.reshape(-1, 14, 15)
+        t26 = time.time();
+        tt26 = t26 -t25;
+        print("26",tt26);
         blend1=modelq.predict(b1)
+        t27 = time.time();
+        tt27 = t27 -t26;
+        print("27",tt27);
         blended_coal_properties=output_scaler.inverse_transform(blend1)
+        t28 = time.time();
+        tt28 = t28 -t27;
+        print("28",tt28);
         blend1=blend1+proces_para
         blend1 = blend1.reshape(blend1.shape[0], -1)
+        t29 = time.time();
+        tt29 = t29 -t28;
+        print("29",tt29);
         blend1 = input__scaler.transform(blend1)
+        t30 = time.time();
+        tt30 = t30 -t29;
+        print("30",tt30);
         coke = rf_model.predict(blend1)
+        t31 = time.time();
+        tt31 = t31 -t30;
+        print("31",tt31);
         predictions=output__scaler.inverse_transform(coke)
-        print("666 predictions" , predictions);
+        t32 = time.time();
+        tt32 = t32 -t31;
+        print("32",tt32);
+        
         
         
         
@@ -769,25 +856,11 @@ def cost():
             ams_min = min_max_values['ams']['lower']
             ams_max = min_max_values['ams']['upper']
             
-            print("Min/Max Values:")
-            print(f"ASH: {ash_min} to {ash_max}")
-            print(f"VM: {vm_min} to {vm_max}")
-            print(f"M_40: {m40_min} to {m40_max}")
-            print(f"M_10: {m10_min} to {m10_max}")
-            print(f"CSR: {csr_min} to {csr_max}")
-            print(f"CRI: {cri_min} to {cri_max}")
-            print(f"AMS: {ams_min} to {ams_max}")
+            
             valid_indices = []
             invalid_indices = []
             for i, prediction in enumerate(predictions):
-                print("750ln prediction" , prediction);
-                print ("ln751 " , predictions);
-                print("vm min " , vm_min);
-                print("vm min precition " , prediction[1]);
-                print("vm max" , vm_max);
-                print("m40 min" , m40_min);
-                print("m40 prediction" , prediction[9]);
-                print("m40 max" , m40_max);
+                
                 
                 # Check if all values are within the specified range
                 if (
@@ -806,15 +879,10 @@ def cost():
                     invalid_indices.append(i)
             # Separate valid and invalid predictions, combinations, and blended coal properties
             valid_predictions = predictions[valid_indices]
-            print("combinations 810" , combinations)
-            print("predictions 2 " , predictions );
-            print("valid indices" , valid_indices);
-        
+            
             valid_indices = [i for i in valid_indices if i < len(combinations)]
             valid_combinations = combinations[valid_indices]
-            print(f"Total combinations: {len(combinations)}")
-            print(f"Filtered valid indices: {valid_indices}")
-            print(f"Filtered count: {len(valid_indices)}")
+            
 
 
             valid_blended_coal_properties = [blended_coal_properties[i] for i in valid_indices]
@@ -822,8 +890,7 @@ def cost():
             invalid_combinations = combinations[invalid_indices]
             invalid_blended_coal_properties = [blended_coal_properties[i] for i in invalid_indices]
             
-            print(f"Number of valid predictions: {len(valid_predictions)}")
-            print(f"Number of invalid predictions: {len(invalid_predictions)}")
+           
 
 
             return (
@@ -844,16 +911,19 @@ def cost():
             invalid_combinations,
             invalid_blended_coal_properties,
         ) = filter_valid_and_invalid(predictions, all_combinations, blended_coal_properties, min_max_values)
+        t33 = time.time();
+        tt33 = t33 -t32;
+        print("33",tt33);
         
         predictions = valid_predictions
-        print("valid predictions " , valid_predictions)
+        
         all_combinations = valid_combinations
         blended_coal_properties = valid_blended_coal_properties
         
         
 
         
-        print("predictions",predictions)
+        
         
         for prediction in predictions:
             diff = []
@@ -866,39 +936,51 @@ def cost():
             diff.append(((prediction[14] - desired_ams) / desired_ams) * min_max_values['ams']['weight'])
 
             differences.append(diff)
-         
-        print("differences" , differences);
-
+        t34 = time.time();
+        tt34 = t34 -t33;
+        print("34",tt34);
+        
+        
         total_differences = [sum(diff) for diff in differences]
-        print("total differences" , total_differences);
+        t35 = time.time();
+        tt35 = t35 -t34;
+        print("35",tt35);
+        
         sorted_indices = np.argsort(total_differences)[::-1]
+        t36 = time.time();
+        tt36 = t36 -t35;
+        print("36",tt36);
         
        
 
         # Safe filtering to avoid IndexError
         filtered_sorted_indices = [i for i in sorted_indices if 0 <= i < len(predictions)]
-
+        t37 = time.time();
+        tt37 = t37 -t36;
+        print("37",tt37);
+        
 # Apply the safe indices
         sorted_predictions = predictions[filtered_sorted_indices]
 
-        print(f"Filtered sorted indices: {filtered_sorted_indices}")
-        print(f"Sorted predictions shape: {sorted_predictions.shape}")
-        print("sorted indices",sorted_indices);
         sorted_indices = sorted_indices[sorted_indices < len(all_combinations)]
         sorted_blends = all_combinations[sorted_indices]
-        print("all_combinations.shape:", all_combinations.shape)
-        print("sorted_indices:", sorted_indices)
-        print("max index in sorted_indices:", np.max(sorted_indices))
+        
 
-
+        
         sorted_diff = [differences[i] for i in sorted_indices]
+        t38 = time.time();
+        tt38 = t38 -t37;
+        print("38",tt38);
+        
         sorted_blended_coal_properties = [blended_coal_properties[i] for i in sorted_indices]
+        t39 = time.time();
+        tt39 = t39 -t38;
+        print("39",tt39);
         
                 
         
-        print("hi",sorted_blends);
         for i, blend in enumerate(sorted_blends):
-            print("hi",blend)
+            
             coal_type_costs = []
             for j, coal_type in enumerate(coal_types):
                
@@ -906,36 +988,66 @@ def cost():
                     # Map the coal type to the CSV file and retrieve the cost
                     coal_type_cost = float(data1.loc[data1[0] == coal_type, data1.columns[-2]].values[0])
                     coal_type_costs.append(coal_type_cost)
-                    print(coal_type_costs);
+                    
             coal_costs.append(coal_type_costs)
-
+        t40 = time.time();
+        tt40 = t40 -t39;
+        print("40",tt40);
+        
         total_costs = [sum(float(blend[i]) * coal_costs[j][i] / 100 for i in range(min(len(blend), len(coal_costs[j])))) for j, blend in enumerate(sorted_blends)] 
+        t41 = time.time();
+        tt41 = t41 -t40;
+        print("41",tt41);
+        
        
        
-       
-        print(f"coal_costs: {coal_costs}")
         
         sorted_indices_by_cost = np.argsort(total_costs)
+        t42 = time.time();
+        tt42 = t42 -t41;
+        print("42",tt42);
+        
         sorted_blend_cost = sorted_blends[sorted_indices_by_cost]
         sorted_prediction_cost = sorted_predictions[sorted_indices_by_cost]
         sorted_total_cost = np.array(total_costs)[sorted_indices_by_cost]
-
+        t43 = time.time();
+        tt43 = t43 -t42;
+        print("43",tt43);
+        
         sorted_blended_coal_properties_cost = [sorted_blended_coal_properties[i] for i in sorted_indices_by_cost]
+        t44 = time.time();
+        tt44 = t44 -t43;
+        print("44",tt44);
+        
         sorted_diff_cost = [sorted_diff[i] for i in sorted_indices_by_cost]
-
+        t45 = time.time();
+        tt45 = t45 -t44;
+        print("45",tt45);
+        
         # -----------------------------------------------------------------------------
         # Combine Cost and Performance
         # -----------------------------------------------------------------------------
         normalized_costs = (total_costs - np.min(total_costs)) / (np.max(total_costs) - np.min(total_costs))
+        t46 = time.time();
+        tt46 = t46 -t45;
+        print("46",tt46);
+        
         normalized_differences = (
             (total_differences - np.min(total_differences))
             / (np.max(total_differences) - np.min(total_differences))
         )
-
+        t47 = time.time();
+        tt47 = t47 -t46;
+        print("47",tt47);
+        
         cost_weight = min_max_values['cost_weightage']
         performance_weight = min_max_values['coke_quality']
 
         min_len = min(len(normalized_costs), len(normalized_differences))
+        t48 = time.time();
+        tt48 = t48 -t47;
+        print("48",tt48);
+        
         normalized_costs = normalized_costs[:min_len]
         normalized_differences = normalized_differences[:min_len]
         combined_scores = (cost_weight * normalized_costs) + (performance_weight * normalized_differences)
@@ -943,7 +1055,7 @@ def cost():
 
         # best_combined_index refers to the ORIGINAL arrays (not sorted)
         best_combined_index = np.argmin(combined_scores)
-
+        
         # -----------------------------------------------------------------------------
         # Helper for Cost Calculation
         # -----------------------------------------------------------------------------
@@ -973,9 +1085,6 @@ def cost():
         blend_3_properties = valid_predictions[best_combined_index]
         blend_3_cost = calculate_cost(blend_3, coal_costs)
         blend_1_cost = calculate_cost(blend_1,coal_costs)
-        print(f"Blend 1 Cost: {blend_1_cost}")
-        print(f"Blend 2 Cost: {blend_2_cost}")
-        print(f"Blend 3 Cost: {blend_3_cost}")
                 
         response = {
                 "blend1": {
@@ -1003,7 +1112,7 @@ def cost():
         
         if np.any(user_input_values_padded != 0):
             D_tensor = tf.constant(user_input_values_padded, dtype=tf.float32)
-            print(D_tensor)
+           
             daily_vector_test = []
             D_test = tf.constant(D_tensor)
             P_test = tf.constant(P_tensor)
@@ -1025,12 +1134,12 @@ def cost():
             daily_vectors_tensor_test_reshaped = daily_vectors_tensor_test.numpy().reshape(1, -1)
             
             daily_vectors_tensor_test_scaled = input_scaler.transform(daily_vectors_tensor_test_reshaped)
-            print("Shape before reshaping:", daily_vectors_tensor_test_scaled.shape)
+           
             daily_vectors_tensor_test_scaled = daily_vectors_tensor_test_scaled.reshape(-1, 14, 15)
             prediction_scaled = modelq.predict(daily_vectors_tensor_test_scaled)
             prediction = output_scaler.inverse_transform(prediction_scaled)
 
-            print("Predicted values:", prediction)
+    
             
             Conv =proces_para+prediction
             # blend1 = blend1.reshape(blend1.shape[0], -1)
@@ -1038,7 +1147,7 @@ def cost():
             coke = rf_model.predict(Conv)
             predictions=output__scaler.inverse_transform(coke)
             
-            print(predictions)
+           
             
             # Add the predicted proposed coal and coke values to the response
             response["ProposedCoal"] = {
@@ -1049,7 +1158,11 @@ def cost():
         # If no valid blendcoal data is provided, indicate that no prediction is made
             response["ProposedCoal"] = {
                 "error": "No valid blendcoal data provided, unable to make predictions."
-            }       
+            }
+        t49 = time.time();
+        tt49 = t49 -t48;
+        print("49",tt49);
+               
         return jsonify(response), 200
 
     
