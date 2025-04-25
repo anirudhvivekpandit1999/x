@@ -733,44 +733,47 @@ def cost():
         mse = np.mean((y_test - y_pred) ** 2)
 
 # Highly optimized combination generator
-        def generate_combinations(target_sum=100):
-            min_vals = min_percentages_padded
-            max_vals = max_percentages_padded
-            n = len(min_vals)
+        def generate_combinations(target_sum=100, min_vals=None, max_vals=None):
+            if min_vals is None or max_vals is None:
+                raise ValueError("min_vals and max_vals must be provided")
 
-    # Use a stack to replace recursion; pre-allocate space for speed
-            stack = [(0, [0] * n, 0)]  # (index, current_combination as reusable list, current_sum)
+            n = len(min_vals)
+            stack = [(0, [0] * n, 0)]
 
             while stack:
                 index, current_comb, current_sum = stack.pop()
 
-        # Last index: directly compute the final value
                 if index == n - 1:
                     remaining = target_sum - current_sum
                     if min_vals[index] <= remaining <= max_vals[index]:
                         current_comb[index] = remaining
-                        yield current_comb.copy()  # Copy needed here to avoid mutation
+                        yield tuple(current_comb)  # tuple is faster to hash & store
                     continue
 
                 remaining_capacity = target_sum - current_sum
                 min_val = min_vals[index]
                 max_val = min(max_vals[index], remaining_capacity)
 
-        # Add next states in reverse to keep DFS order
                 for value in range(max_val, min_val - 1, -1):
-                    current_comb[index] = value
-                    stack.append((index + 1, current_comb.copy(), current_sum + value))
+                    new_comb = current_comb.copy()
+                    new_comb[index] = value
+                    stack.append((index + 1, new_comb, current_sum + value))
 
-# If you only need to iterate lazily:
-        for combo in generate_combinations():
-    # Do something with each combo
+# Example usage (assuming min_percentages_padded and max_percentages_padded are defined):
+        min_vals = np.array([10, 20, 0, 0], dtype=np.uint8)
+        max_vals = np.array([50, 60, 30, 40], dtype=np.uint8)
+        target = 100
+
+# Lazy iterator
+        for combo in generate_combinations(target_sum=target, min_vals=min_vals, max_vals=max_vals):
+    # Do something like evaluating model on combo
             pass
 
-# If you need to collect all combinations into a NumPy array:
-        all_combinations = np.array(
-    [c for c in generate_combinations()],
-    dtype=np.uint8  # Optional: keeps it compact if values are small
-)
+# OR collect all combinations at once
+        all_combinations = np.fromiter(
+    generate_combinations(target_sum=target, min_vals=min_vals, max_vals=max_vals),
+    dtype=f"u1,{len(min_vals)}"
+).view(np.uint8).reshape(-1, len(min_vals))
 
         
         
