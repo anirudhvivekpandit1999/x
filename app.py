@@ -24,6 +24,7 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 from tensorflow.keras import layers  # type: ignore
 
+
 app = Flask(__name__)
 CORS(app,resources={r"/*": {"origins": "*"}})
 
@@ -724,28 +725,55 @@ def cost():
         print("16",tt16);
         # # Define second model
         # # rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
-        
-        
-        
+        # Predict and inverse transform
+        # Predict and inverse transform
+        # Predict and inverse transform
         y_pred = rf_model.predict(input_test_scaled)
         y_pred = output_scaler.inverse_transform(y_pred)
         mse = np.mean((y_test - y_pred) ** 2)
-        
-    
-        def generate_combinations(index, current_combination, current_sum):
-            target_sum = 100
-            if index == len(min_percentages_padded) - 1:
-                remaining = target_sum - current_sum
-                if min_percentages_padded[index] <= remaining <= max_percentages_padded[index]:
-                    yield current_combination + [remaining]
-                return
-            for value in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
-                if current_sum + value <= target_sum:
-                    yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
-                    
-        
 
-        all_combinations = np.array(list(generate_combinations(0, [], 0)))
+# Highly optimized combination generator
+        def generate_combinations(target_sum=100):
+            min_vals = min_percentages_padded
+            max_vals = max_percentages_padded
+            n = len(min_vals)
+
+    # Use a stack to replace recursion; pre-allocate space for speed
+            stack = [(0, [0] * n, 0)]  # (index, current_combination as reusable list, current_sum)
+
+            while stack:
+                index, current_comb, current_sum = stack.pop()
+
+        # Last index: directly compute the final value
+                if index == n - 1:
+                    remaining = target_sum - current_sum
+                    if min_vals[index] <= remaining <= max_vals[index]:
+                        current_comb[index] = remaining
+                        yield current_comb.copy()  # Copy needed here to avoid mutation
+                    continue
+
+                remaining_capacity = target_sum - current_sum
+                min_val = min_vals[index]
+                max_val = min(max_vals[index], remaining_capacity)
+
+        # Add next states in reverse to keep DFS order
+                for value in range(max_val, min_val - 1, -1):
+                    current_comb[index] = value
+                    stack.append((index + 1, current_comb.copy(), current_sum + value))
+
+# If you only need to iterate lazily:
+        for combo in generate_combinations():
+    # Do something with each combo
+            pass
+
+# If you need to collect all combinations into a NumPy array:
+        all_combinations = np.array(
+    [c for c in generate_combinations()],
+    dtype=np.uint8  # Optional: keeps it compact if values are small
+)
+
+        
+        
         t17 = time.time();
         tt17 = t17 - t16;
         print("17" , tt17);
@@ -980,17 +1008,18 @@ def cost():
         print("39",tt39);
         
                 
-        
+        coal_cost_map = {
+    row[0]: float(row[-2])
+    for row in data1.itertuples(index=False)
+}
+        coal_costs = []
+
         for i, blend in enumerate(sorted_blends):
-            
             coal_type_costs = []
             for j, coal_type in enumerate(coal_types):
-               
                 if j < len(blend):
-                    # Map the coal type to the CSV file and retrieve the cost
-                    coal_type_cost = float(data1.loc[data1[0] == coal_type, data1.columns[-2]].values[0])
+                    coal_type_cost = coal_cost_map.get(coal_type, 0.0)  # or raise KeyError if missing is critical
                     coal_type_costs.append(coal_type_cost)
-                    
             coal_costs.append(coal_type_costs)
         t40 = time.time();
         tt40 = t40 -t39;
