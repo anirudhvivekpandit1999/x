@@ -572,27 +572,18 @@ def cost():
             return jsonify({"error": "No data received in the request"}), 400
             
         # Extract coal blend data
-        coal_blends = data.get("blends", [])
-        if not coal_blends:
-            return jsonify({"error": "No coal blend data provided"}), 400
-            
-        coal_types = [blend["coalType"] for blend in coal_blends]
-        min_percentages = np.array([int(blend["minPercentage"]) for blend in coal_blends])
-        max_percentages = np.array([int(blend["maxPercentage"]) for blend in coal_blends])
+        coal_blends = data.get("blends")
+        coal_types = [blk["coalType"] for blk in coal_blends]
+        min_percentages = np.array([int(blk["minPercentage"]) for blk in coal_blends])
+        max_percentages = np.array([int(blk["maxPercentage"]) for blk in coal_blends])
         
-        # Validate data
-        if len(coal_types) == 0:
-            return jsonify({"error": "No coal types provided"}), 400
-        
-        # Pad arrays to fixed size of 14
+        # Pad arrays efficiently in one step
         pad_size = 14 - len(min_percentages)
         min_percentages_padded = np.pad(min_percentages, (0, pad_size), mode='constant')
         max_percentages_padded = np.pad(max_percentages, (0, pad_size), mode='constant')
         
         # Extract desired coke parameters
-        desired_coke_params = data.get("cokeParameters", {})
-        if not desired_coke_params:
-            return jsonify({"error": "No coke parameters provided"}), 400
+        desired_coke_params = data.get("cokeParameters")
         
         # Process blend coal data
         oneblends = data.get('blendcoal', [])
@@ -600,11 +591,10 @@ def cost():
         
         if oneblends:
             user_input_values = np.array([blend['currentRange'] for blend in oneblends])
-            if abs(user_input_values.sum() - 100) > 0.001:  # Allow for floating point precision
+            if user_input_values.sum() != 100:
                 return jsonify({"error": "The total of current range must add up to 100."}), 400
             
-            # Pad user input values
-            user_input_values_padded[:len(user_input_values)] = user_input_values
+            user_input_values_padded = np.pad(user_input_values, (0, 14 - len(user_input_values)), mode='constant')
             user_input_values_padded = user_input_values_padded.reshape(1, -1)
         
         # Get process type and parameters
@@ -617,7 +607,7 @@ def cost():
         
         proces_para = data.get("processParameters", {})
         
-        # Load process parameters based on option - use preloaded data if possible
+        # Load process parameters based on option
         process_parameter_files = {
             1: 'Process_parameter_for_Rec_Top_Char.csv',
             2: 'Process_parameter_for_Rec_Stam_Char.csv',
@@ -633,93 +623,65 @@ def cost():
         # Combine matrices
         Conv_matrix = Blended_coal_parameters + Process_parameters
         
-        # Split data for training - this could be precomputed if the model doesn't change
+        # Split data for training
         X_train, X_test, y_train, y_test = train_test_split(Conv_matrix, Coke_properties, test_size=0.2, random_state=42)
         
-        # Note: Keep the original dimensionality transformation pattern
-        input_train_reshaped = X_train.reshape(X_train.shape[0], -1)  # This should flatten to 210 features
+        # Reshape and scale training data - do this in fewer steps
+        input_train_reshaped = X_train.reshape(X_train.shape[0], -1)
         input_test_reshaped = X_test.reshape(X_test.shape[0], -1)
         
-        # Use existing scalers - the scalers expect 210 features (14*15 = 210)
         input_train_scaled = input__scaler.fit_transform(input_train_reshaped)
         input_test_scaled = input__scaler.transform(input_test_reshaped)
         
         target_train_scaled = output__scaler.fit_transform(y_train)
+        target_test_scaled = output__scaler.transform(y_test)
+        
+        # Predict and evaluate model
+        y_pred = rf_model.predict(input_test_scaled)
+        y_pred = output_scaler.inverse_transform(y_pred)
+        mse = np.mean((y_test - y_pred) ** 2)
         
         # Generate combinations efficiently
-        def generate_valid_combinations(min_vals, max_vals, num_coal_types, target_sum=100):
-            """Generate valid coal blend combinations using a backtracking approach"""
-            min_vals = min_vals[:num_coal_types].copy()
-            max_vals = max_vals[:num_coal_types].copy()
+        def generate_valid_combinations(min_vals, max_vals, target_sum=100):
+            # Use a more efficient approach for generating combinations
+            min_vals = np.array(min_vals[:len(coal_types)])
+            max_vals = np.array(max_vals[:len(coal_types)])
+            
+            # Start with min values
             current = min_vals.copy()
             remaining = target_sum - current.sum()
             
-            # Pre-allocate for better memory usage
-            # Estimate max possible combinations to pre-allocate
-            max_combinations = 10000  # Reasonable starting size
-            valid_combinations = np.zeros((max_combinations, 14))
-            count = 0
-            
-            def add_combination(combo):
-                nonlocal count, valid_combinations
-                # Resize array if needed
-                if count >= len(valid_combinations):
-                    valid_combinations = np.vstack([valid_combinations, np.zeros((max_combinations, 14))])
-                
-                valid_combinations[count, :num_coal_types] = combo
-                count += 1
+            valid_combinations = []
             
             def backtrack(idx, remaining):
-                if idx == num_coal_types - 1:
+                if idx == len(coal_types) - 1:
                     # Last position - check if we can add the remaining amount
                     if min_vals[idx] <= remaining <= max_vals[idx]:
                         combo = current.copy()
                         combo[idx] = remaining
-                        add_combination(combo)
+                        padded_combo = np.pad(combo, (0, 14 - len(combo)), mode='constant')
+                        valid_combinations.append(padded_combo)
                     return
                 
-                # Try values for current position - use adaptive step size for large ranges
-                min_val = min_vals[idx]
-                max_val = min(max_vals[idx], remaining - sum(min_vals[idx+1:]))
-                
-                # For large ranges, use a step size to reduce combinations
-                range_size = max_val - min_val
-                step = 1 if range_size < 50 else max(1, range_size // 50)
-                
-                for val in range(min_val, max_val + 1, step):
+                # Try values for current position
+                for val in range(min_vals[idx], min(max_vals[idx] + 1, remaining - sum(min_vals[idx+1:]) + 1)):
                     current[idx] = val
                     backtrack(idx + 1, remaining - val)
             
-            # Start backtracking
             backtrack(0, remaining)
-            
-            # Return only the filled part of the array
-            return valid_combinations[:count]
+            return np.array(valid_combinations)
         
         # Generate combinations
-        all_combinations = generate_valid_combinations(min_percentages_padded, max_percentages_padded, len(coal_types))
+        all_combinations = generate_valid_combinations(min_percentages_padded, max_percentages_padded)
         
-        # Cap combinations to prevent memory issues
-        MAX_COMBINATIONS = 50000
-        if len(all_combinations) > MAX_COMBINATIONS:
-            # Sample combinations if too many
-            indices = np.random.choice(len(all_combinations), MAX_COMBINATIONS, replace=False)
-            all_combinations = all_combinations[indices]
-        
-        # Process parameters padding
-        if isinstance(proces_para, dict):
-            # Convert dictionary to array based on expected keys
-            # This part depends on your exact data structure
-            proces_para = np.array([proces_para.get(f'param{i}', 0) for i in range(1, 16)])
-        
+        # Pad process parameters if needed
         if Option == 3:
             proces_para = np.pad(proces_para, (0, 2), mode='constant')
         
-        # TensorFlow operations - batch processing
-        # Convert to constants once
+        # TensorFlow operations - optimize for batch processing
         D_tensor = tf.constant(all_combinations, dtype=tf.float32)
         
-        # Reshape for broadcasting
+        # Reshape for efficient broadcasting
         D_expanded = tf.expand_dims(D_tensor, 2)  # shape: [n, d, 1]
         P_expanded = tf.expand_dims(P_tensor, 0)  # shape: [1, d, m]
         
@@ -727,82 +689,56 @@ def cost():
         daily_vectors = tf.multiply(D_expanded, P_expanded)
         daily_vectors = tf.transpose(daily_vectors, perm=[0, 2, 1])
         
-        # Important: Keep the original reshape pattern to match the expected 210 features
-        b1 = daily_vectors.numpy().reshape(daily_vectors.shape[0], -1)  # This flattens to 210 features
+        # Reshape for model input
+        b1 = daily_vectors.numpy().reshape(daily_vectors.shape[0], -1)
+        b1_scaled = input_scaler.transform(b1)
+        b1_reshaped = b1.reshape(-1, 14, 15)
         
-        # Keep the original model input shape
-        b1_reshaped = daily_vectors.numpy().reshape(-1, 14, 15)
-        
-        # Predict in batches if needed
-        BATCH_SIZE = 1000
-        blend1 = []
-        
-        for i in range(0, len(b1_reshaped), BATCH_SIZE):
-            batch = b1_reshaped[i:i+BATCH_SIZE]
-            batch_pred = modelq.predict(batch, verbose=0)  # Silence predictions
-            blend1.append(batch_pred)
-            
-        blend1 = np.vstack(blend1)
+        # Predict coal properties
+        blend1 = modelq.predict(b1_reshaped)
         blended_coal_properties = output_scaler.inverse_transform(blend1)
         
-        # Process for coke prediction - use broadcasting for addition
-        proces_para_broadcast = np.broadcast_to(proces_para, (blend1.shape[0], proces_para.shape[0]))
-        blend1_with_process = blend1 + proces_para_broadcast
-        
-        # Flatten and scale - crucial to reshape to match the expected 210 features
+        # Process for coke prediction
+        blend1_with_process = blend1 + proces_para
         blend1_flattened = blend1_with_process.reshape(blend1_with_process.shape[0], -1)
-        
-        # Scale using the scaler that expects 210 features
         blend1_scaled = input__scaler.transform(blend1_flattened)
         
-        # Predict coke properties in batches
-        predictions = []
-        for i in range(0, len(blend1_scaled), BATCH_SIZE):
-            batch = blend1_scaled[i:i+BATCH_SIZE]
-            batch_pred = rf_model.predict(batch, verbose=0)  # Silence predictions
-            predictions.append(batch_pred)
-            
-        predictions = np.vstack(predictions)
-        predictions = output__scaler.inverse_transform(predictions)
+        # Predict coke properties
+        coke = rf_model.predict(blend1_scaled)
+        predictions = output__scaler.inverse_transform(coke)
         
         # Extract desired parameters
         desired_params = {
-            "ash": desired_coke_params.get("ASH", 0),
-            "vm": desired_coke_params.get("VM", 0),
-            "m40": desired_coke_params.get("M_40MM", 0),
-            "m10": desired_coke_params.get("M_10MM", 0),
-            "csr": desired_coke_params.get("CSR", 0),
-            "cri": desired_coke_params.get("CRI", 0),
-            "ams": desired_coke_params.get("AMS", 0)
+            "ash": desired_coke_params["ASH"],
+            "vm": desired_coke_params["VM"],
+            "m40": desired_coke_params["M_40MM"],
+            "m10": desired_coke_params["M_10MM"],
+            "csr": desired_coke_params["CSR"],
+            "cri": desired_coke_params["CRI"],
+            "ams": desired_coke_params["AMS"]
         }
         
-        # Validate desired parameters
-        if any(value == 0 for value in desired_params.values()):
-            return jsonify({"error": "Missing or zero value in coke parameters"}), 400
-        
-        # Filter valid predictions - use vectorized operations
+        # Filter valid predictions
         def filter_valid_predictions(predictions, combinations, blended_properties, min_max_values):
-            """Filter predictions that meet all constraints using vectorized operations"""
+            # Create masks for each constraint
+            ash_mask = (min_max_values['ash']['lower'] <= predictions[:, 0]) & (predictions[:, 0] <= min_max_values['ash']['upper'])
+            vm_mask = (min_max_values['vm']['lower'] <= predictions[:, 1]) & (predictions[:, 1] <= min_max_values['vm']['upper'])
+            m40_mask = (min_max_values['m40']['lower'] <= predictions[:, 9]) & (predictions[:, 9] <= min_max_values['m40']['upper'])
+            m10_mask = (min_max_values['m10']['lower'] <= predictions[:, 10]) & (predictions[:, 10] <= min_max_values['m10']['upper'])
+            csr_mask = (min_max_values['csr']['lower'] <= predictions[:, 12]) & (predictions[:, 12] <= min_max_values['csr']['upper'])
+            cri_mask = (min_max_values['cri']['lower'] <= predictions[:, 13]) & (predictions[:, 13] <= min_max_values['cri']['upper'])
+            ams_mask = (min_max_values['ams']['lower'] <= predictions[:, 14]) & (predictions[:, 14] <= min_max_values['ams']['upper'])
             
-            # Create masks for each constraint simultaneously
-            masks = np.array([
-                (min_max_values['ash']['lower'] <= predictions[:, 0]) & (predictions[:, 0] <= min_max_values['ash']['upper']),
-                (min_max_values['vm']['lower'] <= predictions[:, 1]) & (predictions[:, 1] <= min_max_values['vm']['upper']),
-                (min_max_values['m40']['lower'] <= predictions[:, 9]) & (predictions[:, 9] <= min_max_values['m40']['upper']),
-                (min_max_values['m10']['lower'] <= predictions[:, 10]) & (predictions[:, 10] <= min_max_values['m10']['upper']),
-                (min_max_values['csr']['lower'] <= predictions[:, 12]) & (predictions[:, 12] <= min_max_values['csr']['upper']),
-                (min_max_values['cri']['lower'] <= predictions[:, 13]) & (predictions[:, 13] <= min_max_values['cri']['upper']),
-                (min_max_values['ams']['lower'] <= predictions[:, 14]) & (predictions[:, 14] <= min_max_values['ams']['upper'])
-            ])
+            # Combine all masks
+            valid_mask = ash_mask & vm_mask & m40_mask & m10_mask & csr_mask & cri_mask & ams_mask
             
-            # Combine all masks with logical AND
-            valid_mask = np.all(masks, axis=0)
-            
-            # Get valid indices
+            # Extract valid and invalid data
             valid_indices = np.where(valid_mask)[0]
             invalid_indices = np.where(~valid_mask)[0]
             
-            # Return valid and invalid data
+            # Ensure indices are within bounds
+            valid_indices = valid_indices[valid_indices < len(combinations)]
+            
             return (
                 predictions[valid_indices],
                 combinations[valid_indices],
@@ -819,17 +755,25 @@ def cost():
         
         # If no valid predictions, return error
         if len(valid_predictions) == 0:
-            return jsonify({
-                "error": "No valid coal blends found that meet the specified criteria.",
-                "total_combinations_tried": len(all_combinations),
-                "suggestion": "Consider relaxing your constraints or increasing the range of allowable percentages."
-            }), 400
+            return jsonify({"error": "No valid coal blends found that meet the specified criteria."}), 400
         
-        # Extract relevant columns for difference calculation
-        pred_indices = [0, 1, 9, 10, 12, 13, 14]  # ASH, VM, M40, M10, CSR, CRI, AMS
-        pred_cols = valid_predictions[:, pred_indices]
+        # Update variables with valid data
+        predictions = valid_predictions
+        all_combinations = valid_combinations
+        blended_coal_properties = valid_blended_coal_properties
         
-        # Target values array
+        # Calculate differences efficiently using vectorized operations
+        differences = []
+        weights = [
+            min_max_values['ash']['weight'],
+            min_max_values['vm']['weight'],
+            min_max_values['m40']['weight'],
+            min_max_values['m10']['weight'],
+            min_max_values['csr']['weight'],
+            min_max_values['cri']['weight'],
+            min_max_values['ams']['weight']
+        ]
+        
         target_values = np.array([
             desired_params["ash"],
             desired_params["vm"],
@@ -840,150 +784,134 @@ def cost():
             desired_params["ams"]
         ])
         
-        # Weights array
-        weights = np.array([
-            min_max_values['ash']['weight'],
-            min_max_values['vm']['weight'],
-            min_max_values['m40']['weight'],
-            min_max_values['m10']['weight'],
-            min_max_values['csr']['weight'],
-            min_max_values['cri']['weight'],
-            min_max_values['ams']['weight']
+        # Extract relevant prediction columns
+        pred_cols = np.column_stack([
+            predictions[:, 0],   # ASH
+            predictions[:, 1],   # VM
+            predictions[:, 9],   # M40
+            predictions[:, 10],  # M10
+            predictions[:, 12],  # CSR
+            predictions[:, 13],  # CRI
+            predictions[:, 14]   # AMS
         ])
         
-        # Create masks for better/worse metrics
-        # Lower is better for ASH(0), VM(1), M10(3), CRI(5)
-        # Higher is better for M40(2), CSR(4), AMS(6)
-        lower_better_mask = np.array([True, True, False, True, False, True, False])
-        
         # Calculate percentage differences with vectorized operations
-        # Broadcast target_values to match pred_cols shape
-        targets_broadcast = np.tile(target_values, (len(pred_cols), 1))
-        
-        # Calculate differences based on whether higher/lower is better
+        # For columns where higher is better (M40, CSR, AMS), we subtract desired from prediction
+        # For columns where lower is better (ASH, VM, M10, CRI), we subtract prediction from desired
         diff_matrix = np.zeros_like(pred_cols)
         
-        # For lower is better metrics
-        lower_indices = np.where(lower_better_mask)[0]
-        diff_matrix[:, lower_indices] = (targets_broadcast[:, lower_indices] - pred_cols[:, lower_indices]) / targets_broadcast[:, lower_indices]
+        # Lower is better: ASH(0), VM(1), M10(3), CRI(5)
+        diff_matrix[:, [0, 1, 3, 5]] = (target_values[[0, 1, 3, 5]] - pred_cols[:, [0, 1, 3, 5]]) / target_values[[0, 1, 3, 5]]
         
-        # For higher is better metrics
-        higher_indices = np.where(~lower_better_mask)[0]
-        diff_matrix[:, higher_indices] = (pred_cols[:, higher_indices] - targets_broadcast[:, higher_indices]) / targets_broadcast[:, higher_indices]
+        # Higher is better: M40(2), CSR(4), AMS(6)
+        diff_matrix[:, [2, 4, 6]] = (pred_cols[:, [2, 4, 6]] - target_values[[2, 4, 6]]) / target_values[[2, 4, 6]]
         
-        # Apply weights with broadcasting
+        # Apply weights
         weighted_diffs = diff_matrix * weights
         
         # Calculate total differences
         total_differences = np.sum(weighted_diffs, axis=1)
         
         # Sort by performance (descending)
-        sorted_performance_indices = np.argsort(total_differences)[::-1]
+        sorted_indices = np.argsort(total_differences)[::-1]
         
-        # Apply sorted indices
-        sorted_predictions = valid_predictions[sorted_performance_indices]
-        sorted_blends = valid_combinations[sorted_performance_indices]
-        sorted_blended_coal_properties = [valid_blended_coal_properties[i] for i in sorted_performance_indices]
+        # Filter to avoid index errors
+        filtered_sorted_indices = sorted_indices[sorted_indices < len(predictions)]
         
-        # Calculate costs with vectorized operations
+        sorted_predictions = predictions[filtered_sorted_indices]
+        sorted_blends = all_combinations[filtered_sorted_indices]
+        sorted_blended_coal_properties = [blended_coal_properties[i] for i in filtered_sorted_indices]
+        
+        # Calculate costs
         coal_cost_map = {row[0]: float(row[-2]) for row in data1.itertuples(index=False)}
         
-        # Get costs for each coal type
-        coal_costs = np.array([coal_cost_map.get(coal_type, 0.0) for coal_type in coal_types])
+        # Calculate costs more efficiently
+        def calculate_blend_cost(blend, coal_types, coal_cost_map):
+            return sum(blend[i] * coal_cost_map.get(coal_types[i], 0.0) / 100 
+                      for i in range(min(len(blend), len(coal_types))))
         
-        # Vectorized cost calculation using dot product
-        # Only use the relevant part of each blend that corresponds to actual coal types
-        total_costs = np.zeros(len(valid_combinations))
-        for i, blend in enumerate(valid_combinations):
-            # Use only the part of the blend that corresponds to actual coal types
-            total_costs[i] = np.dot(blend[:len(coal_types)], coal_costs) / 100
+        # Calculate costs for all blends
+        total_costs = np.array([calculate_blend_cost(blend, coal_types, coal_cost_map) 
+                              for blend in sorted_blends])
         
         # Sort by cost (ascending)
         sorted_indices_by_cost = np.argsort(total_costs)
         
-        sorted_blend_cost = valid_combinations[sorted_indices_by_cost]
-        sorted_prediction_cost = valid_predictions[sorted_indices_by_cost]
+        sorted_blend_cost = sorted_blends[sorted_indices_by_cost]
+        sorted_prediction_cost = sorted_predictions[sorted_indices_by_cost]
         sorted_total_cost = total_costs[sorted_indices_by_cost]
-        sorted_blended_coal_properties_cost = [valid_blended_coal_properties[i] for i in sorted_indices_by_cost]
+        sorted_blended_coal_properties_cost = [sorted_blended_coal_properties[i] for i in sorted_indices_by_cost]
         
         # Calculate combined score
-        normalized_costs = np.zeros_like(total_costs)
         if len(total_costs) > 0 and np.max(total_costs) > np.min(total_costs):
             normalized_costs = (total_costs - np.min(total_costs)) / (np.max(total_costs) - np.min(total_costs))
+        else:
+            normalized_costs = np.zeros_like(total_costs)
             
-        normalized_differences = np.zeros_like(total_differences)
         if len(total_differences) > 0 and np.max(total_differences) > np.min(total_differences):
             normalized_differences = ((total_differences - np.min(total_differences)) / 
                                    (np.max(total_differences) - np.min(total_differences)))
+        else:
+            normalized_differences = np.zeros_like(total_differences)
         
-        # Get weights for combined score
-        cost_weight = min_max_values.get('cost_weightage', 0.5)
-        performance_weight = min_max_values.get('coke_quality', 0.5)
+        # Weights for combined score
+        cost_weight = min_max_values['cost_weightage']
+        performance_weight = min_max_values['coke_quality']
         
-        # Ensure min_len is handled properly
+        # Calculate combined scores
+        min_len = min(len(normalized_costs), len(normalized_differences))
+        normalized_costs = normalized_costs[:min_len]
+        normalized_differences = normalized_differences[:min_len]
         combined_scores = (cost_weight * normalized_costs) + (performance_weight * normalized_differences)
         
-        # Find best combined score (minimum)
+        # Find best combined score
         best_combined_index = np.argmin(combined_scores)
         
         # Select three representative blends
-        # 1. Best by performance (highest difference score)
-        best_performance_index = sorted_performance_indices[0]
-        blend_1 = valid_combinations[best_performance_index]
-        blended_coal_1 = valid_blended_coal_properties[best_performance_index]
-        blend_1_properties = valid_predictions[best_performance_index]
-        blend_1_cost = total_costs[best_performance_index]
+        # 1. Best by performance
+        blend_1 = sorted_blends[0]
+        blended_coal_1 = sorted_blended_coal_properties[0]
+        blend_1_properties = sorted_predictions[0]
+        blend_1_cost = calculate_blend_cost(blend_1, coal_types, coal_cost_map)
         
         # 2. Cheapest
-        cheapest_index = sorted_indices_by_cost[0]
-        blend_2 = valid_combinations[cheapest_index]
-        blended_coal_2 = valid_blended_coal_properties[cheapest_index]
-        blend_2_properties = valid_predictions[cheapest_index]
-        blend_2_cost = total_costs[cheapest_index]
+        blend_2 = sorted_blend_cost[0]
+        blended_coal_2 = sorted_blended_coal_properties_cost[0]
+        blend_2_properties = sorted_prediction_cost[0]
+        blend_2_cost = sorted_total_cost[0]
         
         # 3. Best combined
-        blend_3 = valid_combinations[best_combined_index]
+        blend_3 = all_combinations[best_combined_index]
         blended_coal_3 = valid_blended_coal_properties[best_combined_index]
         blend_3_properties = valid_predictions[best_combined_index]
-        blend_3_cost = total_costs[best_combined_index]
-        
-        # Trim zero-padding from results for cleaner output
-        def clean_output(array, actual_length):
-            if isinstance(array, list):
-                return array[:actual_length]
-            if isinstance(array, np.ndarray):
-                return array[:actual_length].tolist()
-            return array
-            
-        num_coal_types = len(coal_types)
+        blend_3_cost = calculate_blend_cost(blend_3, coal_types, coal_cost_map)
         
         # Prepare response
         response = {
             "blend1": {
-                "composition": clean_output(blend_1, num_coal_types),
-                "blendedcoal": blended_coal_1,
+                "composition": blend_1.tolist(),
+                "blendedcoal": blended_coal_1.tolist(),
                 "properties": blend_1_properties.tolist(),
-                "cost": float(blend_1_cost)
+                "cost": blend_1_cost
             },
             "blend2": {
-                "composition": clean_output(blend_2, num_coal_types),
-                "blendedcoal": blended_coal_2,
+                "composition": blend_2.tolist(),
+                "blendedcoal": blended_coal_2.tolist(),
                 "properties": blend_2_properties.tolist(),
-                "cost": float(blend_2_cost)
+                "cost": blend_2_cost
             },
             "blend3": {
-                "composition": clean_output(blend_3, num_coal_types),
-                "blendedcoal": blended_coal_3,
+                "composition": blend_3.tolist(),
+                "blendedcoal": blended_coal_3.tolist(),
                 "properties": blend_3_properties.tolist(),
-                "cost": float(blend_3_cost)
+                "cost": blend_3_cost
             },
-            "valid_predictions_count": len(valid_predictions),
-            "total_combinations": len(all_combinations)
+            "valid_predictions_count": len(valid_predictions)
         }
         
         # Process user input if provided
         if np.any(user_input_values_padded != 0):
-            # Process user custom blend - maintains original reshape pattern to match 210 features
+            # Process user input more efficiently
             D_tensor = tf.constant(user_input_values_padded, dtype=tf.float32)
             
             # Calculate product directly
@@ -993,34 +921,27 @@ def cost():
             )
             user_daily_vectors = tf.transpose(user_daily_vectors, perm=[0, 2, 1])
             
-            # Reshape for prediction - maintain 14x15 shape for modelq
-            user_vectors_reshaped = user_daily_vectors.numpy().reshape(-1, 14, 15)
+            # Reshape for prediction
+            user_vectors_reshaped = user_daily_vectors.numpy().reshape(1, -1)
+            user_vectors_scaled = input_scaler.transform(user_vectors_reshaped)
+            user_vectors_scaled = user_vectors_scaled.reshape(-1, 14, 15)
             
             # Predict blended coal properties
-            user_prediction_scaled = modelq.predict(user_vectors_reshaped, verbose=0)
+            user_prediction_scaled = modelq.predict(user_vectors_scaled)
             user_prediction = output_scaler.inverse_transform(user_prediction_scaled)
             
             # Add process parameters
-            proces_para_broadcast = np.broadcast_to(proces_para, user_prediction.shape)
-            user_conv = proces_para_broadcast + user_prediction
-            
-            # Critical: reshape to match the expected 210 features for input__scaler
-            user_conv_flattened = user_conv.reshape(user_conv.shape[0], -1)
-            user_conv_scaled = input__scaler.transform(user_conv_flattened)
+            user_conv = proces_para + user_prediction
             
             # Predict coke properties
-            user_coke = rf_model.predict(user_conv_scaled, verbose=0)
+            user_conv_scaled = input__scaler.transform(user_conv)
+            user_coke = rf_model.predict(user_conv_scaled)
             user_predictions = output__scaler.inverse_transform(user_coke)
-            
-            # Calculate cost for custom blend
-            user_blend_cost = sum(user_input_values_padded[0, i] * coal_cost_map.get(coal_types[i], 0) / 100 
-                               for i in range(min(user_input_values_padded.shape[1], len(coal_types))))
             
             # Add to response
             response["ProposedCoal"] = {
-                "BlendProperties": user_prediction.tolist(),
-                "CokeProperties": user_predictions.tolist(),
-                "Cost": float(user_blend_cost)
+                "Blend2": user_prediction.tolist(),
+                "Coke2": user_predictions.tolist()
             }
         else:
             response["ProposedCoal"] = {
@@ -1030,13 +951,10 @@ def cost():
         return jsonify(response), 200
         
     except Exception as e:
-        import traceback
-        # Enhanced error handling with stack trace for debugging
-        trace = traceback.format_exc()
-        app.logger.error(f"Error in cost endpoint: {str(e)}\n{trace}")
+        # Proper error handling
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
-#coal properties page 
-
+    
+    
 @app.route('/download-template-properties')
 def download_template_properties():
     # Define the column headers for the template
