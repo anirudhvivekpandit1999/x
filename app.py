@@ -540,6 +540,7 @@ def get_proposed_coal_types():
 
 
 def load_csv():
+    print("load_csvhit")
     """Load the CSV file and return it as a DataFrame."""
     if os.path.exists(MINMAX_FILE_PATH):
         return pd.read_csv(MINMAX_FILE_PATH)
@@ -548,31 +549,46 @@ def load_csv():
 
 def prepare_ranges():
     """Prepare the range data from the CSV."""
+    
     df = load_csv()
     if df.empty:
         return {}
     
     # Assuming only one row of data in the CSV
     row = df.iloc[0]
+    
+    def to_int(x):
+        # If it’s a NumPy scalar, .item() will give you a Python int/float
+        return x.item() if hasattr(x, 'item') else int(x)
+    
+    def to_float(x):
+        return x.item() if hasattr(x, 'item') else float(x)
+    
+    
     ranges = {
-        'ash': {'lower': row['ash_lower'], 'upper': row['ash_upper'], 'default': (row['ash_lower'] + row['ash_upper']) / 2},
-        'vm': {'lower': row['vm_lower'], 'upper': row['vm_upper'], 'default': (row['vm_lower'] + row['vm_upper']) / 2},
-        'm40': {'lower': row['m40_lower'], 'upper': row['m40_upper'], 'default': (row['m40_lower'] + row['m40_upper']) / 2},
-        'm10': {'lower': row['m10_lower'], 'upper': row['m10_upper'], 'default': (row['m10_lower'] + row['m10_upper']) / 2},
-        'csr': {'lower': row['csr_lower'], 'upper': row['csr_upper'], 'default': (row['csr_lower'] + row['csr_upper']) / 2},
-        'cri': {'lower': row['cri_lower'], 'upper': row['cri_upper'], 'default': (row['cri_lower'] + row['cri_upper']) / 2},
-        'ams': {'lower': row['ams_lower'], 'upper': row['ams_upper'], 'default': (row['ams_lower'] + row['ams_upper']) / 2}
+        'ash': {'lower': to_int(row['ash_lower']), 'upper': to_int(row['ash_upper']), 'default': to_float((row['ash_lower'] + row['ash_upper']) / 2)},
+        'vm': {'lower': to_int(row['vm_lower']), 'upper': to_int(row['vm_upper']), 'default': to_float((row['vm_lower'] + row['vm_upper']) / 2)},
+        'm40': {'lower': to_int(row['m40_lower']), 'upper': to_int(row['m40_upper']), 'default': to_float((row['m40_lower'] + row['m40_upper']) / 2)},
+        'm10': {'lower': to_int(row['m10_lower']), 'upper': to_float(row['m10_upper']), 'default': to_float((row['m10_lower'] + row['m10_upper']) / 2)},
+        'csr': {'lower': to_int(row['csr_lower']), 'upper': to_int(row['csr_upper']), 'default': to_float((row['csr_lower'] + row['csr_upper']) / 2)},
+        'cri': {'lower': to_int(row['cri_lower']), 'upper': to_int(row['cri_upper']), 'default':to_float( (row['cri_lower'] + row['cri_upper']) / 2)},
+        'ams': {'lower': to_int(row['ams_lower']), 'upper': to_int(row['ams_upper']), 'default': to_float((row['ams_lower'] + row['ams_upper']) / 2)}
     }
     return ranges
 
 @app.route('/get_ranges', methods=['GET'])
 def get_ranges():
-    """Endpoint to fetch slider ranges."""
+    
     try:
         ranges = prepare_ranges()
         return jsonify(ranges)
     except FileNotFoundError as e:
+        print(e)
         return jsonify({'error': str(e)}), 404
+        
+
+#model for cost ai page
+
         
 
 #model for cost ai page
@@ -622,7 +638,7 @@ def read_min_max_values():
 min_max_values = read_min_max_values()
         
 
-file_path = 'submitted_training_coal_data.csv'
+file_path = 'training_data_file.csv'
 coal_percentages = []
 coal_properties = []
 blends = []
@@ -642,7 +658,14 @@ last_process_params = None
 
 with open(file_path, 'r') as file:
             reader = csv.reader(file)
+            headers = next(reader)
+            try:
+                file_name_index = headers.index('File Name')
+            except ValueError : 
+                file_name_index = None 
             for row in reader:
+                if file_name_index is not None and file_name_index < len(row) :
+                    row.pop(file_name_index)
                 if row[0] not in ('', 'NaT'):  # Check if the serial number is not empty or NaT
                     serial_number = row[0]
                     if serial_number not in processed_serial_numbers:
@@ -1206,9 +1229,7 @@ def cost():
         import traceback
         error_details = traceback.format_exc()
         app.logger.error(f"Error in cost calculation: {error_details}")
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500        
-
-@app.route('/download-template-properties')
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500  @app.route('/download-template-properties')
 def download_template_properties():
     # Define the column headers for the template
     columns = [
