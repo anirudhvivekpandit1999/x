@@ -70,14 +70,20 @@ UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'xls', 'xlsx'}
 SUBMITTED_CSV_PATH = 'submitted_training_coal_data.csv'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+TRAINING_DATA = 'training_data_file.csv'
+INDIVIDUAL_UPLOADS_FOLDER = os.path.join(UPLOAD_FOLDER, 'individual_uploads')
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+if not os.path.exists(INDIVIDUAL_UPLOADS_FOLDER):
+    os.makedirs(INDIVIDUAL_UPLOADS_FOLDER)
+
 def get_next_index():
     # Check if the CSV file exists and is not empty
-    if os.path.exists(SUBMITTED_CSV_PATH):
-        with open(SUBMITTED_CSV_PATH, 'r') as f:
+    if os.path.exists(TRAINING_DATA):
+        with open(TRAINING_DATA, 'r') as f:
             reader = csv.reader(f)
             rows = list(reader)
             if rows:
@@ -95,6 +101,9 @@ def get_next_index():
     else:
         return 1  # If the CSV doesn't exist, start with 1
     
+
+# UPLOAD EXCEL FILE IN TRAINING PAGE 
+
 
 @app.route('/download-template', methods=['GET'])
 def download_template():
@@ -199,6 +208,255 @@ def format_list_to_string(data_list):
         return str(formatted_list).replace("'", "")
     else:
         return str([formatted_list]).replace("'", "")
+
+@app.route('/upload_excel_training', methods=['POST'])
+def upload_excel_training():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+
+    file = request.files['file']
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        df = pd.read_excel(filepath)
+       
+
+        current_index = get_next_index()
+        new_rows = []
+
+        base_date = None
+
+        # Define expected process parameter keys in order
+        process_keys = [
+            'charging_tonnage', 'moisture_content', 'bulk_density', 'charging_temperature',
+            'battery_operating_temperature', 'cross_wall_temperature', 'push_force',
+            'pri', 'coke_per_push', 'gross_coke_yield', 'gcm_pressure', 'gcm_temperature',
+            'coking_time', 'coke_end_temperature', 'quenching_time'
+        ]
+
+        for i, row in df.iterrows():
+            if pd.notna(row.iloc[0]):
+                try:
+                    base_date = pd.to_datetime(row.iloc[0])
+                except ValueError:
+                    base_date = row.iloc[0]
+
+            if pd.notna(row.iloc[1]) and pd.notna(row.iloc[2]):
+                coal_type = row.iloc[1]
+                current_val = row.iloc[2]
+
+                individual = row.iloc[3:19].tolist()
+                blended = row.iloc[19:34].tolist()
+                coke = row.iloc[34:41].tolist()
+                process_values = row.iloc[41:41+len(process_keys)].tolist()
+
+                # Check if individual properties are all numbers
+                if all(pd.notna(x) and isinstance(x, (int, float)) for x in individual):
+                    individual_str = "{" + ", ".join(map(str, individual)) + "}"
+                else:
+                    individual_str = ""
+
+                # Check if blended properties are all numbers
+                if all(pd.notna(x) and isinstance(x, (int, float)) for x in blended):
+                    blended_str = "{" + ", ".join(map(str, blended)) + "}"
+                else:
+                    blended_str = ""
+
+                # Check if coke properties are all numbers
+                if all(pd.notna(x) and isinstance(x, (int, float)) for x in coke):
+                    coke_str = "{" + ", ".join(map(str, coke)) + "}"
+                else:
+                    coke_str = ""
+
+                # Pair the keys with values
+                process = {k: str(v) if pd.notna(v) else None for k, v in zip(process_keys, process_values)}
+
+                # Only include process parameters if at least one value is not None
+                if any(v is not None for v in process.values()):
+                    process_str = str(process).replace("'", "")
+                else:
+                    process_str = ""
+
+                # Only append row if coal type, current value, and individual properties are valid
+                if coal_type and current_val and individual_str:
+                    new_row = [
+                        current_index if i == 0 or pd.notna(row.iloc[0]) else "",
+                        str(row.iloc[0]) if pd.notna(row.iloc[0]) else "",
+                        coal_type,
+                        current_val,
+                        individual_str,
+                        blended_str if blended_str else "",
+                        coke_str if coke_str else "",
+                        process_str if process_str else ""
+                    ]
+                    new_rows.append(new_row)
+                    if pd.notna(row.iloc[0]):
+                        current_index += 1
+
+        # Write to CSV
+        header = ['ID', 'Date', 'Coal Type', 'Current Value', 'Individual Properties',
+                  'Blended Properties', 'Coke Properties', 'Process Parameters','File Name']
+        file_exists = os.path.isfile(TRAINING_DATA)
+
+        with open(TRAINING_DATA, 'a', newline='') as f:
+            writer = csv.writer(f)
+            if not file_exists:
+                writer.writerow(header)
+            for row in new_rows:
+                writer.writerow(row + [filename])
+
+
+        return jsonify({'message': 'File processed and data saved successfully'}), 200
+
+    return jsonify({'error': 'Invalid file format'}), 400
+
+
+#FUNCTION TO SAVE THE TRAINING FORM IN CSV 
+
+def load_coal_data():
+    
+    df = pd.read_csv('individual_coal_prop.csv', header=None)
+    coal_data = {}
+    
+    for _, row in df.iterrows():
+        coal_type = row[0] 
+        properties = row[1:-1].tolist()  
+        coal_data[coal_type] = {
+            'properties': properties
+        }
+    
+    return coal_data
+
+
+coal_data = load_coal_data()
+       
+# Route to fetch coal data for the dropdown (via AJAX)
+
+
+@app.route('/training_coal_data', methods=['GET'])
+def training_coal_data():
+    coal_data = load_coal_data()  
+    return jsonify(coal_data)
+
+def save_to_csv(data, coal_data, filename):
+    index = get_next_index()
+    coal_info = data['coalData']
+    blended_coal_parameters = data['blendedCoalParameters']
+    coke_parameters = data['cokeParameters']
+    process_parameters = data['processParameters']
+
+    # Format blended coal parameters
+    blended_coal_values = "{" + ",".join([
+        str(blended_coal_parameters['ash']),
+        str(blended_coal_parameters['volatileMatter']),
+        str(blended_coal_parameters['moisture']),
+        str(blended_coal_parameters['maxContraction']),
+        str(blended_coal_parameters['maxExpansion']),
+        str(blended_coal_parameters['maxFluidity']),
+        str(blended_coal_parameters['crushingIndex315mm']),
+        str(blended_coal_parameters['crushingIndex05mm']),
+        str(blended_coal_parameters['softeningTemperature']),
+        str(blended_coal_parameters['resolidificationTempRangeMin']),
+        str(blended_coal_parameters['resolidificationTempRangeMax']),
+        str(blended_coal_parameters['plasticRange']),
+        str(blended_coal_parameters['sulphur']),
+        str(blended_coal_parameters['phosphorous']),
+        str(blended_coal_parameters['csn'])
+    ]) + "}"
+
+    # Format coke parameters
+    coke_values = "{" + ",".join([
+        str(coke_parameters['ash']),
+        str(coke_parameters['volatileMatter']),
+        str(coke_parameters['m40mm']),
+        str(coke_parameters['m10mm']),
+        str(coke_parameters['csr']),
+        str(coke_parameters['cri']),
+        str(coke_parameters['ams'])
+    ]) + "}"
+
+    # Format process parameters
+    process_values = "{" + ",".join([f"{key}:{value}" for key, value in process_parameters.items()]) + "}"
+
+    # Create rows
+    rows = [
+        [
+            str(index),
+            data['date'],
+            coal_info[0]['coal'],
+            coal_info[0]['currentValue'],
+            "{" + ",".join(map(str, coal_data[coal_info[0]['coal']]['properties'])) + "}",
+            blended_coal_values,
+            coke_values,
+            process_values
+        ]
+    ]
+
+    for i in range(1, len(coal_info)):
+        rows.append([
+            '',
+            '',
+            coal_info[i]['coal'],
+            coal_info[i]['currentValue'],
+            "{" + ",".join(map(str, coal_data[coal_info[i]['coal']]['properties'])) + "}",
+            '',
+            '',
+            ''
+        ])
+
+    # Write rows
+    with open(filename, 'a', newline='') as csvfile:
+        writer = csv.writer(csvfile,quoting=csv.QUOTE_MINIMAL)
+        writer.writerows(rows)
+ 
+
+@app.route('/submit_training_data', methods=['POST'])
+def submit_form():
+    data = request.get_json()
+
+    # Save to training data CSV
+    save_to_csv(data, coal_data, TRAINING_DATA,)
+
+    # Save to individual uploads folder
+    individual_filename = os.path.join(INDIVIDUAL_UPLOADS_FOLDER, f"{data['date']}.csv")
+    save_to_csv(data, coal_data, individual_filename)
+
+    return jsonify({'message': 'Form submitted successfully'}), 200
+
+
+
+# TRAINDATA-STORAGE PAGE 
+@app.route('/get_uploaded_files', methods=['GET'])
+def get_uploaded_files():
+    files = os.listdir(app.config['UPLOAD_FOLDER'])
+    file_data = []
+    for i, file in enumerate(files):
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file)
+        timestamp = datetime.fromtimestamp(os.path.getctime(file_path))
+        file_data.append({
+            'sr_no': i+1,
+            'filename': file,
+            'upload_date': timestamp.strftime('%d-%m-%Y %H:%M:%S')
+        })
+    return jsonify(file_data)
+
+@app.route('/delete_uploaded_file', methods=['POST'])
+def delete_uploaded_file():
+    filename = request.json['filename']
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        
+        # Remove data from training data CSV
+        df = pd.read_csv(TRAINING_DATA)
+        df = df[df['File Name'] != filename]
+        df.to_csv(TRAINING_DATA, index=False)
+        
+        return jsonify({'message': 'File deleted successfully'}), 200
+    return jsonify({'error': 'File not found'}), 404
 
 @app.route('/upload-excel', methods=['POST'])
 def upload_excel():

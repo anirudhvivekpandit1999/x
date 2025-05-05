@@ -7,8 +7,7 @@
     <title>Training Page</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -129,11 +128,11 @@
         }
 
         #download-template-btn {
-            margin-left: 20%;
+            margin-left: 16%;
         }
 
         #upload-file-btn {
-            margin-left: 15%;
+            margin-left: 5%;
         }
 
         #add-blend-btn {
@@ -141,26 +140,15 @@
             margin: 0 auto;
         }
 
+
         #confirm-btn {
             margin: 5px;
             font-size: 14px;
         }
 
         input[type="file"] {
-            margin-left: 60px;
+            margin-left: 20px;
         }
-
-        #file-upload-label {
-            display: inline-block;
-            background-color: #008CBA;
-            color: white;
-            font-size: 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-align: center;
-            transition: background-color 0.3s;
-        }
-
 
 
         /* Table Styles */
@@ -232,6 +220,8 @@
         }
     </style>
 </head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <body>
     <header>
@@ -408,6 +398,7 @@
     </form>
 
     <script>
+
         function encryptData(data) {
             const secretKey = CryptoJS.enc.Utf8.parse(
                 "qwertyuiopasdfghjklzxcvbnm123456"
@@ -459,11 +450,6 @@
 
                 const decryptedStr = decrypted.toString(CryptoJS.enc.Utf8);
 
-                //  if (!decryptedStr) {
-                //    console.warn("⚠️ Decryption returned empty string. Possibly wrong secret or IV.");
-                //    return null;
-                //  }
-
                 try {
                     return JSON.parse(decryptedStr);
                 } catch (jsonErr) {
@@ -489,12 +475,6 @@
                 });
 
                 const encryptedResponse = result?.data?.coalProperties ?? result?.data?.encryptedData;
-                //  const firstResultSet = encryptedResponse[0];
-
-                //  if (!encryptedResponse) {
-                //    console.warn("⚠️ No encryptedData in server response. Full response:", result);
-                //    throw new Error("Invalid encrypted response");
-                //  }
 
                 const decryptedResponse = decryptData(encryptedResponse);
                 const resultRow = (
@@ -505,11 +485,8 @@
                 )
                     ? decryptedResponse[0]
                     : decryptedResponse;
-                ; // First item of the first result set
+
                 const finalResult = resultRow;
-                //  if (!decryptedResponse) {
-                //    console.warn("⚠️ Decrypted response is empty or null.");
-                //  }
 
                 return finalResult || {};
             } catch (error) {
@@ -518,46 +495,273 @@
             }
         }
 
-        // Function to insert training data
-        async function insertTrainingData(data) {
-            try {
-                const response = await axios.post(`/api/inserttrainingdata`, data);
 
-                if (response.status === 200) {
-                    console.log('Training data inserted successfully:', response.data);
-                    return response.data;
-                } else {
-                    throw new Error(`Error inserting training data: ${response.status}`);
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Fetch coal data from Flask when the page is loaded
+            try {
+                // 1️⃣ If you still need the encrypted POST call:
+                const result = await postEncrypted(
+                    "http://3.111.89.109:3000/api/getCoalProperties",
+                    { companyId: 1 }
+                );
+                const data = result[0];
+
+
+                // 2️⃣ Fetch the coal data
+
+                if (!result) {
+                    throw new Error(`HTTP error! status: ${result.status}`);
                 }
+                // Assuming “data” is your parsed JSON
+                const coalProps = data.CoalData.CoalProperties;  // Array of 14 objects
+                const coalTypes = data.CoalData.CoalTypes;       // Array of 14 names
+
+                // Grab all <select class="coalDropdown"> elements
+                const coalDropdowns = document.querySelectorAll(".coalDropdown");
+
+                coalDropdowns.forEach(dropdown => {
+                    // 1️⃣ Reset to placeholder
+                    dropdown.innerHTML = "";
+                    const placeholder = document.createElement("option");
+                    placeholder.value = "";
+                    placeholder.textContent = "Select Coal";
+                    dropdown.appendChild(placeholder);
+
+                    // 2️⃣ Loop through the parallel arrays
+                    coalTypes.forEach((propsObj, idx) => {
+                        const coalName = coalTypes[idx] || `Type ${idx + 1}`;
+
+                        // Turn the props object into “Key: Value” strings
+                        const propsList = Object.entries(propsObj).map(
+                            ([key, val]) => `${key}: ${val}`
+                        );
+                        const formattedProps = `{${propsList.join(", ")}}`;
+
+                        // 3️⃣ Create and append the <option>
+                        const option = document.createElement("option");
+                        option.value = coalName;
+                        option.textContent = `${coalName}`;
+                        dropdown.appendChild(option);
+                    });
+                });
+                // 4️⃣ Return something if you want
+                return { success: true, count: Object.keys(coalData).length };
             } catch (error) {
-                console.error('Error inserting training data:', error.message);
+                console.error("Error loading coal data:", error);
+                return { success: false, error };
             }
-        }
+        });
+
+        document.getElementById('add-blend-btn').addEventListener('click', async () => {
+            const coalContainer = document.getElementById('coalContainer');
+            const newRow = document.createElement('div');
+            newRow.classList.add('blend-row');
+            newRow.innerHTML = `
+                    <select class="coalDropdown" name="coalDropdown[]">
+                        <option value="">Select Coal</option>
+                    </select>
+                    <div class="blend-entry">
+                        <input type="number" class="currentValue" name="currentValue[]" placeholder="Enter current value" required>
+                    </div>
+                `;
+            coalContainer.appendChild(newRow);
+
+            // Fetch and populate dropdown options in the new row
+            try {
+                // 1️⃣ If you still need the encrypted POST call:
+                const result = await postEncrypted(
+                    "http://3.111.89.109:3000/api/getCoalProperties",
+                    { companyId: 1 }
+                );
+                const data = result[0];
+
+
+                // 2️⃣ Fetch the coal data
+
+                if (!result.ok) {
+                    throw new Error(`HTTP error! status: ${result.status}`);
+                }
+                const coalData = data.CoalData.CoalProperties;
+                const coalTypes = data.CoalData.CoalTypes
+
+                // 3️⃣ Populate all .coalDropdown selects
+                const coalDropdowns = document.querySelectorAll(".coalDropdown");
+                coalDropdowns.forEach((dropdown) => {
+                    // Reset to a placeholder
+                    dropdown.innerHTML = "";
+                    const placeholder = document.createElement("option");
+                    placeholder.value = "";
+                    placeholder.textContent = "Select Coal";
+                    dropdown.appendChild(placeholder);
+
+                    // Add one <option> per coal type
+                    for (const coalName in coalData) {
+                        const { properties } = coalData[coalName];
+                        const formattedProps = `{${properties.join(", ")}}`;
+                        const option = document.createElement("option");
+                        option.value = coalName;
+                        option.textContent = `${coalName} ${formattedProps}`;
+                        dropdown.appendChild(option);
+                    }
+                });
+
+                // 4️⃣ Return something if you want
+                return { success: true, count: Object.keys(coalData).length };
+            } catch (error) {
+                console.error("Error loading coal data:", error);
+                return { success: false, error };
+            }
+        });
+
+        document.getElementById('upload-file-btn').addEventListener('click', () => {
+            const fileInput = document.getElementById('file-upload');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a file.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('http://3.111.89.109:5000/upload_excel_training', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+                .then(data => alert(data.message || data.error))
+                .catch(error => console.error('Upload failed:', error));
+        });
+
 
 
         document.getElementById('viewdata-btn').addEventListener('click', () => {
             // Trigger the file download
-            window.location.href = 'http://13.201.136.233:5000/TrainData-storage.html';
+            window.location.href = 'http://3.111.89.109:5000/TrainData-storage.html';
         });
 
-        // document.getElementById('download-template-btn').addEventListener('click', () => {
-        //     // Trigger the file download
-        //     window.location.href = '/download-template';
-        // });
+        document.getElementById('download-template-btn').addEventListener('click', () => {
+            // Trigger the file download
+            window.location.href = 'http://3.111.89.109:5000/download-template';
+        });
 
-        document.getElementById("download-template-btn").addEventListener("click", function () {
-            fetch("/download-template")
-                .then(response => response.blob())
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "template.xlsx";
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
+        const form = document.getElementById('coalForm');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                if (key in data) {
+                    if (!Array.isArray(data[key])) {
+                        data[key] = [data[key]];
+                    }
+                    data[key].push(value);
+                } else {
+                    data[key] = value;
+                }
+            });
+
+            // Convert the data to match the required format
+            const formattedData = formatData(data);
+
+            try {
+                const response = await fetch('http://3.111.89.109:5000/submit_training_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formattedData)
                 });
+
+                if (response.ok) {
+                    alert('Data submitted successfully!');
+                    window.location.reload();
+                    console.log('Form submitted successfully');
+
+                } else {
+                    console.error('Error submitting form');
+                }
+            } catch (error) {
+                console.error(error);
+            }
         });
+
+        function formatData(data) {
+            // Assuming the format is an array of values
+            const coalDropdownValues = Array.isArray(data['coalDropdown[]']) ? data['coalDropdown[]'] : [data['coalDropdown[]']];
+            const currentValueValues = Array.isArray(data['currentValue[]']) ? data['currentValue[]'] : [data['currentValue[]']];
+
+            const processParameters = {
+                chargingTonnage: data['charging_tonnage'],
+                moistureContent: data['moisture_content'],
+                bulkDensity: data['bulk_density'],
+                chargingTemperature: data['charging_temperature'],
+                batteryOperatingTemperature: data['battery_operating_temperature'],
+                pushForce: data['push_force'],
+                pri: data['pri'],
+                cokePerPush: data['coke_per_push'],
+                grossCokeYield: data['gross_coke_yield'],
+                cokingTime: data['coking_time'],
+                cokeEndTemperature: data['coke_end_temperature'],
+                quenchingTime: data['quenching_time']
+            };
+
+            if (data['cross_wall_temperature']) {
+                processParameters.crossWallTemperature = data['cross_wall_temperature'];
+            }
+
+            if (data['gcm_pressure']) {
+                processParameters.gcmPressure = data['gcm_pressure'];
+            }
+
+            if (data['gcm_temperature']) {
+                processParameters.gcmTemperature = data['gcm_temperature'];
+            }
+
+            if (data['header_temperature']) {
+                processParameters.headerTemperature = data['header_temperature'];
+            }
+
+            const formattedData = {
+                date: data['dateInput'],
+                coalData: coalDropdownValues.map((coal, index) => ({
+                    coal,
+                    currentValue: currentValueValues[index]
+                })),
+                blendedCoalParameters: {
+                    ash: data['blended_coal_ash'],
+                    volatileMatter: data['blended_coal_vm'],
+                    moisture: data['blended_coal_moisture'],
+                    maxContraction: data['max_contraction'],
+                    maxExpansion: data['max_expansion'],
+                    maxFluidity: data['max_fluidity'],
+                    crushingIndex315mm: data['crushing_index_3_15mm'],
+                    crushingIndex05mm: data['crushing_index_0_5mm'],
+                    softeningTemperature: data['softening_temperature'],
+                    resolidificationTempRangeMin: data['resolidification_temp_range_min'],
+                    resolidificationTempRangeMax: data['resolidification_temp_range_max'],
+                    plasticRange: data['plastic_range'],
+                    sulphur: data['sulpher'],
+                    phosphorous: data['phosphorous'],
+                    csn: data['csn']
+                },
+                cokeParameters: {
+                    ash: data['ASH'],
+                    volatileMatter: data['VM'],
+                    m40mm: data['M_40MM'],
+                    m10mm: data['M_10MM'],
+                    csr: data['CSR'],
+                    cri: data['CRI'],
+                    ams: data['AMS']
+                },
+                processParameters: processParameters
+            };
+
+            return formattedData;
+        }
+
+
 
         function updateProcessParameters() {
             const processType = document.getElementById("processDropdown").value;
@@ -633,234 +837,7 @@
             }
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            // Fetch coal data from Flask when the page is loaded
-            (async () => {
-                try {
-                    const result = await postEncrypted('http://3.111.89.109:3000/api/getTrainingData', { p_CompanyId: 1 });
-                    const coalDropdowns = document.querySelectorAll('.coalDropdown');
-                    console.log(result);
-                    // Populate dropdowns with coal data, displaying properties in curly brackets
-                    coalDropdowns.forEach(dropdown => {
-                        dropdown.innerHTML = '<option value="">Select Coal</option>'; // Clear existing options
 
-                        result.forEach((coalData, index) => {
-                            console.log(coalData);
-                            // Get key-value pairs except some optional fields if needed
-                            const entries = Object.entries(coalData)
-                                .filter(([key, value]) => key !== "CoalId" && key !== "CoalName" && key !== "CompanyId"); // optional filters
-
-                            const formattedProperties = entries
-                                .map(([key, value]) => `${key}: ${value}`)
-                                .join(', ');
-
-                            const option = document.createElement('option');
-                            option.value = coalData.CoalId || index; // or some unique identifier
-                            option.textContent = coalData.CoalName
-
-                            dropdown.appendChild(option);
-                        });
-                    });;
-                } catch (error) {
-                    console.error('Error loading coal data:', error);
-                }
-            })();
-
-
-            function getBlendedCoalParams() {
-                const params = [
-                    document.querySelector('input[name="blended_coal_ash"]').value,
-                    document.querySelector('input[name="blended_coal_vm"]').value,
-                    document.querySelector('input[name="blended_coal_moisture"]').value,
-                    document.querySelector('input[name="max_contraction"]').value,
-                    document.querySelector('input[name="max_expansion"]').value,
-                    document.querySelector('input[name="max_fluidity"]').value,
-                    document.querySelector('input[name="crushing_index_3_15mm"]').value,
-                    document.querySelector('input[name="crushing_index_0_5mm"]').value,
-                    document.querySelector('input[name="softening_temperature"]').value,
-                    document.querySelector('input[name="resolidification_temp_range_min"]').value,
-                    document.querySelector('input[name="resolidification_temp_range_max"]').value,
-                    document.querySelector('input[name="plastic_range"]').value,
-                    document.querySelector('input[name="sulpher"]').value,
-                    document.querySelector('input[name="phosphorous"]').value,
-                    document.querySelector('input[name="csn"]').value
-                ];
-                return params;
-            }
-
-            // Get Coke Parameters
-            function getCokeParams() {
-                const params = [
-                    document.querySelector('input[name="ASH"]').value,
-                    document.querySelector('input[name="VM"]').value,
-                    document.querySelector('input[name="MOISTURE"]').value,
-                    document.querySelector('input[name="S_100MM"]').value,
-                    document.querySelector('input[name="S_80MM"]').value,
-                    document.querySelector('input[name="S_50MM"]').value,
-                    document.querySelector('input[name="S_40MM"]').value,
-                    document.querySelector('input[name="S_30MM"]').value,
-                    document.querySelector('input[name="S_MINUS_30MM"]').value,
-                    document.querySelector('input[name="M_40MM"]').value,
-                    document.querySelector('input[name="M_10MM"]').value,
-                    document.querySelector('input[name="M_MINUS_10MM"]').value,
-                    document.querySelector('input[name="CSR"]').value,
-                    document.querySelector('input[name="CRI"]').value
-                ];
-                return params;
-            }
-
-            function getProcessParams() {
-                const processParams = {};
-
-                // Assuming all process parameters are in the 'processParameters' section
-                const processType = document.getElementById('processDropdown').value;
-                if (processType) {
-                    const inputs = document.querySelectorAll(`#processParameters input`);
-                    inputs.forEach(input => {
-                        if (input.value !== "") {
-                            processParams[input.name] = input.value;
-                        }
-                    });
-                }
-                return processParams;
-            }
-
-            // Add a new coal selection row
-            document.getElementById('add-blend-btn').addEventListener('click', async () => {
-                const coalContainer = document.getElementById('coalContainer');
-                const newRow = document.createElement('div');
-                newRow.classList.add('blend-row');
-                newRow.innerHTML = `
-        <select class="coalDropdown" name="coalDropdown[]">
-            <option value="">Select Coal</option>
-        </select>
-        <div class="blend-entry">
-            <input type="number" class="currentValue" name="currentValue[]" placeholder="Enter current value" required>
-        </div>
-    `;
-                coalContainer.appendChild(newRow);
-
-                try {
-                    const response = await postEncrypted('http://3.111.89.109:3000/api/getTrainingData', { p_CompanyId: 1 });
-                    console.log(response)
-                    const dropdown = newRow.querySelector('.coalDropdown');
-                    dropdown.innerHTML = '<option value="">Select Coal</option>';
-
-                    for (const coalName in response) {
-                        const coalProperties = response[coalName].properties;
-                        const formattedProperties = `{${coalProperties.join(', ')}}`; // Optional formatting
-                        const option = document.createElement('option');
-                        option.value = coalName;
-                        option.textContent = `${coalName}`;
-                        dropdown.appendChild(option);
-                    }
-                } catch (error) {
-                    console.error('Error loading coal data:', error);
-                }
-            });
-
-
-            // Form submission handler
-            const form = document.getElementById('coalForm');
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault(); // Prevent default form submission
-
-                const formData = new FormData(form);
-                const blendedCoalParams = getBlendedCoalParams(); // Assumed to return an array in the same order as BCP parameters
-                const cokeParams = getCokeParams();               // Assumed to return an array in the same order as CP parameters
-                const processParams = getProcessParams();         // Assumed to return an array in the same order as PP parameters
-
-                const coalTypes = formData.getAll('coalDropdown[]');
-                const currentValues = formData.getAll('currentValue[]');
-                const date = formData.get('dateInput');
-
-                // Example of how you're mapping for each coal type
-                for (let i = 0; i < coalTypes.length; i++) {
-                    const formattedData = {
-                        p_CoalId: i + 1,
-                        p_DatedOn: date,
-                        p_CoalType: coalTypes[i],
-                        p_CurrentValue: parseFloat(currentValues[i]),
-
-                        // Individual Coal Parameters (ICP)
-                        p_ICPAsh: 0,
-                        p_ICPVM: 0,
-                        p_ICPMoisture: 0,
-                        p_ICPMaxContraction: 0,
-                        p_ICPMaxExpansion: 0,
-                        p_ICPMaxFluidity: 0,
-                        p_ICPMMR: 0,
-                        p_ICPHGI: 0,
-                        p_ICPSofteningTemperatureDegC: 0,
-                        p_ICPResolidificationTempMinDegC: 0,
-                        p_ICPResolidificationTempMaxDegC: 0,
-                        p_ICPPlasticRangeDegC: 0,
-                        p_ICPSulphur: 0,
-                        p_ICPPhosphorous: 0,
-                        p_ICPCSN: 0,
-                        p_ICPCostInr: 0,
-
-                        // Blended Coal Parameters (BCP)
-                        p_BCPAsh: parseFloat(blendedCoalParams[0]),
-                        p_BCPVM: parseFloat(blendedCoalParams[1]),
-                        p_BCPMoisture: parseFloat(blendedCoalParams[2]),
-                        p_BCPMaxContraction: parseFloat(blendedCoalParams[3]),
-                        p_BCPMaxExpansion: parseFloat(blendedCoalParams[4]),
-                        p_BCPMaxFluidity: parseFloat(blendedCoalParams[5]),
-                        p_BCPCrushingIndex315mm: parseFloat(blendedCoalParams[6]),
-                        p_BCPCrushingIndex05mm: parseFloat(blendedCoalParams[7]),
-                        p_BCPSofteningTemperatureDegC: parseFloat(blendedCoalParams[8]),
-                        p_BCPResolidificationTempMinDegC: parseFloat(blendedCoalParams[9]),
-                        p_BCPResolidificationTempMaxDegC: parseFloat(blendedCoalParams[10]),
-                        p_BCPPlasticRangeDegC: parseFloat(blendedCoalParams[11]),
-                        p_BCPSulphur: parseFloat(blendedCoalParams[12]),
-                        p_BCPPhosphorous: parseFloat(blendedCoalParams[13]),
-                        p_BCPCSN: parseFloat(blendedCoalParams[14]),
-
-                        // Coke Parameters (CP)
-                        p_CPAsh: parseFloat(cokeParams[0]),
-                        p_CPVM: parseFloat(cokeParams[1]),
-                        p_CPM40: parseFloat(cokeParams[2]),
-                        p_CPM10: parseFloat(cokeParams[3]),
-                        p_CPCSR: parseFloat(cokeParams[4]),
-                        p_CPCRI: parseFloat(cokeParams[5]),
-                        p_CPAMS: parseFloat(cokeParams[6]),
-
-                        // Process Parameters (PP)
-                        p_PPChargingTonnage: parseFloat(processParams[0]),
-                        p_PPMoistureContent: parseFloat(processParams[1]),
-                        p_PPBulkDensity: parseFloat(processParams[2]),
-                        p_PPChargingTemperature: parseFloat(processParams[3]),
-                        p_PPBatteryOperatingTemp: parseFloat(processParams[4]),
-                        p_PPCrossWallTemp: parseFloat(processParams[5]),
-                        p_PPPushForce: parseFloat(processParams[6]),
-                        p_PPPRI: parseFloat(processParams[7]),
-                        p_PPCokePerPush: parseFloat(processParams[8]),
-                        p_PPGrossCokeYield: parseFloat(processParams[9]),
-                        p_PPGCMPressure: parseFloat(processParams[10]),
-                        p_PPGCMTemp: parseFloat(processParams[11]),
-                        p_PPCokingTime: parseFloat(processParams[12]),
-                        p_PPCokeEndTemp: parseFloat(processParams[13]),
-                        p_PPQuenchingTime: parseFloat(processParams[14]),
-                        p_PPHeaderTemp: parseFloat(processParams[15]),
-
-                        // Metadata
-                        p_CompanyId: 1,
-                        p_UserId: 1,
-                        p_FileId: 1
-                    };
-
-                    try {
-                        const result = await postEncrypted('http://3.111.89.109:5000/api/inserttrainingdata', formattedData);
-                        alert(result.message);
-                        location.reload();
-                    } catch (error) {
-                        console.error('Error submitting form:', error);
-                    }
-                }
-            });
-
-        });
 
 
         window.addEventListener('DOMContentLoaded', (event) => {
@@ -876,3 +853,7 @@
         });
 
     </script>
+
+</body>
+
+</html>
