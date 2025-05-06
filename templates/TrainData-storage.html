@@ -1,15 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Training Data</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #f5f5f5; 
+            margin: 0; padding-top: 1px; }
 
+            table {
+                border-collapse: collapse;
+                width: 85%;
+                margin: 150px auto;
+                
+            }
+            th, td {
+                padding: 10px;
+                border: 1px solid #464646;
+                text-align: center;
+            }
+            th {
+                background-color: #000a66;
+                color: #f5f5f5;
+            }
+            .delete-btn {
+                background-color: #dc3545;
+                color: #fff;
+                border: none;
+                padding: 5px 10px;
+                font-size: 14px;
+                border-radius: 5px;
+                cursor: pointer;
+              }
+              
+              .delete-btn:hover {
+                background-color: #bd2130;
+              }
+            
+            
+
+    </style>
+</head>
 <body>
     <header>
         <nav class="navbar">
@@ -17,15 +51,13 @@
                 <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left">
             </div>
             <ul class="navbar-links">
-                <li>
-                    <h1>SmartCoke</h1>
-                </li>
+                <li><h1>SmartCoke</h1></li>
                 <li><a href="coal-properties.html">COAL PROPERTIES</a></li>
                 <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
                 <li><a href="cost-ai.html">COST AI</a></li>
                 <li><a href="training.html">TRAINING</a></li>
                 <li><a href="index.html">HOME</a></li>
-
+                
             </ul>
             <select id="language-select">
                 <option value="en">English</option>
@@ -34,21 +66,89 @@
                 <option value="fr">French</option>
                 <option value="de">German</option>
                 <option value="ru">Russian</option>
-                <option value="it">Italian</option>
+                <option value ="it">Italian</option>
                 <option value="ko">Korean</option>
                 <option value="ja">Japanese</option>
-
+                
             </select>
         </nav>
-    </header>
+
+</header>
+<h2 style="text-align: center;">Uploaded Excel Files</h2>
+    <table id="uploaded-files-table">
+        <thead>
+            <tr>
+                <th>Sr No</th>
+                <th>Filename</th>
+                <th>Upload Date</th>
+                <th>Delete file</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
     <script>
+
+    fetch('http://3.111.89.109:5000/get_uploaded_files')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.querySelector('#uploaded-files-table tbody');
+            tableBody.innerHTML = '';
+            data.forEach(file => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${file.sr_no}</td>
+                <td>${file.filename}</td>
+                <td>${file.upload_date}</td>
+                <td><button class="delete-btn" data-filename="${file.filename}">Delete</button></td>
+            `;
+            tableBody.appendChild(row);
+            });
+
+            // Add event listener to delete buttons
+            const deleteBtns = document.querySelectorAll('.delete-btn');
+            deleteBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filename = btn.dataset.filename;
+                fetch('http://3.111.89.109:5000//delete_uploaded_file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                    alert(data.message);
+                    // Refresh the file list
+                    fetch('http://3.111.89.109:5000s/get_uploaded_files')
+                        .then(response => response.json())
+                        .then(data => {
+                        const tableBody = document.querySelector('#uploaded-files-table tbody');
+                        tableBody.innerHTML = '';
+                        data.forEach(file => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                            <td>${file.sr_no}</td>
+                            <td>${file.filename}</td>
+                            <td>${file.upload_date}</td>
+                            <td><button class="delete-btn" data-filename="${file.filename}">Delete</button></td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                        });
+                    } else {
+                    alert(data.error);
+                    }
+                });
+            });
+            });
+        });
 
         async function deleteExcelFile(filePath) {
             try {
-                const response = await axios.post(`${apiBaseUrl}/deleteexcelfile`, {
+                const response = await axios.post(`http://3.111.89.109:5000/deleteexcelfile`, {
                     filePath: filePath
                 });
-
+        
                 if (response.status === 200) {
                     console.log('File deleted successfully:', response.data);
                     return response.data;
@@ -59,14 +159,14 @@
                 console.error('Error deleting file:', error.message);
             }
         }
-
+        
         // Function to delete a file by ID
         async function deleteFileById(fileId) {
             try {
-                const response = await axios.post(`${apiBaseUrl}/deleteonfileid`, {
+                const response = await axios.post(`http://3.111.89.109:5000/deleteonfileid`, {
                     fileId: fileId
                 });
-
+        
                 if (response.status === 200) {
                     console.log('File deleted successfully:', response.data);
                     return response.data;
@@ -77,12 +177,11 @@
                 console.error('Error deleting file:', error.message);
             }
         }
-
-
-
+        
+       
+        
 
     </script>
-
+    
 </body>
-
 </html>
