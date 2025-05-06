@@ -435,7 +435,7 @@
     }
 
     document.getElementById("downloadcoalfile").addEventListener("click", function () {
-  fetch("/download-template-properties")
+  fetch("http://3.111.89.109:3000/download-template-properties")
     .then(response => response.blob())
     .then(blob => {
       const url = window.URL.createObjectURL(blob);
@@ -480,7 +480,7 @@
 
       coalTypes.forEach((coal, index) => {
         const option = document.createElement("option");
-        option.value = index;
+        option.value = coal;
         option.textContent = coal;
         selectCoal.appendChild(option);
       });
@@ -552,19 +552,12 @@
         document.getElementById("mmr").value = selectedCoal.MMR;
         document.getElementById("hgi").value = selectedCoal.HGI;
         document.getElementById("softening_temp").value = selectedCoal.SofteningTemperaturec;
-        document.getElementById("resolidification_min").value =
-          selectedCoal.
-          ResolidificationTempRangeMinc;
-        document.getElementById("resolidification_max").value =
-          selectedCoal.ResolidificationTempRangeMaxc;
-        document.getElementById("plastic_range").value = selectedCoal.
-        PlasticRangec;
+        document.getElementById("resolidification_min").value = selectedCoal.ResolidificationTempRangeMinc;
+        document.getElementById("resolidification_max").value = selectedCoal.ResolidificationTempRangeMaxc;
+        document.getElementById("plastic_range").value = selectedCoal.PlasticRangec;
         document.getElementById("sulphur").value = selectedCoal.Sulphur;
-        document.getElementById("phosphorous").value = selectedCoal.
-Phosphorous
-;
-        document.getElementById("csn").value = selectedCoal.CSN
-        ;
+        document.getElementById("phosphorous").value = selectedCoal.Phosphorous;
+        document.getElementById("csn").value = selectedCoal.CSN;
         document.getElementById("cost").value = selectedCoal.CostPerTonRs;
       }
     });
