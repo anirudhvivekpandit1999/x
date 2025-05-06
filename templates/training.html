@@ -613,25 +613,29 @@
             }
         });
 
-        document.getElementById('upload-file-btn').addEventListener('click', () => {
-            const fileInput = document.getElementById('file-upload');
-            const file = fileInput.files[0];
+        document.getElementById('upload-file-btn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('file-upload');
+    const file = fileInput.files[0];
+    if (!file) {
+      return alert("Please select an Excel file to upload.");
+    }
 
-            if (!file) {
-                alert("Please select a file.");
-                return;
-            }
+    const formData = new FormData();
+    formData.append('file', file);
 
-            const formData = new FormData();
-            formData.append('file', file);
-
-            fetch('http://3.111.89.109:5000/upload_excel_training', {
-                method: 'POST',
-                body: formData
-            }).then(response => response.json())
-                .then(data => alert(data.message || data.error))
-                .catch(error => console.error('Upload failed:', error));
-        });
+    try {
+      const resp = await axios.post(
+        'http://3.111.89.109:5000/upload_excel_training',
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      alert(resp.data.message);
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.error || err.message;
+      alert("Upload failed: " + msg);
+    }
+  });
 
 
 

@@ -220,109 +220,101 @@ def format_list_to_string(data_list):
 
 @app.route('/upload_excel_training', methods=['POST'])
 def upload_excel_training():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file uploaded'}), 400
+    try:
+        # 1. Check file in request
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file part in request'}), 400
 
-    file = request.files['file']
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file type'}), 400
 
-    if file and allowed_file(file.filename):
+        # 2. Save it
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
+        # 3. Read Excel
         df = pd.read_excel(filepath)
-       
 
+        # 4. Prepare to build new CSV rows
         current_index = get_next_index()
         new_rows = []
-
-        base_date = None
-
-        # Define expected process parameter keys in order
         process_keys = [
-            'charging_tonnage', 'moisture_content', 'bulk_density', 'charging_temperature',
-            'battery_operating_temperature', 'cross_wall_temperature', 'push_force',
-            'pri', 'coke_per_push', 'gross_coke_yield', 'gcm_pressure', 'gcm_temperature',
-            'coking_time', 'coke_end_temperature', 'quenching_time'
+            'charging_tonnage','moisture_content','bulk_density','charging_temperature',
+            'battery_operating_temperature','cross_wall_temperature','push_force',
+            'pri','coke_per_push','gross_coke_yield','gcm_pressure','gcm_temperature',
+            'coking_time','coke_end_temperature','quenching_time'
         ]
 
         for i, row in df.iterrows():
+            # Detect new date whenever first column is non-null
             if pd.notna(row.iloc[0]):
                 try:
-                    base_date = pd.to_datetime(row.iloc[0])
-                except ValueError:
-                    base_date = row.iloc[0]
-
+                    base_date = pd.to_datetime(row.iloc[0]).date().isoformat()
+                except:
+                    base_date = str(row.iloc[0])
+            # Only process rows with coal type & current value
             if pd.notna(row.iloc[1]) and pd.notna(row.iloc[2]):
-                coal_type = row.iloc[1]
+                coal_type   = row.iloc[1]
                 current_val = row.iloc[2]
+                individual  = row.iloc[3:19].tolist()
+                blended     = row.iloc[19:34].tolist()
+                coke_vals   = row.iloc[34:41].tolist()
+                proc_vals   = row.iloc[41:41+len(process_keys)].tolist()
 
-                individual = row.iloc[3:19].tolist()
-                blended = row.iloc[19:34].tolist()
-                coke = row.iloc[34:41].tolist()
-                process_values = row.iloc[41:41+len(process_keys)].tolist()
+                # Helper to stringify numeric lists
+                def list_to_str(vals):
+                    if all(pd.notna(v) and isinstance(v, (int, float)) for v in vals):
+                        return '{' + ','.join(str(v) for v in vals) + '}'
+                    return ''
 
-                # Check if individual properties are all numbers
-                if all(pd.notna(x) and isinstance(x, (int, float)) for x in individual):
-                    individual_str = "{" + ", ".join(map(str, individual)) + "}"
-                else:
-                    individual_str = ""
+                individual_str = list_to_str(individual)
+                blended_str    = list_to_str(blended)
+                coke_str       = list_to_str(coke_vals)
 
-                # Check if blended properties are all numbers
-                if all(pd.notna(x) and isinstance(x, (int, float)) for x in blended):
-                    blended_str = "{" + ", ".join(map(str, blended)) + "}"
-                else:
-                    blended_str = ""
+                # Build process dict & stringify if any
+                proc_dict = {
+                    k: v for k, v in zip(process_keys, proc_vals) if pd.notna(v)
+                }
+                process_str = str(proc_dict).replace("'", "") if proc_dict else ''
 
-                # Check if coke properties are all numbers
-                if all(pd.notna(x) and isinstance(x, (int, float)) for x in coke):
-                    coke_str = "{" + ", ".join(map(str, coke)) + "}"
-                else:
-                    coke_str = ""
-
-                # Pair the keys with values
-                process = {k: str(v) if pd.notna(v) else None for k, v in zip(process_keys, process_values)}
-
-                # Only include process parameters if at least one value is not None
-                if any(v is not None for v in process.values()):
-                    process_str = str(process).replace("'", "")
-                else:
-                    process_str = ""
-
-                # Only append row if coal type, current value, and individual properties are valid
-                if coal_type and current_val and individual_str:
-                    new_row = [
-                        current_index if i == 0 or pd.notna(row.iloc[0]) else "",
-                        str(row.iloc[0]) if pd.notna(row.iloc[0]) else "",
+                # Only append if we have the essentials
+                if individual_str:
+                    new_rows.append([
+                        current_index,
+                        base_date,
                         coal_type,
                         current_val,
                         individual_str,
-                        blended_str if blended_str else "",
-                        coke_str if coke_str else "",
-                        process_str if process_str else ""
-                    ]
-                    new_rows.append(new_row)
-                    if pd.notna(row.iloc[0]):
-                        current_index += 1
+                        blended_str,
+                        coke_str,
+                        process_str,
+                        filename
+                    ])
+                    current_index += 1
 
-        # Write to CSV
-        header = ['ID', 'Date', 'Coal Type', 'Current Value', 'Individual Properties',
-                  'Blended Properties', 'Coke Properties', 'Process Parameters','File Name']
-        file_exists = os.path.isfile(TRAINING_DATA)
-
+        # 5. Append to CSV
+        header = [
+            'ID','Date','Coal Type','Current Value',
+            'Individual Properties','Blended Properties',
+            'Coke Properties','Process Parameters','File Name'
+        ]
+        file_exists = os.path.exists(TRAINING_DATA)
         with open(TRAINING_DATA, 'a', newline='') as f:
             writer = csv.writer(f)
             if not file_exists:
                 writer.writerow(header)
-            for row in new_rows:
-                writer.writerow(row + [filename])
+            writer.writerows(new_rows)
 
+        return jsonify({'message': f'{len(new_rows)} rows imported successfully'}), 200
 
-        return jsonify({'message': 'File processed and data saved successfully'}), 200
-
-    return jsonify({'error': 'Invalid file format'}), 400
-
-
+    except Exception as e:
+        # full traceback to console
+        app.logger.exception("Error in /upload_excel_training")
+        return jsonify({'error': str(e)}), 500
 #FUNCTION TO SAVE THE TRAINING FORM IN CSV 
 
 def load_coal_data():
