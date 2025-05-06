@@ -107,83 +107,90 @@ def get_next_index():
 
 @app.route('/download-template', methods=['GET'])
 def download_template():
-    # Define the first header (Main Categories)
-    main_header = [
-        'Date', 'Coal Type', 'Current Percentage',
-        'Individual Coal Properties', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-        'Blended Coal Properties', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-        'Coke Properties', '', '', '', '', '', '', '',
-        'Process Parameters', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
-    ]
+    try:
+        # Define the first header (Main Categories)
+        main_header = [
+            'Date', 'Coal Type', 'Current Percentage',
+            'Individual Coal Properties', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+            'Blended Coal Properties', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+            'Coke Properties', '', '', '', '', '', '', '',
+            'Process Parameters', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+        ]
 
-    # Define the second header (Subcategories)
-    sub_header = [
-        '', '', '',
-        'Ash', 'VM', 'Moisture', 'Max. Contraction', 'Max. Expansion',
-        'Max. fluidity', 'MMR', 'HGI', 'Softening temperature (degC)',
-        'Resolidification temp min (degC)', 'Resolidification temp max (degC)',
-        'Plastic range (degC)', 'Sulphur', 'Phosphorous', 'CSN', 'Cost (INR)',
-        'Ash', 'VM', 'Moisture', 'Max. Contraction', 'Max. Expansion',
-        'Max. fluidity', 'Crushing Index <3.15mm', 'Crushing Index <0.5mm',
-        'Softening temperature (degC)', 'Resolidification temp min (degC)', 'Resolidification temp max (degC)',
-        'Plastic range (degC)', 'Sulphur', 'Phosphorous', 'CSN',
-        'Ash', 'VM', 'M40', 'M10', 'CSR', 'CRI', 'AMS',
-        'Charging Tonnage', 'Moisture Content', 'Bulk Density',
-        'Charging Temperature', 'Battery Operating Temp', 'Cross Wall Temp',
-        'Push Force', 'PRI', 'Coke per Push', 'Gross Coke Yield',
-        'Gcm Pressure', 'Gcm Temp', 'Coking Time', 'Coke End Temp',
-        'Quenching Time', 'Header Temp'
-    ]
+        # Define the second header (Subcategories)
+        sub_header = [
+            '', '', '',
+            'Ash', 'VM', 'Moisture', 'Max. Contraction', 'Max. Expansion',
+            'Max. fluidity', 'MMR', 'HGI', 'Softening temperature (degC)',
+            'Resolidification temp min (degC)', 'Resolidification temp max (degC)',
+            'Plastic range (degC)', 'Sulphur', 'Phosphorous', 'CSN', 'Cost (INR)',
+            'Ash', 'VM', 'Moisture', 'Max. Contraction', 'Max. Expansion',
+            'Max. fluidity', 'Crushing Index <3.15mm', 'Crushing Index <0.5mm',
+            'Softening temperature (degC)', 'Resolidification temp min (degC)', 'Resolidification temp max (degC)',
+            'Plastic range (degC)', 'Sulphur', 'Phosphorous', 'CSN',
+            'Ash', 'VM', 'M40', 'M10', 'CSR', 'CRI', 'AMS',
+            'Charging Tonnage', 'Moisture Content', 'Bulk Density',
+            'Charging Temperature', 'Battery Operating Temp', 'Cross Wall Temp',
+            'Push Force', 'PRI', 'Coke per Push', 'Gross Coke Yield',
+            'Gcm Pressure', 'Gcm Temp', 'Coking Time', 'Coke End Temp',
+            'Quenching Time', 'Header Temp'
+        ]
 
-    # Example data
-    data = [
-        ['04-03-2025', 'Coal Type 1', 30] + [''] * (len(sub_header) - 3),
-        ['', 'Coal Type 2', 30] + [''] * (len(sub_header) - 3),
-        ['', 'Coal Type 3', 40] + [''] * (len(sub_header) - 3),
-    ]
+        # Ensure header count matches
+        num_columns = len(sub_header)
 
-    # Convert to DataFrame
-    df = pd.DataFrame(data)
+        # Example data (3 rows)
+        data = [
+            ['04-03-2025', 'Coal Type 1', 30] + [''] * (num_columns - 3),
+            ['', 'Coal Type 2', 30] + [''] * (num_columns - 3),
+            ['', 'Coal Type 3', 40] + [''] * (num_columns - 3),
+        ]
 
-    # Save to Excel with XlsxWriter
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, startrow= 2, header=False, sheet_name='Template')
-        workbook = writer.book
-        worksheet = writer.sheets['Template']
+        # Create DataFrame
+        df = pd.DataFrame(data)
 
-        # Apply header formatting
-        header_format = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1, 'bg_color': '#DDEBF7'})
-        subheader_format = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1})
-        
-        # Merge the main headers with proper ranges
-        worksheet.merge_range(0, 3, 0, 18, 'Individual Coal Properties', header_format)
-        worksheet.merge_range(0, 19, 0, 33, 'Blended Coal Properties', header_format)
-        worksheet.merge_range(0, 34, 0, 40, 'Coke Properties', header_format)
-        worksheet.merge_range(0, 41, 0, 56, 'Process Parameters', header_format)
+        # Output buffer
+        output = BytesIO()
 
-        # Write the static columns for main header
-        worksheet.write(0, 0, 'Date', header_format)
-        worksheet.write(0, 1, 'Coal Type', header_format)
-        worksheet.write(0, 2, 'Current Value', header_format)
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, startrow=2, header=False, sheet_name='Template')
+            workbook = writer.book
+            worksheet = writer.sheets['Template']
 
-        # Write sub-headers
-        for col in range(len(sub_header)):
-            worksheet.write(1, col, sub_header[col], subheader_format)
+            # Formats
+            header_format = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1, 'bg_color': '#DDEBF7'})
+            subheader_format = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1})
 
-        # Adjust row height for better visibility
-        worksheet.set_row(0, 25)
-        worksheet.set_row(1, 30)
+            # Merge main headers
+            worksheet.merge_range(0, 3, 0, 18, 'Individual Coal Properties', header_format)
+            worksheet.merge_range(0, 19, 0, 33, 'Blended Coal Properties', header_format)
+            worksheet.merge_range(0, 34, 0, 40, 'Coke Properties', header_format)
+            worksheet.merge_range(0, 41, 0, 56, 'Process Parameters', header_format)
 
-        # Set column widths
-        for col in range(len(sub_header)):
-            worksheet.set_column(col, col, max(len(str(sub_header[col])) if sub_header[col] else 15, 15))
+            # Static headers
+            worksheet.write(0, 0, 'Date', header_format)
+            worksheet.write(0, 1, 'Coal Type', header_format)
+            worksheet.write(0, 2, 'Current Value', header_format)
 
-    output.seek(0)
-    return send_file(output, as_attachment=True, download_name='coal_template.xlsx',
-                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            # Sub headers
+            for col in range(num_columns):
+                worksheet.write(1, col, sub_header[col], subheader_format)
 
-def format_list_to_string(data_list):
+            # Adjust formatting
+            worksheet.set_row(0, 25)
+            worksheet.set_row(1, 30)
+            for col in range(num_columns):
+                worksheet.set_column(col, col, max(len(str(sub_header[col])) if sub_header[col] else 15, 15))
+
+        output.seek(0)
+        return send_file(output,
+                         as_attachment=True,
+                         download_name='coal_template.xlsx',
+                         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+    except Exception as e:
+        print("Error in /download-template:", e)
+        return jsonify({'error': str(e)}), 500def format_list_to_string(data_list):
     if not data_list or all(pd.isna(x) for x in data_list):
         return None
     
