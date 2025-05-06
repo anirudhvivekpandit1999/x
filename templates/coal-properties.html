@@ -435,7 +435,7 @@
     }
 
     document.getElementById("downloadcoalfile").addEventListener("click", function () {
-  fetch("/download-template-properties")
+  fetch("http://3.111.89.109:5000/download-template-properties")
     .then(response => response.blob())
     .then(blob => {
       const url = window.URL.createObjectURL(blob);
@@ -454,7 +454,7 @@
 
     async function fetchCoalData() {
       try {
-        const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 })
+        const result = await postEncrypted("http://3.111.89.109:5000/api/getCoalProperties", { companyId: 1 })
         console.log("🚀 Data fetched successfully:", result);
         const data = result[0];
         coalData = data.CoalData.CoalProperties;
@@ -468,6 +468,7 @@
     }
 
     function populateCoalDropdown() {
+      console.log(coalTypes);
       const selectCoal = document.getElementById("selectCoal");
       selectCoal.innerHTML = "";
 
@@ -554,7 +555,7 @@
         document.getElementById("selectCoal").value,
         10
       );
-      const result = await postEncrypted("http://3.111.89.109:3000/api/getIndividualCoalProperty", { p_CompanyId: 1 , p_CoalId : (selectedIndex + 1) })
+      const result = await postEncrypted("http://3.111.89.109:5000/api/getIndividualCoalProperty", { p_CompanyId: 1 , p_CoalId : (selectedIndex + 1) })
       console.log(result);
       if (selectedIndex >= 0 && selectedIndex < coalData.length) {
         const selectedCoal = coalData[selectedIndex];
@@ -569,19 +570,12 @@
         document.getElementById("mmr").value = selectedCoal.MMR;
         document.getElementById("hgi").value = selectedCoal.HGI;
         document.getElementById("softening_temp").value = selectedCoal.SofteningTemperaturec;
-        document.getElementById("resolidification_min").value =
-          selectedCoal.
-          ResolidificationTempRangeMinc;
-        document.getElementById("resolidification_max").value =
-          selectedCoal.ResolidificationTempRangeMaxc;
-        document.getElementById("plastic_range").value = selectedCoal.
-        PlasticRangec;
+        document.getElementById("resolidification_min").value = selectedCoal.ResolidificationTempRangeMinc;
+        document.getElementById("resolidification_max").value = selectedCoal.ResolidificationTempRangeMaxc;
+        document.getElementById("plastic_range").value = selectedCoal.PlasticRangec;
         document.getElementById("sulphur").value = selectedCoal.Sulphur;
-        document.getElementById("phosphorous").value = selectedCoal.
-Phosphorous
-;
-        document.getElementById("csn").value = selectedCoal.CSN
-        ;
+        document.getElementById("phosphorous").value = selectedCoal.Phosphorous;
+        document.getElementById("csn").value = selectedCoal.CSN;
         document.getElementById("cost").value = selectedCoal.CostPerTonRs;
       }
     });
@@ -626,7 +620,7 @@ Phosphorous
 
         try {
           const response = await postEncrypted(
-            "http://3.111.89.109:3000/api/updateCoalProperties",
+            "http://3.111.89.109:5000/api/updateCoalProperties",
             modifiedCoalData
           );
 
@@ -724,7 +718,7 @@ Phosphorous
   };
 
   try {
-    const response = await postEncrypted("http://3.111.89.109:3000/api/insertCoalProperties", newCoalData);
+    const response = await postEncrypted("http://3.111.89.109:5000/api/insertCoalProperties", newCoalData);
 
     const result = Array.isArray(response) && response[0] ? response[0] : response;
 
