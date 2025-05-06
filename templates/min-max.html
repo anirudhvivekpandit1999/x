@@ -504,7 +504,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Call the encrypted POST request and wait for the result
-        const result = await postEncrypted('http://3.111.89.109:5000/api/getMinMaxValues', {p_CompanyId : 1 }); // assuming no payload
+        const result = await postEncrypted('http://3.111.89.109:3000/api/getMinMaxValues', {p_CompanyId : 1 }); // assuming no payload
         console.log(result[0].CoalPropertiesFormatted);
         // Populate form fields with the fetched data
         document.querySelector('[name="ash_lower"]').value = result[0].CoalPropertiesFormatted.ash.lower;
