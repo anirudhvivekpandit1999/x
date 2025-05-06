@@ -487,50 +487,67 @@
     }
 
     function displayTable() {
-      const tableBody = document.querySelector("#coalTable tbody");
-      tableBody.innerHTML = "";
+  const tableBody = document.querySelector("#coalTable tbody");
+  tableBody.innerHTML = "";
 
-      // Define columns and their display names (optional)
-      const columnOrder = [
-        "CoalName",
-        "Ash",
-        "VolatileMatter",
-        "Moisture",
-        "MaxContraction",
-        "MaxExpansion",
-        "Maxfluidityddpm",
-        "MMR",
-        "HGI",
-        "ResolidificationTempRangeMinc",
-        "SofteningTemperaturec",
-        "ResolidificationTempRangeMaxc",
-        "PlasticRangec",
-        "Sulphur",
-        "Phosphorous",
-        "CSN",
-        "CostPerTonRs",
-        "LastModifiedDate"
-      ];
+  const columnOrder = [
+    "CoalName",
+    "Ash",
+    "VolatileMatter",
+    "Moisture",
+    "MaxContraction",
+    "MaxExpansion",
+    "Maxfluidityddpm",
+    "MMR",
+    "HGI",
+    "ResolidificationTempRangeMinc",
+    "SofteningTemperaturec",
+    "ResolidificationTempRangeMaxc",
+    "PlasticRangec",
+    "Sulphur",
+    "Phosphorous",
+    "CSN",
+    "CostPerTonRs",
+    "LastModifiedDate"
+  ];
 
-      coalData.forEach((row, index) => {
-        const tr = document.createElement("tr");
+  coalData.forEach((row, index) => {
+    const tr = document.createElement("tr");
 
-        // S.No column
-        const tdIndex = document.createElement("td");
-        tdIndex.textContent = index + 1;
-        tr.appendChild(tdIndex);
+    // S.No column
+    const tdIndex = document.createElement("td");
+    tdIndex.textContent = index + 1;
+    tr.appendChild(tdIndex);
 
-        // Loop through the predefined columns
-        columnOrder.forEach((key) => {
-          const td = document.createElement("td");
-          td.textContent = row[key] !== undefined ? row[key] : "N/A";
-          tr.appendChild(td);
-        });
+    // Data columnsw
+    columnOrder.forEach((key) => {
+      const td = document.createElement("td");
+      td.textContent = row[key] !== undefined ? row[key] : "N/A";
+      tr.appendChild(td);
+    });
 
-        tableBody.appendChild(tr);
-      });
-    }
+    // Delete button
+    const tdDelete = document.createElement("td");
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Delete";
+    deleteButton.className = "delete-button";
+    deleteButton.onclick = async () => {
+      try {
+        const response = await postEncrypted('http://3.111.89.109:3000/api/deleteCoalProperties',{p_CoalId : row.CoalId})
 
+        fetchCoalData();
+        alert("Deleted Coal");
+      } catch (error) {
+        console.error("Error deleting coal entry:", error);
+        alert("Error deleting entry. See console for details.");
+      }
+    };
+    tdDelete.appendChild(deleteButton);
+    tr.appendChild(tdDelete);
+
+    tableBody.appendChild(tr);
+  });
+}
 
     document.getElementById("selectCoal").addEventListener("change",async () => {
       const selectedIndex = parseInt(
@@ -615,9 +632,9 @@ Phosphorous
 
           fetchCoalData(); // Refresh table
 
-          if (response.message) {
+         
             alert("Data updated successfully!");
-          }
+          
 
           document.getElementById("modifyCoalFormPopup").style.display = "none";
           resetForm();
@@ -713,9 +730,9 @@ Phosphorous
 
     fetchCoalData();
 
-    if (result.message) {
+    
       alert("Data added successfully!");
-    }
+    
 
     document.getElementById("coalFormPopup").style.display = "none";
   } catch (err) {

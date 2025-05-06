@@ -109,7 +109,7 @@
             deleteBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const filename = btn.dataset.filename;
-                fetch('http://3.111.89.109:5000//delete_uploaded_file', {
+                fetch('http://3.111.89.109:5000/delete_uploaded_file', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ filename }),
@@ -119,7 +119,7 @@
                     if (data.message) {
                     alert(data.message);
                     // Refresh the file list
-                    fetch('http://3.111.89.109:5000s/get_uploaded_files')
+                    fetch('http://3.111.89.109:5000/get_uploaded_files')
                         .then(response => response.json())
                         .then(data => {
                         const tableBody = document.querySelector('#uploaded-files-table tbody');
@@ -169,6 +169,7 @@
         
                 if (response.status === 200) {
                     console.log('File deleted successfully:', response.data);
+                    alert("File has been successfully deleted ");
                     return response.data;
                 } else {
                     throw new Error(`Error deleting file: ${response.status}`);

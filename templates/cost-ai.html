@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <style>
@@ -927,12 +927,13 @@
 
         async function loadCoalTypes() {
             try {
-                const response = await fetch('http://3.111.89.109:5000/get_coal_types_cost');
-                const data = await response.json();
-                const coalTypes = data.coal_types;
+                const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 })
+                const data = result[0];
+                const coalData = data.CoalData.CoalProperties;
+                const coalTypes = data.CoalData.CoalTypes;
 
                 // Store coal properties globally
-                window.coalProperties = data.coal_properties;
+                window.coalProperties = coalData;
 
                 // Return dropdown options
                 return coalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
@@ -1041,9 +1042,10 @@
                 const range = parseFloat(rangeInput.value) || 0;
 
                 if (selectedCoal && range > 0 && window.coalProperties) {
-                    const coalData = window.coalProperties.find(row => row[0] === selectedCoal);
+                    console.log("selectedCoal" , selectedCoal);
+                    const coalData = window.coalProperties.find(row => row.CoalName === selectedCoal);
                     if (coalData) {
-                        const costPerTon = parseFloat(coalData[16]); // Assuming cost is in the 17th column
+                        const costPerTon = parseFloat(coalData.CostPerTonRs); // Assuming cost is in the 17th column
                         totalCost += costPerTon * range / 100; // Add the weighted cost
                     }
                 }
@@ -1072,7 +1074,7 @@
                 //    (assuming `CoalPropertiesFormatted` is JSON-stringified in the response)
                 const formatted = apiResult[0].CoalPropertiesFormatted;
                 console.log(formatted);
-                
+
 
                 // 3. loop through each property and wire up the sliders
                 Object.entries(formatted).forEach(([key, range]) => {

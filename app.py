@@ -233,7 +233,7 @@ def upload_excel_training():
 
         # 2. Save it
         filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        filepath = os.path.join("uploads", filename)
         file.save(filepath)
 
         # 3. Read Excel
@@ -447,14 +447,12 @@ def get_uploaded_files():
 @app.route('/delete_uploaded_file', methods=['POST'])
 def delete_uploaded_file():
     filename = request.json['filename']
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file_path = os.path.join("uploads", filename)
     if os.path.exists(file_path):
         os.remove(file_path)
         
         # Remove data from training data CSV
-        df = pd.read_csv(TRAINING_DATA)
-        df = df[df['File Name'] != filename]
-        df.to_csv(TRAINING_DATA, index=False)
+        
         
         return jsonify({'message': 'File deleted successfully'}), 200
     return jsonify({'error': 'File not found'}), 404
