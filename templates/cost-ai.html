@@ -925,22 +925,23 @@
             document.getElementById("totalproposedRange").textContent = totalCurrentRange;
         }
 
-        async function loadCoalTypes() {
+        
+
+        async function fetchCoalData() {
             try {
-                const response = await fetch('http://3.111.89.109:5000/get_coal_types_cost');
-                const data = await response.json();
-                const coalTypes = data.coal_types;
+              const result = await postEncrypted("http://3.111.89.109:5000/api/getCoalProperties", { companyId: 1 })
+              console.log("🚀 Data fetched successfully:", result);
+              const data = result[0];
+              coalTypes = data.CoalData.CoalTypes;
 
-                // Store coal properties globally
-                window.coalProperties = data.coal_properties;
+              window.coalProperties = data.CoalData.CoalProperties;
 
-                // Return dropdown options
-                return coalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
+      
+              return coalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
             } catch (error) {
-                console.error("Error loading coal types:", error);
-                return '';
+              console.error("Error fetching coal type:", error);
             }
-        }
+          }
 
         async function addBlend() {
             const MAX_COALS = 10;
@@ -1064,7 +1065,7 @@
             try {
                 // 1. call your secured API
                 const apiResult = await postEncrypted(
-                    'http://3.111.89.109:3000/api/getMinMaxValues',
+                    'http://3.111.89.109:5000/api/getMinMaxValues',
                     { p_CompanyId: 1 }
                 );
 
