@@ -68,7 +68,7 @@ def login():
 #training page 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'xls', 'xlsx'}
-SUBMITTED_CSV_PATH = 'submitted_training_coal_data.csv'
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 TRAINING_DATA = 'training_data_file.csv'
 INDIVIDUAL_UPLOADS_FOLDER = os.path.join(UPLOAD_FOLDER, 'individual_uploads')
@@ -459,59 +459,6 @@ def delete_uploaded_file():
         return jsonify({'message': 'File deleted successfully'}), 200
     return jsonify({'error': 'File not found'}), 404
 
-@app.route('/upload-excel', methods=['POST'])
-def upload_excel():
-    if 'file' not in request.files:
-        return jsonify({'message': 'No file part'}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'message': 'No selected file'}), 400
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
-
-        try:
-            df = pd.read_excel(file_path)
-            
-            headers_list = ['Ash', 'VM', 'Moisture', 'Max. Contraction', 'Max. Expansion', 'Max. fluidity', 'MMR', 'HGI', 'Softening temperature (degC)',
-                            'Resolidification temp min (degC)', 'Resolidification temp max (degC)', 'Plastic range (degC)', 'Sulphur', 'Phosphorous', 'CSN']
-            df = df[~df.iloc[:, 3:18].apply(lambda row: all(col in headers_list for col in row.dropna()), axis=1)]
-
-            rows_to_write = []
-            index_number = get_next_index()
-
-            for _, row in df.iterrows():
-                date = row.get('Date', None)
-                coal_type = row.get('Coal Type', None)
-                value = row.get('Current Value', None)
-
-                coal_properties = format_list_to_string(row.iloc[3:19].tolist())
-                blended_coal_params = format_list_to_string(row.iloc[19:35].tolist())
-                coke_params = format_list_to_string(row.iloc[35:42].tolist())
-                process_params = format_list_to_string(row.iloc[42:].tolist())
-
-                current_index = index_number if pd.notna(date) else None
-                if pd.notna(date):
-                    index_number = get_next_index()
-
-                rows_to_write.append([current_index, date, coal_type, value, coal_properties, blended_coal_params, coke_params, process_params])
-
-        except Exception as e:
-            return jsonify({'message': 'Error reading the Excel file', 'error': str(e)}), 500
-
-        try:
-            with open(SUBMITTED_CSV_PATH, 'a', newline='') as f:
-                writer = csv.writer(f)
-                for row in rows_to_write:
-                    writer.writerow(row)
-            return jsonify({'message': 'File uploaded and data saved successfully!'}), 200
-
-        except Exception as e:
-            return jsonify({'message': 'Error saving data to CSV', 'error': str(e)}), 500
-
-    return jsonify({'message': 'Invalid file type. Only .xls and .xlsx are allowed.'}), 400
-
 
 
 # cost AI page 
@@ -639,7 +586,7 @@ def read_min_max_values():
 min_max_values = read_min_max_values()
         
 
-file_path = 'submitted_training_coal_data.csv'
+file_path = 'training_data_file.csv'
 coal_percentages = []
 coal_properties = []
 blends = []
@@ -1231,6 +1178,8 @@ def cost():
         error_details = traceback.format_exc()
         app.logger.error(f"Error in cost calculation: {error_details}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500  @app.route('/download-template-properties')
+
+
 def download_template_properties():
     # Define the column headers for the template
     columns = [
