@@ -468,6 +468,7 @@
     }
 
     function populateCoalDropdown() {
+      console.log(coalTypes);
       const selectCoal = document.getElementById("selectCoal");
       selectCoal.innerHTML = "";
 
@@ -480,7 +481,7 @@
 
       coalTypes.forEach((coal, index) => {
         const option = document.createElement("option");
-        option.value = coal;
+        option.value = index;
         option.textContent = coal;
         selectCoal.appendChild(option);
       });
