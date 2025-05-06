@@ -190,7 +190,9 @@ def download_template():
 
     except Exception as e:
         print("Error in /download-template:", e)
-        return jsonify({'error': str(e)}), 500def format_list_to_string(data_list):
+        return jsonify({'error': str(e)}), 500
+    
+def format_list_to_string(data_list):
     if not data_list or all(pd.isna(x) for x in data_list):
         return None
     
