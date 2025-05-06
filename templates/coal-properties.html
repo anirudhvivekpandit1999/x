@@ -44,9 +44,10 @@
 
     /* Coal Table */
     #coalTable {
-      width: 100%;
+      width: 90%;
       border-collapse: collapse;
       margin-top: 20px;
+      margin-left: 0.5rem;
       border: 1px solid #ddd;
     }
 
@@ -175,6 +176,25 @@
         font-size: 14px;
       }
     }
+
+    .delete-button {
+      background-color: #dc3545; /* Red color */
+      color: #fff; /* White text */
+      border: none;
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.2s ease-in-out;
+    }
+    
+    .delete-button:hover {
+      background-color: #bd2130; /* Darker red on hover */
+    }
+    
+    .delete-button:active {
+      transform: scale(0.95); /* Scale down on click */
+    }
   </style>
 </head>
 
@@ -238,6 +258,7 @@
         <th>CSN</th>
         <th>Cost per Ton (Rs.)</th>
         <th>Last Modified Date</th>
+        <th>Delete Coal</th>
       </tr>
     </thead>
     <tbody>
