@@ -435,7 +435,7 @@
     }
 
     document.getElementById("downloadcoalfile").addEventListener("click", function () {
-  fetch("http://3.111.89.109:5000/download-template-properties")
+  fetch("http://3.111.89.109:3000/download-template-properties")
     .then(response => response.blob())
     .then(blob => {
       const url = window.URL.createObjectURL(blob);
@@ -454,7 +454,7 @@
 
     async function fetchCoalData() {
       try {
-        const result = await postEncrypted("http://3.111.89.109:5000/api/getCoalProperties", { companyId: 1 })
+        const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 })
         console.log("🚀 Data fetched successfully:", result);
         const data = result[0];
         coalData = data.CoalData.CoalProperties;
@@ -555,7 +555,7 @@
         document.getElementById("selectCoal").value,
         10
       );
-      const result = await postEncrypted("http://3.111.89.109:5000/api/getIndividualCoalProperty", { p_CompanyId: 1 , p_CoalId : (selectedIndex + 1) })
+      const result = await postEncrypted("http://3.111.89.109:3000/api/getIndividualCoalProperty", { p_CompanyId: 1 , p_CoalId : (selectedIndex + 1) })
       console.log(result);
       if (selectedIndex >= 0 && selectedIndex < coalData.length) {
         const selectedCoal = coalData[selectedIndex];
@@ -620,7 +620,7 @@
 
         try {
           const response = await postEncrypted(
-            "http://3.111.89.109:5000/api/updateCoalProperties",
+            "http://3.111.89.109:3000/api/updateCoalProperties",
             modifiedCoalData
           );
 
@@ -718,7 +718,7 @@
   };
 
   try {
-    const response = await postEncrypted("http://3.111.89.109:5000/api/insertCoalProperties", newCoalData);
+    const response = await postEncrypted("http://3.111.89.109:3000/api/insertCoalProperties", newCoalData);
 
     const result = Array.isArray(response) && response[0] ? response[0] : response;
 
