@@ -8,22 +8,21 @@ set -euo pipefail
 # 1. Navigate to app directory
 cd /home/ec2-user/x
 
-# 2. Fetch and reset to main for a clean sync
-git fetch origin main
-git reset --hard origin/main
+# 2. Pull latest changes from main
+git pull origin main
 
-# 3. Activate virtualenv if it exists
+# 3. (Optional) Activate virtualenv if you have one
 if [ -f venv/bin/activate ]; then
   source venv/bin/activate
 fi
 
-# 4. Install dependencies
+# 4. (Optional) Install new dependencies
 pip install -r requirements.txt
 
-# 5. Restart app via PM2
+# 5. Restart your app via PM2
 pm2 restart all
 
-# 6. Return to original directory
+# 6. Return to original directory (keeps history clean)
 cd -
 
 echo "✅ Deploy complete: $(date +'%Y-%m-%d %H:%M:%S')"
