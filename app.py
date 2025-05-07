@@ -474,6 +474,9 @@ def delete_uploaded_file():
         os.remove(file_path)
         
         # Remove data from training data CSV
+        df = pd.read_csv(TRAINING_DATA)
+        df = df[df['File Name'] != filename]
+        df.to_csv(TRAINING_DATA, index=False)
         
         
         return jsonify({'message': 'File deleted successfully'}), 200
