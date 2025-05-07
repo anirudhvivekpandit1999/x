@@ -1098,22 +1098,20 @@
             }
         });
 
-
         async function loadProposedCoalTypes() {
             try {
-                const response = await fetch('http://3.111.89.109:5000/get_proposed_coal_types');
-                const data = await response.json();
-                const coalInfo = data.coal_info;
+                const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 })
+                const data = result[0];
+                const coalData = data.CoalData.CoalProperties;
+                const coalTypes = data.CoalData.CoalTypes;
 
-                coalCostMap = coalInfo.reduce((acc, item) => {
-                    acc[item.type] = parseFloat(item.cost);
-                    return acc;
-                }, {});
+                // Store coal properties globally
+                window.coalProperties = coalData;
 
                 // Return dropdown options
-                return coalInfo.map(item => `<option value="${item.type}">${item.type}</option>`).join('');
+                return coalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
             } catch (error) {
-                console.error("Error loading proposed coal types:", error);
+                console.error("Error loading coal types:", error);
                 return '';
             }
         }
