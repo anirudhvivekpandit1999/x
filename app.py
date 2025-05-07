@@ -25,7 +25,6 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 from tensorflow.keras import layers  # type: ignore
 import requests
-from io import StringIO
 
 
 app = Flask(__name__)
@@ -638,8 +637,15 @@ P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',')
 Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
 
 response = requests.get('http://3.111.89.109:3000/api/getCoalProperties')
+
+# Check if the request was successful
 if response.status_code == 200:
-    data1 = pd.read_csv(StringIO(response.text), dtype=str, header=None, on_bad_lines='skip')
+   
+    data = json.loads(response.text)
+    df = pd.DataFrame(data)
+    # Use the API data as needed
+    data1 = df.astype(str)  
+
 else:
     print(f"Failed to retrieve data. Status code: {response.status_code}")      
 
