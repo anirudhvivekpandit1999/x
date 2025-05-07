@@ -1,4 +1,3 @@
-```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -13,7 +12,7 @@ git pull origin main
 
 # 3. (Optional) Activate virtualenv if you have one
 if [ -f venv/bin/activate ]; then
-  source venv/bin/activate
+source venv/bin/activate
 fi
 
 # 4. (Optional) Install new dependencies
@@ -26,4 +25,3 @@ pm2 restart all
 cd -
 
 echo "✅ Deploy complete: $(date +'%Y-%m-%d %H:%M:%S')"
-```
