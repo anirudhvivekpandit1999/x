@@ -4,314 +4,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartCoke</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Smartcoke Login</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+        * {
             margin: 0;
-            padding-top: 1px;
-        }
-
-        .main-container {
-            width: 60%;
-            margin: auto;
-            padding: 20px;
-            margin-top: 110px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            background-color: #ffffff;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #333;
-            font-size: 28px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        .input-slider-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .input-slider-group input[type="number"] {
-            width: 30%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 0;
             box-sizing: border-box;
         }
 
-        .input-slider-group input[type="range"] {
-            flex: 1;
-            -webkit-appearance: none;
-            appearance: none;
-            height: 10px;
-            border-radius: 5px;
-            background: linear-gradient(to right, #fa4033, #ffeb3b, #329936);
-            outline: none;
-            opacity: 0.7;
-            transition: opacity 0.15s ease-in-out;
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
         }
 
-        .input-slider-group input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #000000;
-            cursor: pointer;
-            transition: background 0.15s ease-in-out;
+        .container {
+            display: flex;
+            width: 80%;
+            height: 80%;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
 
-        .input-slider-group input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #4caf50;
-            cursor: pointer;
-            transition: background 0.15s ease-in-out;
+        .form-section {
+            width: 50%;
+            background-color: #fff;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
-        .slider-value {
-            width: 50px;
-            text-align: center;
-            font-size: 1.2em;
-            margin-left: 83%;
+        .form-section h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
             color: #333;
         }
 
-        button[type="submit"] {
-            display: block;
-            width: 30%;
-            padding: 10px 0;
-            background-color: #020947;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 35%;
-            font-size: 1.1em;
-            margin-top: 20px;
-            transition: background-color 0.3s ease-in-out;
+        .input-field {
+            margin-bottom: 15px;
         }
 
-        button[type="submit"]:hover {
-            background-color: #1e40af;
+        .input-field label {
+            display: block;
+            font-size: 18px;
+            color: #000000;
+        }
+
+        .input-field input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
         }
 
         button {
-            display: block;
-            width: 30%;
-            padding: 10px 0;
-            background-color: #020947;
+            padding: 12px;
+            background-color: #0a3d62;
             color: white;
+            width: 30%;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
+            font-size: 18px;
             cursor: pointer;
-            margin-left: 35%;
-            font-size: 1.1em;
-            margin-top: 20px;
-            transition: background-color 0.3s ease-in-out;
+            transition: background-color 0.3s ease;
         }
 
         button:hover {
-            background-color: #1e40af;
+            background-color: #082a45;
+        }
+
+        .image-section {
+            width: 50%;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-section img {
+            width: 80%;
+            height: 80%;
+
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                width: 90%;
+            }
+
+            .form-section,
+            .image-section {
+                width: 100%;
+            }
+
+            .image-section img {
+                max-width: 90%;
+                max-height: 70%;
+            }
         }
     </style>
-
 </head>
 
 <body>
-    <header>
-        <nav class="navbar">
-            <div class="logo-left">
-                <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left">
-            </div>
-            <ul class="navbar-links">
-                <li>
-                    <h1>SmartCoke</h1>
-                </li>
-                <li><a href="coal-properties.html">COAL PROPERTIES</a></li>
-                <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
-                <li><a href="cost-ai.html">COST AI</a></li>
-                <li><a href="training.html">TRAINING</a></li>
-                <li><a href="index.html">HOME</a></li>
+    <div class="container">
+        <!-- Form Section -->
+        <div class="form-section">
+            <h1>Smartcoke</h1>
+            <h2>Log In</h2>
+            {% if error %}
+            <p style="color: red;">{{ error }}</p>
+            {% endif %}
 
-            </ul>
-            <select id="language-select">
-                <option value="en">English</option>
-                <option value="zh-CN">Chinese</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="ru">Russian</option>
-                <option value="it">Italian</option>
-                <option value="ko">Korean</option>
-                <option value="ja">Japanese</option>
+            <form id="loginForm">
+                <div class="input-field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" autocomplete="email" required>
+                </div>
+                <div class="input-field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" autocomplete="current-password" required>
+                </div>
+                <button type="submit">Log In</button>
+            </form>
+            <p>Don't have an account? <a href="signup.html">Sign up here</a></p>
+        </div>
 
-            </select>
-        </nav>
-    </header>
-
-    <div class="main-container">
-        <h2>Coke Properties of Proposed Blend</h2>
-
-        <form id="single-entry-form">
-            <!-- Ash -->
-            <div class="form-group">
-                <label for="ash">Ash (%)</label>
-                <div class="input-slider-group">
-                    <input type="number" id="ash_lower" name="ash_lower" placeholder="Lower Limit" step="0.01" required>
-                    <input type="number" id="ash_upper" name="ash_upper" placeholder="Upper Limit" step="0.01" required>
-                    <label for="ash_weight">Weightage</label>
-                    <input type="range" id="ash_weight" name="ash_weight" min="0" max="2" step="0.1" value="1" required>
-                </div>
-                <div class="slider-value">
-                    <span id="ash_slider_value">1</span>
-                </div>
-            </div>
-
-            <!-- Volatile Matter -->
-            <div class="form-group">
-                <label for="vm">Volatile Matter (VM) (%)</label>
-                <div class="input-slider-group">
-                    <input type="number" id="vm_lower" name="vm_lower" placeholder="Lower Limit" step="0.01" required>
-                    <input type="number" id="vm_upper" name="vm_upper" placeholder="Upper Limit" step="0.01" required>
-                    <label for="vm_weight">Weightage</label>
-                    <input type="range" id="vm_weight" name="vm_weight" min="0" max="2" step="0.1" value="1" required>
-                </div>
-                <div class="slider-value">
-                    <span id="vm_slider_value">1</span>
-                </div>
-            </div>
-
-            <!-- M40 -->
-            <div class="form-group">
-                <label for="m40">M40 (%)</label>
-                <div class="input-slider-group">
-                    <input type="number" id="m40_lower" name="m40_lower" placeholder="Lower Limit" step="0.01" required>
-                    <input type="number" id="m40_upper" name="m40_upper" placeholder="Upper Limit" step="0.01" required>
-                    <label for="m40_weight">Weightage</label>
-                    <input type="range" id="m40_weight" name="m40_weight" min="0" max="2" step="0.1" value="1" required>
-                </div>
-                <div class="slider-value">
-                    <span id="m40_slider_value">1</span>
-                </div>
-            </div>
-
-            <!-- M10 -->
-            <div class="form-group">
-                <label for="m10">M10 (%)</label>
-                <div class="input-slider-group">
-                    <input type="number" id="m10_lower" name="m10_lower" placeholder="Lower Limit" step="0.01" required>
-                    <input type="number" id="m10_upper" name="m10_upper" placeholder="Upper Limit" step="0.01" required>
-                    <label for="m10_weight">Weightage</label>
-                    <input type="range" id="m10_weight" name="m10_weight" min="0" max="2" step="0.1" value="1" required>
-                </div>
-                <div class="slider-value">
-                    <span id="m10_slider_value">1</span>
-                </div>
-            </div>
-
-            <!-- CSR -->
-            <div class="form-group">
-                <label for="csr">CSR (%)</label>
-                <div class="input-slider-group">
-                    <input type="number" id="csr_lower" name="csr_lower" placeholder="Lower Limit" step="0.01" required>
-                    <input type="number" id="csr_upper" name="csr_upper" placeholder="Upper Limit" step="0.01" required>
-                    <label for="csr_weight">Weightage</label>
-                    <input type="range" id="csr_weight" name="csr_weight" min="0" max="2" step="0.1" value="1" required>
-                </div>
-                <div class="slider-value">
-                    <span id="csr_slider_value">1</span>
-                </div>
-            </div>
-
-            <!-- CRI -->
-            <div class="form-group">
-                <label for="cri">CRI (%)</label>
-                <div class="input-slider-group">
-                    <input type="number" id="cri_lower" name="cri_lower" placeholder="Lower Limit" step="0.01" required>
-                    <input type="number" id="cri_upper" name="cri_upper" placeholder="Upper Limit" step="0.01" required>
-                    <label for="cri_weight">Weightage</label>
-                    <input type="range" id="cri_weight" name="cri_weight" min="0" max="2" step="0.1" value="1" required>
-                </div>
-                <div class="slider-value">
-                    <span id="cri_slider_value">1</span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="AMS">AMS( Arithmetic Mean Size )</label>
-                <div class="input-slider-group">
-                    <input type="number" id="ams_lower" name="ams_lower" placeholder="Lower Limit" step="0.01" required>
-                    <input type="number" id="ams_upper" name="ams_upper" placeholder="Upper Limit" step="0.01" required>
-                    <label for="ams_weight">Weightage</label>
-                    <input type="range" id="ams_weight" name="ams_weight" min="0" max="2" step="0.1" value="1" required>
-                </div>
-                <div class="slider-value">
-                    <span id="ams_slider_value">1</span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="cost_weightage">Cost Weightage:</label>
-                <div class="input-slider-group">
-                    <input type="range" id="cost_weightage" name="cost_weightage" min="0" max="2" step="0.1" value="1"
-                        required>
-                </div>
-                <div class="slider-value">
-                    <span id="cost_weightage_value">1</span>
-
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="coke_quality">Coke Quality:</label>
-                <div class="input-slider-group">
-                    <input type="range" id="coke_quality" name="coke_quality" min="0" max="2" step="0.1" value="1"
-                        required>
-                    <input type="hidden" name="MinMaxId" id="MinMaxId"> <!-- or use actual value -->
-                    <input type="hidden" name="CompanyId" id="CompanyId"> <!-- or use actual value -->
-                    <input type="hidden" name="FileId" id="FileId">
-                </div>
-                <div class="slider-value">
-                    <span id="coke_quality_value">1</span>
-                </div>
-            </div>
-            <button type="submit">Submit</button>
-
-        </form>
+        <!-- Image Section -->
+        <div class="image-section">
+            <img src="{{ url_for('static', filename='images/Abhitech.jpeg') }}" alt="Abhitech Logo">
+        </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script>
+    function encryptData(data) {
+        const secretKey = CryptoJS.enc.Utf8.parse(
+            "qwertyuiopasdfghjklzxcvbnm123456"
+        );
+        const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
 
-        function encryptData(data) {
+        const encrypted = CryptoJS.AES.encrypt(
+            JSON.stringify(data),
+            secretKey,
+            {
+                iv: iv,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7,
+            }
+        );
+
+        // Convert Base64 output to Hex
+        const ciphertextWords = CryptoJS.enc.Base64.parse(encrypted.toString());
+        const hexCipherText = CryptoJS.enc.Hex.stringify(ciphertextWords);
+        return hexCipherText;
+    }
+
+    function decryptData(encryptedHexData) {
+        try {
             const secretKey = CryptoJS.enc.Utf8.parse(
                 "qwertyuiopasdfghjklzxcvbnm123456"
             );
             const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
 
-            const encrypted = CryptoJS.AES.encrypt(
-                JSON.stringify(data),
+            if (!encryptedHexData || encryptedHexData.length < 16) {
+                console.warn(
+                    "⚠️ Encrypted data is missing or too short:",
+                    encryptedHexData
+                );
+                return null;
+            }
+
+            const decrypted = CryptoJS.AES.decrypt(
+                {
+                    ciphertext: CryptoJS.enc.Hex.parse(encryptedHexData),
+                },
                 secretKey,
                 {
                     iv: iv,
@@ -320,242 +196,92 @@
                 }
             );
 
-            // Convert Base64 output to Hex
-            const ciphertextWords = CryptoJS.enc.Base64.parse(encrypted.toString());
-            const hexCipherText = CryptoJS.enc.Hex.stringify(ciphertextWords);
-            return hexCipherText;
-        }
+            const decryptedStr = decrypted.toString(CryptoJS.enc.Utf8);
 
-        function decryptData(encryptedHexData) {
+            //  if (!decryptedStr) {
+            //    console.warn("⚠️ Decryption returned empty string. Possibly wrong secret or IV.");
+            //    return null;
+            //  }
+
             try {
-                const secretKey = CryptoJS.enc.Utf8.parse(
-                    "qwertyuiopasdfghjklzxcvbnm123456"
+                return JSON.parse(decryptedStr);
+            } catch (jsonErr) {
+                console.error(
+                    "❌ JSON parse failed. Decrypted string:",
+                    decryptedStr
                 );
-                const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
-
-                if (!encryptedHexData || encryptedHexData.length < 16) {
-                    console.warn(
-                        "⚠️ Encrypted data is missing or too short:",
-                        encryptedHexData
-                    );
-                    return null;
-                }
-
-                const decrypted = CryptoJS.AES.decrypt(
-                    {
-                        ciphertext: CryptoJS.enc.Hex.parse(encryptedHexData),
-                    },
-                    secretKey,
-                    {
-                        iv: iv,
-                        mode: CryptoJS.mode.CBC,
-                        padding: CryptoJS.pad.Pkcs7,
-                    }
-                );
-
-                const decryptedStr = decrypted.toString(CryptoJS.enc.Utf8);
-
-                //  if (!decryptedStr) {
-                //    console.warn("⚠️ Decryption returned empty string. Possibly wrong secret or IV.");
-                //    return null;
-                //  }
-
-                try {
-                    return JSON.parse(decryptedStr);
-                } catch (jsonErr) {
-                    console.error(
-                        "❌ JSON parse failed. Decrypted string:",
-                        decryptedStr
-                    );
-                    throw jsonErr;
-                }
-            } catch (error) {
-                console.error("❌ Decryption error:", error.message);
-                console.log("Raw encrypted input:", encryptedHexData);
-                return null;
+                throw jsonErr;
             }
+        } catch (error) {
+            console.error("❌ Decryption error:", error.message);
+            console.log("Raw encrypted input:", encryptedHexData);
+            return null;
         }
-
-        async function postEncrypted(endpoint, data) {
-            try {
-                const encryptedPayload = encryptData(data);
-
-                const result = await axios.post(endpoint, {
-                    encryptedData: encryptedPayload,
-                });
-
-                const encryptedResponse = result.data.coalProperties;
-                //  const firstResultSet = encryptedResponse[0];
-
-                //  if (!encryptedResponse) {
-                //    console.warn("⚠️ No encryptedData in server response. Full response:", result);
-                //    throw new Error("Invalid encrypted response");
-                //  }
-
-                const decryptedResponse = decryptData(encryptedResponse);
-                const resultRow = (
-                    decryptedResponse &&
-                    Array.isArray(decryptedResponse) &&
-                    decryptedResponse.length > 0 &&
-                    typeof decryptedResponse[0] === "object"
-                )
-                    ? decryptedResponse[0]
-                    : decryptedResponse;
-                ; // First item of the first result set
-                const finalResult = resultRow;
-                //  if (!decryptedResponse) {
-                //    console.warn("⚠️ Decrypted response is empty or null.");
-                //  }
-
-                return finalResult || {};
-            } catch (error) {
-                console.error("🚨 Secure POST Error:", error.message);
-                throw error;
-            }
-        }
-        function updateSliderColor(slider, valueDisplay) {
-            const value = parseFloat(slider.value);
-            slider.classList.remove('red-thumb', 'green-thumb');
-            valueDisplay.classList.remove('red', 'green');
-
-            if (value < 1) {
-                slider.classList.add('red-thumb');
-                valueDisplay.classList.add('red');
-            } else if (value > 1) {
-                slider.classList.add('green-thumb');
-                valueDisplay.classList.add('green');
-            }
-
-            valueDisplay.textContent = value.toFixed(1);
-        }
-
-        // Initialize sliders
-        const sliders = [
-            { slider: document.getElementById('ash_weight'), valueDisplay: document.getElementById('ash_slider_value') },
-            { slider: document.getElementById('vm_weight'), valueDisplay: document.getElementById('vm_slider_value') },
-            { slider: document.getElementById('m40_weight'), valueDisplay: document.getElementById('m40_slider_value') },
-            { slider: document.getElementById('m10_weight'), valueDisplay: document.getElementById('m10_slider_value') },
-            { slider: document.getElementById('csr_weight'), valueDisplay: document.getElementById('csr_slider_value') },
-            { slider: document.getElementById('cri_weight'), valueDisplay: document.getElementById('cri_slider_value') },
-            { slider: document.getElementById('ams_weight'), valueDisplay: document.getElementById('ams_slider_value') },
-            { slider: document.getElementById('cost_weightage'), valueDisplay: document.getElementById('cost_weightage_value'), noColor: true },
-            { slider: document.getElementById('coke_quality'), valueDisplay: document.getElementById('coke_quality_value'), noColor: true }
-        ];
-
-        sliders.forEach(({ slider, valueDisplay, noColor }) => {
-            // Handle color update if it's not the special sliders
-            if (!noColor) {
-                updateSliderColor(slider, valueDisplay);
-                slider.addEventListener('input', () => updateSliderColor(slider, valueDisplay));
-            } else {
-                valueDisplay.textContent = slider.value;
-                slider.addEventListener('input', () => {
-                    valueDisplay.textContent = slider.value;
-                });
-            }
-        });
-
-        const form = document.getElementById('single-entry-form');
-        form.addEventListener('submit', async function (event) {
-            event.preventDefault();
-
-            const formData = new FormData(form);
-
-            // Construct the payload in the exact order
-            const data = {
-                p_AshLower: parseFloat(formData.get("ash_lower")),
-                p_AshUpper: parseFloat(formData.get("ash_upper")),
-                p_AshWeight: parseFloat(formData.get("ash_weight")),
-                p_VMLower: parseFloat(formData.get("vm_lower")),
-                p_VMUpper: parseFloat(formData.get("vm_upper")),
-                p_VMWeight: parseFloat(formData.get("vm_weight")),
-                p_M40Lower: parseFloat(formData.get("m40_lower")),
-                p_M40Upper: parseFloat(formData.get("m40_upper")),
-                p_M40Weight: parseFloat(formData.get("m40_weight")),
-                p_M10Lower: parseFloat(formData.get("m10_lower")),
-                p_M10Upper: parseFloat(formData.get("m10_upper")),
-                p_M10Weight: parseFloat(formData.get("m10_weight")),
-                p_CSRLower: parseFloat(formData.get("csr_lower")),
-                p_CSRUpper: parseFloat(formData.get("csr_upper")),
-                p_CSRWeight: parseFloat(formData.get("csr_weight")),
-                p_CRILower: parseFloat(formData.get("cri_lower")),
-                p_CRIUpper: parseFloat(formData.get("cri_upper")),
-                p_CRIWeight: parseFloat(formData.get("cri_weight")),
-                p_AMSLower: parseFloat(formData.get("ams_lower")),
-                p_AMSUpper: parseFloat(formData.get("ams_upper")),
-                p_AMSWeight: parseFloat(formData.get("ams_weight")),
-                p_CostWeightage: parseFloat(formData.get("cost_weightage")),
-                p_CokeQuality: parseFloat(formData.get("coke_quality")),
-                p_CompanyId: 1,
-                p_FileId: 1
-            };
-
-            try {
-                const response = await postEncrypted('http://3.111.89.109:5000/api/updateMinMaxValues', data);
-                alert('Data submitted successfully!');
-                console.log(response);
-            } catch (error) {
-                alert('Error: ' + error.message);
-                console.error(error);
-            }
-        });
-
-
-        document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        // Call the encrypted POST request and wait for the result
-        const result = await postEncrypted('http://3.111.89.109:3000/api/getMinMaxValues', {p_CompanyId : 1 }); // assuming no payload
-        console.log(result[0].CoalPropertiesFormatted);
-        // Populate form fields with the fetched data
-        document.querySelector('[name="ash_lower"]').value = result[0].CoalPropertiesFormatted.ash.lower;
-        document.querySelector('[name="ash_upper"]').value = result[0].CoalPropertiesFormatted.ash.upper;
-        document.querySelector('[name="vm_lower"]').value = result[0].CoalPropertiesFormatted.vm.lower;
-        document.querySelector('[name="vm_upper"]').value = result[0].CoalPropertiesFormatted.vm.upper;
-
-        document.querySelector('[name="m40_lower"]').value = result[0].CoalPropertiesFormatted.m40.lower;
-        document.querySelector('[name="m40_upper"]').value = result[0].CoalPropertiesFormatted.m40.upper;
-
-        document.querySelector('[name="m10_lower"]').value = result[0].CoalPropertiesFormatted.m10.lower;
-        document.querySelector('[name="m10_upper"]').value = result[0].CoalPropertiesFormatted.m10.upper;
-
-        document.querySelector('[name="csr_lower"]').value = result[0].CoalPropertiesFormatted.csr.lower;
-        document.querySelector('[name="csr_upper"]').value = result[0].CoalPropertiesFormatted.csr.upper;
-
-        document.querySelector('[name="cri_lower"]').value = result[0].CoalPropertiesFormatted.cri.lower;
-        document.querySelector('[name="cri_upper"]').value = result[0].CoalPropertiesFormatted.cri.upper;
-
-        document.querySelector('[name="ams_lower"]').value = result[0].CoalPropertiesFormatted.ams.lower;
-        document.querySelector('[name="ams_upper"]').value = result[0].CoalPropertiesFormatted.ams.upper;
-
-
-
-
-        // Update all sliders after form values are set
-        sliders.forEach(({ slider, valueDisplay, noColor }) => {
-            if (!noColor) {
-                updateSliderColor(slider, valueDisplay);
-            } else {
-                valueDisplay.textContent = slider.value;
-            }
-        });
-    } catch (error) {
-        console.error('Error fetching encrypted data:', error);
     }
-});
 
+    async function postEncrypted(endpoint, data) {
+        try {
+            const encryptedPayload = encryptData(data);
 
-        window.addEventListener('DOMContentLoaded', (event) => {
-            // Get all the navigation links
-            const navLinks = document.querySelectorAll('.navbar a');
-
-            // Loop through each link to check if it matches the current page URL
-            navLinks.forEach(link => {
-                if (link.href === window.location.href) {
-                    link.classList.add('active'); // Add 'active' class to the link that matches the URL
-                }
+            const result = await axios.post(endpoint, {
+                encryptedData: encryptedPayload,
             });
-        });
-    </script>
-</body>
+
+            const encryptedResponse = result.data.coalProperties;
+            //  const firstResultSet = encryptedResponse[0];
+
+            //  if (!encryptedResponse) {
+            //    console.warn("⚠️ No encryptedData in server response. Full response:", result);
+            //    throw new Error("Invalid encrypted response");
+            //  }
+
+            const decryptedResponse = decryptData(encryptedResponse);
+            const resultRow = (
+                decryptedResponse &&
+                Array.isArray(decryptedResponse) &&
+                decryptedResponse.length > 0 &&
+                typeof decryptedResponse[0] === "object"
+            )
+                ? decryptedResponse[0]
+                : decryptedResponse;
+            ; // First item of the first result set
+            const finalResult = resultRow;
+            //  if (!decryptedResponse) {
+            //    console.warn("⚠️ Decrypted response is empty or null.");
+            //  }
+
+            return finalResult || {};
+        } catch (error) {
+            console.error("🚨 Secure POST Error:", error.message);
+            throw error;
+        }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+        e.preventDefault(); // prevent default form submission
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        const payload = { email, password };
+
+        try {
+            const response = await postEncrypted('http://3.111.89.109:3000/api/login', payload);
+            console.log(response);
+            // Handle successful login (you can change this based on what the backend returns)
+            if (response) {
+                // Example: save token to localStorage and redirect
+                
+                window.location.href = '/index.html'; // or wherever
+            } else {
+                alert('Login failed: ' + response.message);
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('An error occurred while logging in.');
+        }
+    });
+
+</script>
 
 </html>
