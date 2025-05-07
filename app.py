@@ -61,6 +61,10 @@ def github_deploy():
 def index_html():
     return render_template('index.html')
 
+@app.route('/hi.html')
+def index_html2():
+    return render_template('hi.html')
+
 @app.route('/coal-properties.html')
 def properties():
     return render_template('coal-properties.html')
