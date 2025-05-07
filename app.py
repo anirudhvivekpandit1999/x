@@ -32,7 +32,7 @@ from tensorflow.keras import layers  # type: ignore
 app = Flask(__name__)
 CORS(app,resources={r"/*": {"origins": "*"}})
 
-WEBHOOK_SECRET = os.getenv('WEBHOOK_SECRET')
+WEBHOOK_SECRET = 'qwertyuiopasdfghjklzxcvbnm123456'
 DEPLOY_SCRIPT = '/home/ec2-user/x/deploy.sh'
 def verify_signature(req):
         signature = req.headers.get('X-Hub-Signature-256')
