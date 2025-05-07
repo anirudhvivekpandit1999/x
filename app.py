@@ -12,9 +12,6 @@ from io import BytesIO
 from datetime import datetime
 from flask import Flask, abort, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
 from flask_cors import CORS
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 from werkzeug.utils import secure_filename
 from flask_mysqldb import MySQL
@@ -508,59 +505,7 @@ def get_proposed_coal_types():
     coal_info = [{"type": coal_types[i], "cost": coal_costs[i]} for i in range(len(coal_types))]
 
     return jsonify({'coal_info': coal_info})
-
-
-def load_csv():
-    print("load_csvhit")
-    """Load the CSV file and return it as a DataFrame."""
-    if os.path.exists(MINMAX_FILE_PATH):
-        return pd.read_csv(MINMAX_FILE_PATH)
-    else:
-        raise FileNotFoundError(f"{CSV_FILE} not found!")
-
-def prepare_ranges():
-    """Prepare the range data from the CSV."""
-    
-    df = load_csv()
-    if df.empty:
-        return {}
-    
-    # Assuming only one row of data in the CSV
-    row = df.iloc[0]
-    
-    def to_int(x):
-        # If it’s a NumPy scalar, .item() will give you a Python int/float
-        return x.item() if hasattr(x, 'item') else int(x)
-    
-    def to_float(x):
-        return x.item() if hasattr(x, 'item') else float(x)
-    
-    
-    ranges = {
-        'ash': {'lower': to_int(row['ash_lower']), 'upper': to_int(row['ash_upper']), 'default': to_float((row['ash_lower'] + row['ash_upper']) / 2)},
-        'vm': {'lower': to_int(row['vm_lower']), 'upper': to_int(row['vm_upper']), 'default': to_float((row['vm_lower'] + row['vm_upper']) / 2)},
-        'm40': {'lower': to_int(row['m40_lower']), 'upper': to_int(row['m40_upper']), 'default': to_float((row['m40_lower'] + row['m40_upper']) / 2)},
-        'm10': {'lower': to_int(row['m10_lower']), 'upper': to_float(row['m10_upper']), 'default': to_float((row['m10_lower'] + row['m10_upper']) / 2)},
-        'csr': {'lower': to_int(row['csr_lower']), 'upper': to_int(row['csr_upper']), 'default': to_float((row['csr_lower'] + row['csr_upper']) / 2)},
-        'cri': {'lower': to_int(row['cri_lower']), 'upper': to_int(row['cri_upper']), 'default':to_float( (row['cri_lower'] + row['cri_upper']) / 2)},
-        'ams': {'lower': to_int(row['ams_lower']), 'upper': to_int(row['ams_upper']), 'default': to_float((row['ams_lower'] + row['ams_upper']) / 2)}
-    }
-    return ranges
-
-@app.route('/get_ranges', methods=['GET'])
-def get_ranges():
-    
-    try:
-        ranges = prepare_ranges()
-        return jsonify(ranges)
-    except FileNotFoundError as e:
-        print(e)
-        return jsonify({'error': str(e)}), 404
-        
-
-#model for cost ai page
-
-        
+      
 
 #model for cost ai page
 def read_min_max_values():
@@ -609,7 +554,7 @@ def read_min_max_values():
 min_max_values = read_min_max_values()
         
 
-file_path = 'submitted_training_coal_data.csv'
+file_path = 'training_data_file.csv'
 coal_percentages = []
 coal_properties = []
 blends = []
