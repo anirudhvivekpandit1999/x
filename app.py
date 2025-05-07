@@ -1,3 +1,7 @@
+import hashlib
+import hmac
+import subprocess
+import threading
 import pandas as pd
 import numpy as np
 import csv
@@ -6,7 +10,7 @@ import time
 import io, json
 from io import BytesIO
 from datetime import datetime
-from flask import Flask, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
+from flask import Flask, abort, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
 from flask_cors import CORS
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -31,27 +35,27 @@ CORS(app,resources={r"/*": {"origins": "*"}})
 WEBHOOK_SECRET = os.getenv('WEBHOOK_SECRET')
 DEPLOY_SCRIPT = '/home/ec2-user/x/deploy.sh'
 def verify_signature(req):
-         signature = req.headers.get('X-Hub-Signature-256')
-         if not signature:
-             abort(400)
-         sha_name, sig = signature.split('=',1)
-         mac = hmac.new(WEBHOOK_SECRET.encode(), req.data, hashlib.sha256)
-         if not hmac.compare_digest(mac.hexdigest(), sig):
-             abort(400)
+        signature = req.headers.get('X-Hub-Signature-256')
+        if not signature:
+            abort(400)
+        sha_name, sig = signature.split('=',1)
+        mac = hmac.new(WEBHOOK_SECRET.encode(), req.data, hashlib.sha256)
+        if not hmac.compare_digest(mac.hexdigest(), sig):
+            abort(400)
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/github-deploy', methods=['POST'])
-     def github_deploy():
-         verify_signature(request)
-         payload = request.get_json() or {}
-         if payload.get('ref') != 'refs/heads/main':
-             return jsonify({'status':'ignored'}), 200
+def github_deploy():
+        verify_signature(request)
+        payload = request.get_json() or {}
+        if payload.get('ref') != 'refs/heads/main':
+            return jsonify({'status':'ignored'}), 200
 
-         # Run deploy.sh in the background
-         threading.Thread(target=lambda: subprocess.run([DEPLOY_SCRIPT], check=True)).start()
-         return jsonify({'status':'triggered'}), 202
+        # Run deploy.sh in the background
+        threading.Thread(target=lambda: subprocess.run([DEPLOY_SCRIPT], check=True)).start()
+        return jsonify({'status':'triggered'}), 202
 
 @app.route('/index.html')
 def index_html():
