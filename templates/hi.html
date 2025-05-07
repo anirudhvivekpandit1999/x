@@ -2,785 +2,877 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SmartCoke</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #ffffff;
-      color: #020947;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    /* Button Styling */
-    button {
-      background-color: #020947;
-      color: #fff;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      margin: 10px 15px;
-      /* Adds horizontal space between buttons */
-      margin-top: 120px;
-      /* Adds space from the top */
-      display: inline-block;
-    }
 
-    /* Hover Effect */
-    button:hover {
-      background-color: #c2c6f7;
-      color: #020947;
-    }
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding-top: 1px;
+        }
 
-    /* Focus Effect */
-    button:focus {
-      outline: none;
-    }
+        form {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 20px auto;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
 
-    /* Coal Table */
-    #coalTable {
-      width: 90%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      margin-left: 0.5rem;
-      border: 1px solid #ddd;
-    }
+        h2 {
+            color: #003366;
+            border-bottom: 2px solid #003366;
+            padding-bottom: 5px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
 
-    #coalTable th,
-    #coalTable td {
-      padding: 12px 15px;
-      text-align: left;
-      border: 1px solid #ddd;
-    }
+        h3 {
+            color: #003366;
+            border-bottom: 2px solid #003366;
+            padding-bottom: 5px;
+            margin-top: 20px;
+            margin-bottom: 20px;
 
-    #coalTable th {
-      background-color: #f5f6ff;
-      color: rgb(24, 0, 80);
-      font-size: 16px;
-    }
+        }
 
-    #coalTable tbody tr:nth-child(even) {
-      background-color: #f4f4f4;
-    }
+        #coalContainer {
+            margin-bottom: 20px;
+        }
 
-    #coalTable tbody tr:hover {
-      background-color: #c2c6f7;
-    }
+        .blend-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
 
-    /* Form Popups */
-    .form-popup {
-      display: none;
-      /* Hidden by default */
-      position: fixed;
-      z-index: 1;
-      /* Sit on top */
-      left: 0;
-      margin-left: 25%;
-      margin-top: 80px;
-      top: 10%;
-      width: 50%;
-      height: 70%;
-      overflow: auto;
-      border-radius: 8px;
-      background-color: rgb(252, 252, 252);
-    }
+        .coalDropdown {
+            flex: 1;
+            margin-right: 10px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
 
-    .form-popup form {
-      display: flex;
-      flex-direction: column;
-    }
+        .blend-entry {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
-    .form-popup h2 {
-      text-align: center;
-      color: #333;
-      font-size: 20px;
+        .blend-entry label {
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #003366;
+        }
 
-      margin-bottom: 20px;
-    }
+        .blend-entry input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            width: calc(100% - 16px);
+        }
 
-    /* Input Fields */
-    input[type="number"],
-    input[type="text"],
-    select {
-      padding: 10px;
-      width: 80%;
-      margin: 8px 0;
-      margin-left: 40px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 16px;
-    }
+        /* Input and Label Styles */
+        label {
+            font-weight: bold;
+            color: #003366;
+        }
 
-    input[type="number"]:focus,
-    input[type="text"]:focus,
-    select:focus {
-      border-color: #4caf50;
-      outline: none;
-    }
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border 0.3s ease;
+        }
 
-    /* Labels */
-    label {
-      font-weight: bold;
-      margin-left: 40px;
-      margin-bottom: 5px;
-      color: #333;
-    }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            border: 1px solid #003366;
+            outline: none;
+        }
 
-    /* Buttons in Forms */
-    .form-popup button {
-      margin-top: 10px;
-      width: 50%;
-      margin-left: 40px;
-    }
+        /* Button Styles */
+        button {
+            background-color: #003366;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 130px;
+            margin-bottom: 10px;
+            transition: background-color 0.3s ease;
+        }
 
-    #submitModifiedData {
-      background-color: #150d81;
-    }
+        button:hover {
+            background-color: #002244;
+        }
 
-    #submitModifiedData:hover {
-      background-color: #2a32a8;
-    }
+        #download-template-btn {
+            margin-left: 16%;
+        }
 
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 30px;
-      font-weight: bold;
-      color: red;
-      cursor: pointer;
-    }
+        #upload-file-btn {
+            margin-left: 5%;
+        }
 
-    /* Responsive Styles */
-    @media (max-width: 768px) {
-      .form-popup {
-        width: 90%;
-        padding: 15px;
-      }
+        #add-blend-btn {
+            display: block;
+            margin: 0 auto;
+        }
 
-      #coalTable {
-        font-size: 12px;
-      }
 
-      #coalTable th,
-      #coalTable td {
-        padding: 8px;
-      }
+        #confirm-btn {
+            margin: 5px;
+            font-size: 14px;
+        }
 
-      button {
-        font-size: 14px;
-      }
-    }
+        input[type="file"] {
+            margin-left: 20px;
+        }
 
-    .delete-button {
-      background-color: #dc3545; /* Red color */
-      color: #fff; /* White text */
-      border: none;
-      padding: 8px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: background-color 0.2s ease-in-out;
-    }
-    
-    .delete-button:hover {
-      background-color: #bd2130; /* Darker red on hover */
-    }
-    
-    .delete-button:active {
-      transform: scale(0.95); /* Scale down on click */
-    }
-  </style>
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table tr {
+            background-color: #f9f9f9;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #eef3f8;
+        }
+
+        table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        table td label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-actions {
+            text-align: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            form {
+                padding: 15px;
+            }
+
+            table td {
+                padding: 8px;
+            }
+
+            button {
+                font-size: 12px;
+                padding: 8px 16px;
+            }
+        }
+    </style>
 </head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <body>
-  <header>
-    <nav class="navbar">
-      <div class="logo-left">
-        <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left" />
-      </div>
-      <ul class="navbar-links">
-        <li>
-          <h1>SmartCoke</h1>
-        </li>
-        <li><a href="coal-properties.html">COAL PROPERTIES</a></li>
-        <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
-        <li><a href="cost-ai.html">COST AI</a></li>
-        <li><a href="training.html">TRAINING</a></li>
-        <li><a href="index.html">HOME</a></li>
-      </ul>
-      <select id="language-select">
-        <option value="en">English</option>
-        <option value="zh-CN">Chinese</option>
-        <option value="es">Spanish</option>
-        <option value="fr">French</option>
-        <option value="de">German</option>
-        <option value="ru">Russian</option>
-        <option value="it">Italian</option>
-        <option value="ko">Korean</option>
-        <option value="ja">Japanese</option>
-      </select>
-    </nav>
-  </header>
+    <header>
+        <nav class="navbar">
+            <div class="logo-left">
+                <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left">
+            </div>
+            <ul class="navbar-links">
+                <li>
+                    <h1>SmartCoke</h1>
+                </li>
+                <li><a href="coal-properties.html">COAL PROPERTIES</a></li>
+                <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
+                <li><a href="cost-ai.html">COST AI</a></li>
+                <li><a href="training.html">TRAINING</a></li>
+                <li><a href="index.html">HOME</a></li>
 
-  <h2>Coal Properties</h2>
+            </ul>
+            <select id="language-select">
+                <option value="en">English</option>
+                <option value="zh-CN">Chinese</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="ru">Russian</option>
+                <option value="it">Italian</option>
+                <option value="ko">Korean</option>
+                <option value="ja">Japanese</option>
 
-  <button id="addCoalDataButton">Add Coal Data</button>
-  <button id="modifyCoalDataButton">Modify Coal Data</button>
-  <button id="downloadcoalfile">Download Template</button>
-  <button id="upload-file-btn">Upload Excel File</button>
-  <input type="file" id="file-upload" accept=".xls,.xlsx" />
+            </select>
+        </nav>
+    </header>
+    <button id="download-template-btn">Download Excel format</button>
 
-  <table id="coalTable">
-    <thead>
-      <tr>
-        <th>Index</th>
-        <th>Coal</th>
-        <th>Ash (%)</th>
-        <th>Volatile Matter (%)</th>
-        <th>Moisture (%)</th>
-        <th>Max. Contraction</th>
-        <th>Max. Expansion</th>
-        <th>Max. fluidity (ddpm)</th>
-        <th>MMR</th>
-        <th>HGI</th>
-        <th>Softening temperature (°C)</th>
-        <th>Resolidification temp range Min (°C)</th>
-        <th>Resolidification temp range Max (°C)</th>
-        <th>Plastic range (°C)</th>
-        <th>Sulphur (%)</th>
-        <th>Phosphorous (%)</th>
-        <th>CSN</th>
-        <th>Cost per Ton (Rs.)</th>
-        <th>Last Modified Date</th>
-        <th>Delete Coal</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Data rows will be inserted here by JavaScript -->
-    </tbody>
-  </table>
+    <button id="upload-file-btn">Upload Excel File</button>
+    <input type="file" id="file-upload" accept=".xls,.xlsx">
 
-  <div id="modifyCoalFormPopup" class="form-popup">
-    <form id="modifyCoalForm">
-      <h2>Modify Coal Data</h2>
+    <button id="viewdata-btn">View Data</button>
 
-      <span id="closeModifyForm" class="close-btn">&times;</span>
 
-      <label for="selectCoal">Select Coal:</label>
-      <select id="selectCoal" required>
-        <!-- Coal options will be dynamically populated here --></select><br />
 
-      <label for="coal">Coal:</label><input type="text" id="coal" required /><br />
-      <label for="ash">Ash (%):</label><input type="number" id="ash" step="0.001" required /><br />
-      <label for="volatile_matter">Volatile Matter (%):</label><input type="number" id="volatile_matter" step="0.001"
-        required /><br />
-      <label for="moisture">Moisture (%):</label><input type="number" id="moisture" step="0.001" required /><br />
-      <label for="max_contraction">Max. Contraction:</label><input type="number" id="max_contraction" step="0.001"
-        required /><br />
-      <label for="max_expansion">Max. Expansion:</label><input type="number" id="max_expansion" step="0.001"
-        required /><br />
-      <label for="max_fluidity">Max. Fluidity (ddpm):</label><input type="number" id="max_fluidity" step="0.001"
-        required /><br />
-      <label for="mmr">MMR:</label><input type="number" id="mmr" step="0.001" required /><br />
-      <label for="hgi">HGI:</label><input type="number" id="hgi" step="0.001" required /><br />
-      <label for="softening_temp">Softening Temperature (°C):</label><input type="number" id="softening_temp"
-        step="0.001" required /><br />
-      <label for="resolidification_min">Resolidification Temp Range Min (°C):</label><input type="number"
-        id="resolidification_min" step="0.001" required /><br />
-      <label for="resolidification_max">Resolidification Temp Range Max (°C):</label><input type="number"
-        id="resolidification_max" step="0.001" required /><br />
-      <label for="plastic_range">Plastic Range (°C):</label><input type="number" id="plastic_range" step="0.001"
-        required /><br />
-      <label for="sulphur">Sulphur (%):</label><input type="number" id="sulphur" step="0.001" required /><br />
-      <label for="phosphorous">Phosphorous (%):</label><input type="number" id="phosphorous" step="0.001"
-        required /><br />
-      <label for="csn">CSN:</label><input type="number" id="csn" step="0.001" required /><br />
-      <label for="cost">Cost per Ton (Rs.):</label><input type="number" id="cost" step="0.001" required /><br />
-
-      <button type="submit" id="submitModifiedData" disabled>Submit</button>
-    </form>
-  </div>
-
-  <div id="coalFormPopup" class="form-popup">
     <form id="coalForm">
-      <span id="closeForm" class="close-btn">&times;</span>
-      <h2>Enter Coal Data</h2>
-      <label for="add_coal">Coal:</label><input type="text" id="add_coal" required /><br />
-      <label for="add_ash">Ash (%):</label><input type="number" id="add_ash" step="0.01" required /><br />
-      <label for="add_volatile_matter">Volatile Matter (%):</label><input type="number" id="add_volatile_matter"
-        step="0.01" required /><br />
-      <label for="add_moisture">Moisture (%):</label><input type="number" id="add_moisture" step="0.01"
-        required /><br />
-      <label for="add_max_contraction">Max. Contraction:</label><input type="number" id="add_max_contraction"
-        step="0.01" required /><br />
-      <label for="add_max_expansion">Max. Expansion:</label><input type="number" id="add_max_expansion" step="0.01"
-        required /><br />
-      <label for="add_max_fluidity">Max. Fluidity (ddpm):</label><input type="number" id="add_max_fluidity" step="0.01"
-        required /><br />
-      <label for="add_mmr">MMR:</label><input type="number" id="add_mmr" step="0.01" required /><br />
-      <label for="add_hgi">HGI:</label><input type="number" id="add_hgi" step="0.01" required /><br />
-      <label for="add_softening_temp">Softening Temperature (°C):</label><input type="number" id="add_softening_temp"
-        step="0.01" required /><br />
-      <label for="add_resolidification_min">Resolidification Temp Range Min (°C):</label><input type="number"
-        id="add_resolidification_min" step="0.01" required /><br />
-      <label for="add_resolidification_max">Resolidification Temp Range Max (°C):</label><input type="number"
-        id="add_resolidification_max" step="0.01" required /><br />
-      <label for="add_plastic_range">Plastic Range (°C):</label><input type="number" id="add_plastic_range" step="0.01"
-        required /><br />
-      <label for="add_sulphur">Sulphur (%):</label><input type="number" id="add_sulphur" step="0.01" required /><br />
-      <label for="add_phosphorous">Phosphorous (%):</label><input type="number" id="add_phosphorous" step="0.01"
-        required /><br />
-      <label for="add_csn">CSN:</label><input type="number" id="add_csn" step="0.01" required /><br />
-      <label for="add_cost">Cost per Ton (Rs.):</label><input type="number" id="add_cost" step="0.01" required /><br />
-      <button type="submit" id="submitnewCoalData">Submit</button>
+        <div class="form-group">
+            <!-- Date input with format validation -->
+            <label for="dateInput">Date (DD-MM-YYYY):</label>
+            <input type="text" id="dateInput" name="dateInput" placeholder="DD-MM-YYYY" required>
+        </div>
+
+
+        <h2>Select Individual Coal</h2>
+        <div id="coalContainer">
+            <!-- Initial coal row -->
+            <div class="blend-row">
+                <select class="coalDropdown" name="coalDropdown[]">
+                    <option value="">Select Coal</option>
+                </select>
+                <div class="blend-entry">
+                    <input type="number" class="currentValue" name="currentValue[]" placeholder="Enter current value"
+                        required>
+                </div>
+            </div>
+        </div>
+        <button type="button" id="add-blend-btn">Add Coal</button>
+
+        <h2>Blended Coal Parameters</h2>
+        <div class="form-section">
+            <table>
+                <tr>
+                    <td><label for="blended_coal_ash">ASH</label></td>
+                    <td><input type="number" name="blended_coal_ash" step="0.01" class="coal-param"
+                            placeholder="Blended Coal Ash" value="15"></td>
+                    <td><label for="blended_coal_vm">VOLATILE MATTER</label></td>
+                    <td><input type="number" name="blended_coal_vm" step="0.01" class="coal-param"
+                            placeholder="Blended Coal VM" value="1"></td>
+                </tr>
+                <tr>
+                    <td><label for="blended_coal_moisture">MOISTURE</label></td>
+                    <td><input type="number" name="blended_coal_moisture" step="0.01" class="coal-param"
+                            placeholder="Blended Coal Moisture" value="5"></td>
+                    <td><label for="max_contraction">MAX. CONTRACTION</label></td>
+                    <td><input type="number" name="max_contraction" step="0.01" class="coal-param"
+                            placeholder="Max. Contraction" value="0.5"></td>
+                </tr>
+                <tr>
+                    <td><label for="max_expansion">MAX. EXPANSION</label></td>
+                    <td><input type="number" name="max_expansion" step="0.01" class="coal-param"
+                            placeholder="Max. Expansion" value="1.2"></td>
+                    <td><label for="max_fluidity">MAX. FLUIDITY</label></td>
+                    <td><input type="number" name="max_fluidity" step="0.01" class="coal-param"
+                            placeholder="Max. Fluidity" value="100"></td>
+                </tr>
+                <tr>
+                    <td><label for="crushing_index_3_15mm">CRUSHING INDEX &lt; 3.15mm</label></td>
+                    <td><input type="number" name="crushing_index_3_15mm" step="0.01" class="coal-param"
+                            placeholder="Crushing Index &lt; 3.15mm" value="2"></td>
+                    <td><label for="crushing_index_0_5mm">CRUSHING INDEX &lt; 0.5mm</label></td>
+                    <td><input type="number" name="crushing_index_0_5mm" step="0.01" class="coal-param"
+                            placeholder="Crushing Index &lt; 0.5mm" value="5"></td>
+                </tr>
+                <tr>
+                    <td><label for="softening_temperature">SOFTENING TEMPERATURE (°C)</label></td>
+                    <td><input type="number" name="softening_temperature" step="0.01" class="coal-param"
+                            placeholder="Softening Temperature" value="1200"></td>
+                    <td><label for="resolidification_temp_range_min">RESOLIDIFICATION TEMP RANGE MIN (°C)</label></td>
+                    <td><input type="number" name="resolidification_temp_range_min" step="0.01" class="coal-param"
+                            placeholder="Resolidification Temp Range Min" value="1150"></td>
+                </tr>
+                <tr>
+                    <td><label for="resolidification_temp_range_max">RESOLIDIFICATION TEMP RANGE MAX (°C)</label></td>
+                    <td><input type="number" name="resolidification_temp_range_max" step="0.01" class="coal-param"
+                            placeholder="Resolidification Temp Range Max" value="1150"></td>
+                    <td><label for="plastic_range">PLASTIC RANGE (°C)</label></td>
+                    <td><input type="number" name="plastic_range" step="0.01" class="coal-param"
+                            placeholder="Plastic Range" value="200"></td>
+
+                </tr>
+                <tr>
+                    <td><label for="sulpher">SULPHUR</label></td>
+                    <td><input type="number" name="sulpher" step="0.01" class="coal-param" placeholder="Sulpher"
+                            value="0.5"></td>
+                    <td><label for="phosphorous">PHOSPHOROUS</label></td>
+                    <td><input type="number" name="phosphorous" step="0.01" class="coal-param" placeholder="Phosphorous"
+                            value="0.1"></td>
+                </tr>
+                <tr>
+                    <td><label for="csn">CSN</label></td>
+                    <td><input type="number" name="csn" step="0.01" class="coal-param" placeholder="CSN" value="6"></td>
+                </tr>
+            </table>
+        </div>
+
+        <h2>Coke Parameters</h2>
+        <div class="form-section">
+            <table>
+                <tr>
+                    <td><label for="ASH">ASH</label></td>
+                    <td><input type="number" name="ASH" step="0.01" class="coke-param" placeholder="ASH"></td>
+                    <td><label for="VM">VOLATILE MATTER</label></td>
+                    <td><input type="number" name="VM" step="0.01" class="coke-param" placeholder="VM"></td>
+                </tr>
+                <tr>
+                    <td><label for="M_40MM">M_40MM</label></td>
+                    <td><input type="number" name="M_40MM" step="0.01" class="coke-param" placeholder="M_40MM"></td>
+                    <td><label for="M_10MM">M_10MM</label></td>
+                    <td><input type="number" name="M_10MM" step="0.01" class="coke-param" placeholder="M_10MM"></td>
+                </tr>
+                <tr>
+                    <td><label for="CSR">CSR</label></td>
+                    <td><input type="number" name="CSR" step="0.01" class="coke-param" placeholder="CSR"></td>
+                    <td><label for="CRI">CRI</label></td>
+                    <td><input type="number" name="CRI" step="0.01" class="coke-param" placeholder="CRI"></td>
+                </tr>
+                <tr>
+                    <td><label for="AMS">AMS</label></td>
+                    <td><input type="number" name="AMS" step="0.01" class="coke-param" placeholder="AMS"></td>
+                </tr>
+            </table>
+        </div>
+
+        <h2>Process Parameters</h2>
+        <select id="processDropdown" name="processDropdown" onchange="updateProcessParameters()">
+            <option value="">Select Process Parameter Type</option>
+            <option value="1">Recovery Top Charge COB</option>
+            <option value="2">Recovery Stamp Charge COB</option>
+            <option value="3">Non-Recovery Stamp Charge</option>
+        </select>
+        <div class="form-section">
+            <div id="processParameters">
+                <!-- Dynamic process parameters will be loaded here -->
+            </div>
+        </div>
+        </div>
+        <button type="submit">Submit</button>
     </form>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-  <script>
-    function encryptData(data) {
-      const secretKey = CryptoJS.enc.Utf8.parse(
-        "qwertyuiopasdfghjklzxcvbnm123456"
-      );
-      const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
+    <script>
 
-      const encrypted = CryptoJS.AES.encrypt(
-        JSON.stringify(data),
-        secretKey,
-        {
-          iv: iv,
-          mode: CryptoJS.mode.CBC,
-          padding: CryptoJS.pad.Pkcs7,
-        }
-      );
+        function encryptData(data) {
+            const secretKey = CryptoJS.enc.Utf8.parse(
+                "qwertyuiopasdfghjklzxcvbnm123456"
+            );
+            const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
 
-      // Convert Base64 output to Hex
-      const ciphertextWords = CryptoJS.enc.Base64.parse(encrypted.toString());
-      const hexCipherText = CryptoJS.enc.Hex.stringify(ciphertextWords);
-      return hexCipherText;
-    }
+            const encrypted = CryptoJS.AES.encrypt(
+                JSON.stringify(data),
+                secretKey,
+                {
+                    iv: iv,
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7,
+                }
+            );
 
-    function decryptData(encryptedHexData) {
-      try {
-        const secretKey = CryptoJS.enc.Utf8.parse(
-          "qwertyuiopasdfghjklzxcvbnm123456"
-        );
-        const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
-
-        if (!encryptedHexData || encryptedHexData.length < 16) {
-          console.warn(
-            "⚠️ Encrypted data is missing or too short:",
-            encryptedHexData
-          );
-          return null;
+            // Convert Base64 output to Hex
+            const ciphertextWords = CryptoJS.enc.Base64.parse(encrypted.toString());
+            const hexCipherText = CryptoJS.enc.Hex.stringify(ciphertextWords);
+            return hexCipherText;
         }
 
-        const decrypted = CryptoJS.AES.decrypt(
-          {
-            ciphertext: CryptoJS.enc.Hex.parse(encryptedHexData),
-          },
-          secretKey,
-          {
-            iv: iv,
-            mode: CryptoJS.mode.CBC,
-            padding: CryptoJS.pad.Pkcs7,
-          }
-        );
+        function decryptData(encryptedHexData) {
+            try {
+                const secretKey = CryptoJS.enc.Utf8.parse(
+                    "qwertyuiopasdfghjklzxcvbnm123456"
+                );
+                const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
 
-        const decryptedStr = decrypted.toString(CryptoJS.enc.Utf8);
+                if (!encryptedHexData || encryptedHexData.length < 16) {
+                    console.warn(
+                        "⚠️ Encrypted data is missing or too short:",
+                        encryptedHexData
+                    );
+                    return null;
+                }
 
-        //  if (!decryptedStr) {
-        //    console.warn("⚠️ Decryption returned empty string. Possibly wrong secret or IV.");
-        //    return null;
-        //  }
+                const decrypted = CryptoJS.AES.decrypt(
+                    {
+                        ciphertext: CryptoJS.enc.Hex.parse(encryptedHexData),
+                    },
+                    secretKey,
+                    {
+                        iv: iv,
+                        mode: CryptoJS.mode.CBC,
+                        padding: CryptoJS.pad.Pkcs7,
+                    }
+                );
 
-        try {
-          return JSON.parse(decryptedStr);
-        } catch (jsonErr) {
-          console.error(
-            "❌ JSON parse failed. Decrypted string:",
-            decryptedStr
-          );
-          throw jsonErr;
+                const decryptedStr = decrypted.toString(CryptoJS.enc.Utf8);
+
+                try {
+                    return JSON.parse(decryptedStr);
+                } catch (jsonErr) {
+                    console.error(
+                        "❌ JSON parse failed. Decrypted string:",
+                        decryptedStr
+                    );
+                    throw jsonErr;
+                }
+            } catch (error) {
+                console.error("❌ Decryption error:", error.message);
+                console.log("Raw encrypted input:", encryptedHexData);
+                return null;
+            }
         }
-      } catch (error) {
-        console.error("❌ Decryption error:", error.message);
-        console.log("Raw encrypted input:", encryptedHexData);
-        return null;
-      }
-    }
 
-    async function postEncrypted(endpoint, data) {
-      try {
-        const encryptedPayload = encryptData(data);
+        async function postEncrypted(endpoint, data) {
+            try {
+                const encryptedPayload = encryptData(data);
 
-        const result = await axios.post(endpoint, {
-          encryptedData: encryptedPayload,
+                const result = await axios.post(endpoint, {
+                    encryptedData: encryptedPayload,
+                });
+
+                const encryptedResponse = result?.data?.coalProperties ?? result?.data?.encryptedData;
+
+                const decryptedResponse = decryptData(encryptedResponse);
+                const resultRow = (
+                    decryptedResponse &&
+                    Array.isArray(decryptedResponse) &&
+                    decryptedResponse.length > 0 &&
+                    typeof decryptedResponse[0] === "object"
+                )
+                    ? decryptedResponse[0]
+                    : decryptedResponse;
+
+                const finalResult = resultRow;
+
+                return finalResult || {};
+            } catch (error) {
+                console.error("🚨 Secure POST Error:", error.message);
+                throw error;
+            }
+        }
+
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Fetch coal data from Flask when the page is loaded
+            try {
+                // 1️⃣ If you still need the encrypted POST call:
+                const result = await postEncrypted(
+                    "http://3.111.89.109:3000/api/getCoalProperties",
+                    { companyId: 1 }
+                );
+                const data = result[0];
+
+
+                // 2️⃣ Fetch the coal data
+
+                if (!result) {
+                    throw new Error(`HTTP error! status: ${result.status}`);
+                }
+                // Assuming “data” is your parsed JSON
+                const coalProps = data.CoalData.CoalProperties;  // Array of 14 objects
+                const coalTypes = data.CoalData.CoalTypes;       // Array of 14 names
+
+                // Grab all <select class="coalDropdown"> elements
+                const coalDropdowns = document.querySelectorAll(".coalDropdown");
+
+                coalDropdowns.forEach(dropdown => {
+                    // 1️⃣ Reset to placeholder
+                    dropdown.innerHTML = "";
+                    const placeholder = document.createElement("option");
+                    placeholder.value = "";
+                    placeholder.textContent = "Select Coal";
+                    dropdown.appendChild(placeholder);
+
+                    // 2️⃣ Loop through the parallel arrays
+                    coalTypes.forEach((propsObj, idx) => {
+                        const coalName = coalTypes[idx] || `Type ${idx + 1}`;
+
+                        // Turn the props object into “Key: Value” strings
+                        const propsList = Object.entries(propsObj).map(
+                            ([key, val]) => `${key}: ${val}`
+                        );
+                        const formattedProps = `{${propsList.join(", ")}}`;
+
+                        // 3️⃣ Create and append the <option>
+                        const option = document.createElement("option");
+                        option.value = coalName;
+                        option.textContent = `${coalName}`;
+                        dropdown.appendChild(option);
+                    });
+                });
+                // 4️⃣ Return something if you want
+                return { success: true, count: Object.keys(coalData).length };
+            } catch (error) {
+                console.error("Error loading coal data:", error);
+                return { success: false, error };
+            }
         });
 
-        const encryptedResponse = result.data.coalProperties;
-        //  const firstResultSet = encryptedResponse[0];
+        document.getElementById('add-blend-btn').addEventListener('click', async () => {
+            const coalContainer = document.getElementById('coalContainer');
+            const newRow = document.createElement('div');
+            newRow.classList.add('blend-row');
+            newRow.innerHTML = `
+                    <select class="coalDropdown" name="coalDropdown[]">
+                        <option value="">Select Coal</option>
+                    </select>
+                    <div class="blend-entry">
+                        <input type="number" class="currentValue" name="currentValue[]" placeholder="Enter current value" required>
+                    </div>
+                `;
+            coalContainer.appendChild(newRow);
 
-        //  if (!encryptedResponse) {
-        //    console.warn("⚠️ No encryptedData in server response. Full response:", result);
-        //    throw new Error("Invalid encrypted response");
-        //  }
+            // Fetch and populate dropdown options in the new row
+            try {
+                // 1️⃣ If you still need the encrypted POST call:
+                const result = await postEncrypted(
+                    "http://3.111.89.109:3000/api/getCoalProperties",
+                    { companyId: 1 }
+                );
+                const data = result[0];
 
-        const decryptedResponse = decryptData(encryptedResponse);
-        const resultRow = (
-          decryptedResponse &&
-          Array.isArray(decryptedResponse) &&
-          decryptedResponse.length > 0 &&
-          typeof decryptedResponse[0] === "object"
-        )
-          ? decryptedResponse[0]
-          : decryptedResponse;
-        ; // First item of the first result set
-        const finalResult = resultRow;
-        //  if (!decryptedResponse) {
-        //    console.warn("⚠️ Decrypted response is empty or null.");
-        //  }
 
-        return finalResult || {};
-      } catch (error) {
-        console.error("🚨 Secure POST Error:", error.message);
-        throw error;
-      }
+                // 2️⃣ Fetch the coal data
+
+                if (!result.ok) {
+                    throw new Error(`HTTP error! status: ${result.status}`);
+                }
+                const coalData = data.CoalData.CoalProperties;
+                const coalTypes = data.CoalData.CoalTypes
+
+                // 3️⃣ Populate all .coalDropdown selects
+                const coalDropdowns = document.querySelectorAll(".coalDropdown");
+                coalDropdowns.forEach((dropdown) => {
+                    // Reset to a placeholder
+                    dropdown.innerHTML = "";
+                    const placeholder = document.createElement("option");
+                    placeholder.value = "";
+                    placeholder.textContent = "Select Coal";
+                    dropdown.appendChild(placeholder);
+
+                    // Add one <option> per coal type
+                    for (const coalName in coalData) {
+                        const { properties } = coalData[coalName];
+                        const formattedProps = `{${properties.join(", ")}}`;
+                        const option = document.createElement("option");
+                        option.value = coalName;
+                        option.textContent = `${coalName} ${formattedProps}`;
+                        dropdown.appendChild(option);
+                    }
+                });
+
+                // 4️⃣ Return something if you want
+                return { success: true, count: Object.keys(coalData).length };
+            } catch (error) {
+                console.error("Error loading coal data:", error);
+                return { success: false, error };
+            }
+        });
+
+        document.getElementById('upload-file-btn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('file-upload');
+    const file = fileInput.files[0];
+    if (!file) {
+      return alert("Please select an Excel file to upload.");
     }
 
-    document.getElementById("downloadcoalfile").addEventListener("click", function () {
-  fetch("http://3.111.89.109:3000/download-template-properties")
-    .then(response => response.blob())
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "coal-properties-template.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    });
-});
+    const formData = new FormData();
+    formData.append('file', file);
 
-
-    let coalData = [];
-    let coalTypes = [];
-
-    async function fetchCoalData() {
-      try {
-        const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 })
-        console.log("🚀 Data fetched successfully:", result);
-        const data = result[0];
-        coalData = data.CoalData.CoalProperties;
-        coalTypes = data.CoalData.CoalTypes;
-
-        populateCoalDropdown();
-        displayTable();
-      } catch (error) {
-        console.error("Error fetching coal data:", error);
-      }
-    }
-
-    function populateCoalDropdown() {
-      console.log(coalTypes);
-      const selectCoal = document.getElementById("selectCoal");
-      selectCoal.innerHTML = "";
-
-      const labelOption = document.createElement("option");
-      labelOption.value = "";
-      labelOption.textContent = "Select Coal Type";
-      labelOption.disabled = true;
-      labelOption.selected = true;
-      selectCoal.appendChild(labelOption);
-
-      coalTypes.forEach((coal, index) => {
-        const option = document.createElement("option");
-        option.value = index;
-        option.textContent = coal;
-        selectCoal.appendChild(option);
-      });
-    }
-
-    function displayTable() {
-  const tableBody = document.querySelector("#coalTable tbody");
-  tableBody.innerHTML = "";
-
-  const columnOrder = [
-    "CoalName",
-    "Ash",
-    "VolatileMatter",
-    "Moisture",
-    "MaxContraction",
-    "MaxExpansion",
-    "Maxfluidityddpm",
-    "MMR",
-    "HGI",
-    "ResolidificationTempRangeMinc",
-    "SofteningTemperaturec",
-    "ResolidificationTempRangeMaxc",
-    "PlasticRangec",
-    "Sulphur",
-    "Phosphorous",
-    "CSN",
-    "CostPerTonRs",
-    "LastModifiedDate"
-  ];
-
-  coalData.forEach((row, index) => {
-    const tr = document.createElement("tr");
-
-    // S.No column
-    const tdIndex = document.createElement("td");
-    tdIndex.textContent = index + 1;
-    tr.appendChild(tdIndex);
-
-    // Data columnsw
-    columnOrder.forEach((key) => {
-      const td = document.createElement("td");
-      td.textContent = row[key] !== undefined ? row[key] : "N/A";
-      tr.appendChild(td);
-    });
-
-    // Delete button
-    const tdDelete = document.createElement("td");
-    const deleteButton = document.createElement("button");
-    deleteButton.textContent = "Delete";
-    deleteButton.className = "delete-button";
-    deleteButton.onclick = async () => {
-      try {
-        const response = await postEncrypted('http://3.111.89.109:3000/api/deleteCoalProperties',{p_CoalId : row.CoalId})
-
-        fetchCoalData();
-        alert("Deleted Coal");
-      } catch (error) {
-        console.error("Error deleting coal entry:", error);
-        alert("Error deleting entry. See console for details.");
-      }
-    };
-    tdDelete.appendChild(deleteButton);
-    tr.appendChild(tdDelete);
-
-    tableBody.appendChild(tr);
-  });
-}
-
-    document.getElementById("selectCoal").addEventListener("change",async () => {
-      const selectedIndex = parseInt(
-        document.getElementById("selectCoal").value,
-        10
+    try {
+      const resp = await axios.post(
+        'http://3.111.89.109:5000/upload_excel_training',
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       );
-      const result = await postEncrypted("http://3.111.89.109:3000/api/getIndividualCoalProperty", { p_CompanyId: 1 , p_CoalId : (selectedIndex + 1) })
-      console.log(result);
-      if (selectedIndex >= 0 && selectedIndex < coalData.length) {
-        const selectedCoal = coalData[selectedIndex];
+      alert(resp.data.message);
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.error || err.message;
+      alert("Upload failed: " + msg);
+    }
+  });
 
-        document.getElementById("coal").value = selectedCoal.CoalName;
-        document.getElementById("ash").value = selectedCoal.Ash;
-        document.getElementById("volatile_matter").value = selectedCoal.VolatileMatter;
-        document.getElementById("moisture").value = selectedCoal.Moisture;
-        document.getElementById("max_contraction").value = selectedCoal.MaxContraction;
-        document.getElementById("max_expansion").value = selectedCoal.MaxExpansion;
-        document.getElementById("max_fluidity").value = selectedCoal.Maxfluidityddpm;
-        document.getElementById("mmr").value = selectedCoal.MMR;
-        document.getElementById("hgi").value = selectedCoal.HGI;
-        document.getElementById("softening_temp").value = selectedCoal.SofteningTemperaturec;
-        document.getElementById("resolidification_min").value = selectedCoal.ResolidificationTempRangeMinc;
-        document.getElementById("resolidification_max").value = selectedCoal.ResolidificationTempRangeMaxc;
-        document.getElementById("plastic_range").value = selectedCoal.PlasticRangec;
-        document.getElementById("sulphur").value = selectedCoal.Sulphur;
-        document.getElementById("phosphorous").value = selectedCoal.Phosphorous;
-        document.getElementById("csn").value = selectedCoal.CSN;
-        document.getElementById("cost").value = selectedCoal.CostPerTonRs;
-      }
-    });
 
-    document
-      .getElementById("modifyCoalForm")
-      .addEventListener("submit", async (e) => {
-        e.preventDefault();
 
-        const selectedIndex = parseInt(
-          document.getElementById("selectCoal").value,
-          10
-        );
-        console.log(selectedIndex);
+        document.getElementById('viewdata-btn').addEventListener('click', () => {
+            // Trigger the file download
+            window.location.href = 'http://3.111.89.109:5000/TrainData-storage.html';
+        });
 
-        // These should be available based on how you're managing IDs
-        const coalId = selectedIndex + 1; // Assuming select dropdown value = CoalId
-        const fileId = 1; // Replace with actual fileId logic
-        const companyId = 1; // Replace with actual companyId logic
+        document.getElementById('download-template-btn').addEventListener('click', async () => {
+    try {
+        const response = await axios.get('http://3.111.89.109:5000/download-template', {
+            responseType: 'blob', // very important!
+        });
 
-        const modifiedCoalData = {
-          p_CoalId: coalId,
-          p_Ash: parseFloat(document.getElementById("ash").value),
-          p_VolatileMatter: parseFloat(document.getElementById("volatile_matter").value),
-          p_Moisture: parseFloat(document.getElementById("moisture").value),
-          p_MaxContraction: parseFloat(document.getElementById("max_contraction").value),
-          p_MaxExpansion: parseFloat(document.getElementById("max_expansion").value),
-          p_Maxfluidityddpm: parseFloat(document.getElementById("max_fluidity").value),
-          p_MMR: parseFloat(document.getElementById("mmr").value),
-          p_HGI: parseFloat(document.getElementById("hgi").value),
-          p_SofteningTemperaturec: parseFloat(document.getElementById("softening_temp").value),
-          p_ResolidificationTempRangeMinc: parseFloat(document.getElementById("resolidification_min").value),
-          p_ResolidificationTempRangeMaxc: parseFloat(document.getElementById("resolidification_max").value),
-          p_PlasticRangec: parseFloat(document.getElementById("plastic_range").value),
-          p_Sulphur: parseFloat(document.getElementById("sulphur").value),
-          p_Phosphorous: parseFloat(document.getElementById("phosphorous").value),
-          p_CSN: parseFloat(document.getElementById("csn").value),
-          p_CostPerTonRs: parseFloat(document.getElementById("cost").value),
-          p_FileId: 1,
-          p_CompanyId: 1
-        };
-
-        try {
-          const response = await postEncrypted(
-            "http://3.111.89.109:3000/api/updateCoalProperties",
-            modifiedCoalData
-          );
-
-          fetchCoalData(); // Refresh table
-
-         
-            alert("Data updated successfully!");
-          
-
-          document.getElementById("modifyCoalFormPopup").style.display = "none";
-          resetForm();
-        } catch (err) {
-          console.error("Error modifying coal data:", err);
-        }
-      });
-
-    fetchCoalData();
-
-    document
-      .getElementById("modifyCoalDataButton")
-      .addEventListener("click", () => {
-        document.getElementById("modifyCoalFormPopup").style.display =
-          "block";
-      });
-
-    document
-      .getElementById("closeModifyForm")
-      .addEventListener("click", () => {
-        document.getElementById("modifyCoalFormPopup").style.display = "none";
-      });
-
-    const formFields = [
-      "coal",
-      "ash",
-      "volatile_matter",
-      "moisture",
-      "max_contraction",
-      "max_expansion",
-      "max_fluidity",
-      "mmr",
-      "hgi",
-      "softening_temp",
-      "resolidification_min",
-      "resolidification_max",
-      "plastic_range",
-      "sulphur",
-      "phosphorous",
-      "csn",
-      "cost",
-    ];
-
-    formFields.forEach((fieldId) => {
-      document.getElementById(fieldId).addEventListener("input", () => {
-        const originalValues =
-          coalData[document.getElementById("selectCoal").value];
-        const modifiedValues = formFields.map(
-          (id) => document.getElementById(id).value
-        );
-
-        const submitButton = document.getElementById("submitModifiedData");
-        submitButton.disabled = !modifiedValues.some(
-          (value, index) => value !== originalValues[index + 1]
-        );
-      });
-    });
-
-    document.getElementById("coalForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const newCoalData = { 
-    p_CoalId: null, // Assuming 0 for new insert, or generate dynamically
-    p_CoalName: (document.getElementById("add_coal").value).toString(),
-    p_Ash: parseFloat(document.getElementById("add_ash").value),
-    p_VolatileMatter: parseFloat(document.getElementById("add_volatile_matter").value),
-    p_Moisture: parseFloat(document.getElementById("add_moisture").value),
-    p_MaxContraction: parseFloat(document.getElementById("add_max_contraction").value),
-    p_MaxExpansion: parseFloat(document.getElementById("add_max_expansion").value),
-    p_Maxfluidityddpm: parseFloat(document.getElementById("add_max_fluidity").value),
-    p_MMR: parseFloat(document.getElementById("add_mmr").value),
-    p_HGI: parseFloat(document.getElementById("add_hgi").value),
-    p_SofteningTemperaturec: parseFloat(document.getElementById("add_softening_temp").value),
-    p_ResolidificationTempRangeMinc: parseFloat(document.getElementById("add_resolidification_min").value),
-    p_ResolidificationTempRangeMaxc: parseFloat(document.getElementById("add_resolidification_max").value),
-    p_PlasticRangec: parseFloat(document.getElementById("add_plastic_range").value),
-    p_Sulphur: parseFloat(document.getElementById("add_sulphur").value),
-    p_Phosphorous: parseFloat(document.getElementById("add_phosphorous").value),
-    p_CSN: parseFloat(document.getElementById("add_csn").value),
-    p_CostPerTonRs: parseFloat(document.getElementById("add_cost").value),
-    p_FileId: 1, // Replace with actual FileId if needed
-    p_CompanyId: 1, // Replace with actual CompanyId if needed
-    p_UserId: 1, // Replace with actual UserId if needed
-    p_FileName: "coal_import.xlsx", // Or dynamic name if uploading file
-    p_FileDate: new Date().toISOString().slice(0, 19).replace("T", " ")
-    // Current timestamp in ISO format
-  };
-
-  try {
-    const response = await postEncrypted("http://3.111.89.109:3000/api/insertCoalProperties", newCoalData);
-
-    const result = Array.isArray(response) && response[0] ? response[0] : response;
-
-    fetchCoalData();
-
-    
-      alert("Data added successfully!");
-    
-
-    document.getElementById("coalFormPopup").style.display = "none";
-  } catch (err) {
-    console.error("Error adding coal data:", err);
-    alert("Error adding data");
-  }
+        // Create a blob URL and trigger download
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'template.csv'); // set your filename
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Download failed:', error);
+    }
 });
 
-    document
-      .getElementById("addCoalDataButton")
-      .addEventListener("click", () => {
-        document.getElementById("coalFormPopup").style.display = "block";
-      });
+        const form = document.getElementById('coalForm');
 
-    document.getElementById("closeForm").addEventListener("click", () => {
-      document.getElementById("coalFormPopup").style.display = "none";
-    });
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                if (key in data) {
+                    if (!Array.isArray(data[key])) {
+                        data[key] = [data[key]];
+                    }
+                    data[key].push(value);
+                } else {
+                    data[key] = value;
+                }
+            });
 
-    function resetForm() {
-      window.location.href = "coal-properties.html";
-    }
+            // Convert the data to match the required format
+            const formattedData = formatData(data);
 
-    window.addEventListener("DOMContentLoaded", (event) => {
-      // Get all the navigation links
-      const navLinks = document.querySelectorAll(".navbar a");
+            try {
+                const response = await fetch('http://3.111.89.109:5000/submit_training_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formattedData)
+                });
 
-      navLinks.forEach((link) => {
-        if (link.href === window.location.href) {
-          link.classList.add("active"); // Add 'active' class to the link that matches the URL
+                if (response.ok) {
+                    alert('Data submitted successfully!');
+                    window.location.reload();
+                    console.log('Form submitted successfully');
+
+                } else {
+                    console.error('Error submitting form');
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
+        function formatData(data) {
+            // Assuming the format is an array of values
+            const coalDropdownValues = Array.isArray(data['coalDropdown[]']) ? data['coalDropdown[]'] : [data['coalDropdown[]']];
+            const currentValueValues = Array.isArray(data['currentValue[]']) ? data['currentValue[]'] : [data['currentValue[]']];
+
+            const processParameters = {
+                chargingTonnage: data['charging_tonnage'],
+                moistureContent: data['moisture_content'],
+                bulkDensity: data['bulk_density'],
+                chargingTemperature: data['charging_temperature'],
+                batteryOperatingTemperature: data['battery_operating_temperature'],
+                pushForce: data['push_force'],
+                pri: data['pri'],
+                cokePerPush: data['coke_per_push'],
+                grossCokeYield: data['gross_coke_yield'],
+                cokingTime: data['coking_time'],
+                cokeEndTemperature: data['coke_end_temperature'],
+                quenchingTime: data['quenching_time']
+            };
+
+            if (data['cross_wall_temperature']) {
+                processParameters.crossWallTemperature = data['cross_wall_temperature'];
+            }
+
+            if (data['gcm_pressure']) {
+                processParameters.gcmPressure = data['gcm_pressure'];
+            }
+
+            if (data['gcm_temperature']) {
+                processParameters.gcmTemperature = data['gcm_temperature'];
+            }
+
+            if (data['header_temperature']) {
+                processParameters.headerTemperature = data['header_temperature'];
+            }
+
+            const formattedData = {
+                date: data['dateInput'],
+                coalData: coalDropdownValues.map((coal, index) => ({
+                    coal,
+                    currentValue: currentValueValues[index]
+                })),
+                blendedCoalParameters: {
+                    ash: data['blended_coal_ash'],
+                    volatileMatter: data['blended_coal_vm'],
+                    moisture: data['blended_coal_moisture'],
+                    maxContraction: data['max_contraction'],
+                    maxExpansion: data['max_expansion'],
+                    maxFluidity: data['max_fluidity'],
+                    crushingIndex315mm: data['crushing_index_3_15mm'],
+                    crushingIndex05mm: data['crushing_index_0_5mm'],
+                    softeningTemperature: data['softening_temperature'],
+                    resolidificationTempRangeMin: data['resolidification_temp_range_min'],
+                    resolidificationTempRangeMax: data['resolidification_temp_range_max'],
+                    plasticRange: data['plastic_range'],
+                    sulphur: data['sulpher'],
+                    phosphorous: data['phosphorous'],
+                    csn: data['csn']
+                },
+                cokeParameters: {
+                    ash: data['ASH'],
+                    volatileMatter: data['VM'],
+                    m40mm: data['M_40MM'],
+                    m10mm: data['M_10MM'],
+                    csr: data['CSR'],
+                    cri: data['CRI'],
+                    ams: data['AMS']
+                },
+                processParameters: processParameters
+            };
+
+            return formattedData;
         }
-      });
-    });
-  </script>
+
+
+
+        function updateProcessParameters() {
+            const processType = document.getElementById("processDropdown").value;
+            const processParametersDiv = document.getElementById("processParameters");
+
+            // Clear the existing parameters
+            processParametersDiv.innerHTML = '';
+
+            if (processType === "1") {
+                // Recovery Top Charge COB
+                processParametersDiv.innerHTML = `
+                    <h3>Recovery Top Charge COB </h3>
+                    <table>
+                        <tr><td>Charging Tonnage:</td><td><input type="number" name="charging_tonnage" value="17"></td></tr>
+                        <tr><td>Moisture Content:</td><td><input type="number" name="moisture_content" value="10"></td></tr>
+                        <tr><td>Bulk Density:</td><td><input type="number" name="bulk_density" value="0.78"></td></tr>
+                        <tr><td>Charging Temperature (°C):</td><td><input type="number" name="charging_temperature" value="1198"></td></tr>
+                        <tr><td>Battery Operating Temperature (°C):</td><td><input type="number" name="battery_operating_temperature" value="1255"></td></tr>
+                        <tr><td>Cross Wall Temperature (°C):</td><td><input type="number" name="cross_wall_temperature" value="1214"></td></tr>
+                        <tr><td>Push Force (Amp):</td><td><input type="number" name="push_force" value="125"></td></tr>
+                        <tr><td>PRI:</td><td><input type="number" name="pri" value="100"></td></tr>
+                        <tr><td>Coke per Push (kg):</td><td><input type="number" name="coke_per_push" value="12.84"></td></tr>
+                        <tr><td>Gross Coke Yield (%):</td><td><input type="number" name="gross_coke_yield" value="75"></td></tr>
+                        <tr><td>GCM Pressure (Pa):</td><td><input type="number" name="gcm_pressure" value="140"></td></tr>
+                        <tr><td>GCM Temperature (°C):</td><td><input type="number" name="gcm_temperature" value="80"></td></tr>
+                        <tr><td>Coking Time (hrs):</td><td><input type="number" name="coking_time" value="20"></td></tr>
+                        <tr><td>Coke End Temperature (°C):</td><td><input type="number" name="coke_end_temperature" value="1050"></td></tr>
+                        <tr><td>Quenching Time (min):</td><td><input type="number" name="quenching_time" value="5"></td></tr>
+                    </table>
+                `;
+            } else if (processType === "2") {
+                // Recovery Stamp Charge COB
+                processParametersDiv.innerHTML = `
+                    <h3>Recovery Stamp Charge COB </h3>
+                    <table>
+                        <tr><td>Charging Tonnage:</td><td><input type="number" name="charging_tonnage" value="27"></td></tr>
+                        <tr><td>Moisture Content:</td><td><input type="number" name="moisture_content" value="10.5"></td></tr>
+                        <tr><td>Bulk Density:</td><td><input type="number" name="bulk_density" value="1.15"></td></tr>
+                        <tr><td>Charging Temperature (°C):</td><td><input type="number" name="charging_temperature" value="1100"></td></tr>
+                        <tr><td>Battery Operating Temperature (°C):</td><td><input type="number" name="battery_operating_temperature" value="1350"></td></tr>
+                        <tr><td>Cross Wall Temperature (°C):</td><td><input type="number" name="cross_wall_temperature" value="1280"></td></tr>
+                        <tr><td>Push Force (Amp):</td><td><input type="number" name="push_force" value="220"></td></tr>
+                        <tr><td>PRI:</td><td><input type="number" name="pri" value="100"></td></tr>
+                        <tr><td>Coke per Push (kg):</td><td><input type="number" name="coke_per_push" value="20.7"></td></tr>
+                        <tr><td>Gross Coke Yield (%):</td><td><input type="number" name="gross_coke_yield" value="76"></td></tr>
+                        <tr><td>GCM Pressure (Pa):</td><td><input type="number" name="gcm_pressure" value="190"></td></tr>
+                        <tr><td>GCM Temperature (°C):</td><td><input type="number" name="gcm_temperature" value="80"></td></tr>
+                        <tr><td>Coking Time (hrs):</td><td><input type="number" name="coking_time" value="26"></td></tr>
+                        <tr><td>Coke End Temperature (°C):</td><td><input type="number" name="coke_end_temperature" value="1000"></td></tr>
+                        <tr><td>Quenching Time (min):</td><td><input type="number" name="quenching_time" value="5"></td></tr>
+                    </table>
+                `;
+            } else if (processType === "3") {
+                // Non-Recovery Stamp Charge
+                processParametersDiv.innerHTML = `
+                    <h3>Non-Recovery Stamp Charge </h3>
+                    <table>
+                        <tr><td>Charging Tonnage:</td><td><input type="number" name="charging_tonnage" value="50"></td></tr>
+                        <tr><td>Moisture Content:</td><td><input type="number" name="moisture_content" value="10"></td></tr>
+                        <tr><td>Bulk Density:</td><td><input type="number" name="bulk_density" value="1.1"></td></tr>
+                        <tr><td>Charging Temperature (°C):</td><td><input type="number" name="charging_temperature" value="1000"></td></tr>
+                        <tr><td>Battery Operating Temperature (°C):</td><td><input type="number" name="battery_operating_temperature" value="1350"></td></tr>
+                        <tr><td>Push Force (Amp):</td><td><input type="number" name="push_force" value="250"></td></tr>
+                        <tr><td>PRI:</td><td><input type="number" name="pri" value="100"></td></tr>
+                        <tr><td>Coke per Push (kg):</td><td><input type="number" name="coke_per_push" value="34.5"></td></tr>
+                        <tr><td>Gross Coke Yield (%):</td><td><input type="number" name="gross_coke_yield" value="73"></td></tr>
+                        <tr><td>Header Temperature (°C):</td><td><input type="number" name="header_temperature" value="1100"></td></tr>
+                        <tr><td>Coking Time (hrs):</td><td><input type="number" name="coking_time" value="66"></td></tr>
+                        <tr><td>Coke End Temperature (°C):</td><td><input type="number" name="coke_end_temperature" value="1050"></td></tr>
+                        <tr><td>Quenching Time (min):</td><td><input type="number" name="quenching_time" value="5"></td></tr>
+                    </table>
+                `;
+            }
+        }
+
+
+
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            // Get all the navigation links
+            const navLinks = document.querySelectorAll('.navbar a');
+
+            // Loop through each link to check if it matches the current page URL
+            navLinks.forEach(link => {
+                if (link.href === window.location.href) {
+                    link.classList.add('active'); // Add 'active' class to the link that matches the URL
+                }
+            });
+        });
+
+    </script>
+
 </body>
 
 </html>
