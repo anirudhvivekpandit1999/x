@@ -636,18 +636,23 @@ D= np.loadtxt('coal_percentages.csv', delimiter=',')
 P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',')  
 Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
 
-response = requests.get('http://3.111.89.109:3000/api/getCoalProperties')
+def get_coal_properties(company_id=1):
+    url = "http://3.111.89.109:3000/api/getCoalProperties"
+    payload = { "companyId": company_id }
 
-# Check if the request was successful
-if response.status_code == 200:
-   
-    data = json.loads(response.text)
-    df = pd.DataFrame(data)
-    # Use the API data as needed
-    data1 = df.astype(str)  
-
-else:
-    print(f"Failed to retrieve data. Status code: {response.status_code}")      
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        result = response.json()
+        
+        coal_data = result[0]["CoalData"]["CoalProperties"]
+        df = pd.DataFrame(coal_data)
+        return df
+    except Exception as e:
+        print("Error fetching coal properties:", e)
+        return pd.DataFrame()
+    
+data1 = get_coal_properties(company_id=1)      
 
 D_tensor = tf.constant(D, dtype=tf.float32)
 P_tensor = tf.constant(P, dtype=tf.float32)
