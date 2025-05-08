@@ -30,7 +30,7 @@ from tensorflow import keras
 from tensorflow.keras import layers  # type: ignore
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
-
+import demjson3
 
 app = Flask(__name__)
 CORS(app,resources={r"/*": {"origins": "*"}})
@@ -102,14 +102,24 @@ def getCoalPropertiesCSV():
     for row in rows:
         writer.writerow(row)
     raw_data = output.getvalue()
-    data = [yaml.safe_load(item) for item in raw_data]
-# Define the column order (no headers needed)
+    data = []
+    for item in raw_data:
+        try:
+            # Convert Python-style dict to valid JSON
+            json_str = item.replace("'", '"').replace('True', 'true').replace('False', 'false')
+            parsed = demjson3.decode(json_str)
+            data.append(parsed)
+        except demjson3.JSONDecodeError as e:
+            print(f"Error parsing item: {item}")
+            raise
+
+    # Field order matching your target format
     field_order = [
-    'CoalName', 'Ash', 'VolatileMatter', 'Moisture', 'MaxContraction',
-    'MaxExpansion', 'Maxfluidityddpm', 'MMR', 'HGI', 'SofteningTemperaturec',
-    'ResolidificationTempRangeMinc', 'ResolidificationTempRangeMaxc',
-    'PlasticRangec', 'Sulphur', 'Phosphorous', 'CSN', 'CostPerTonRs'
-]
+        'CoalName', 'Ash', 'VolatileMatter', 'Moisture', 'MaxContraction',
+        'MaxExpansion', 'Maxfluidityddpm', 'MMR', 'HGI', 'SofteningTemperaturec',
+        'ResolidificationTempRangeMinc', 'ResolidificationTempRangeMaxc',
+        'PlasticRangec', 'Sulphur', 'Phosphorous', 'CSN', 'CostPerTonRs'
+    ]
 
 # Generate CSV output without headers
     output2 = io.StringIO()
@@ -122,11 +132,15 @@ def getCoalPropertiesCSV():
 
 # Write only the data rows
     for entry in data:
-        row = [
-            # Format numbers to remove trailing zeros (e.g., 0.6000 → 0.6)
-            f"{entry[field]:.5g}" if isinstance(entry[field], (int, float)) else str(entry[field])
-            for field in field_order
-        ]
+        row = []
+        for field in field_order:
+            value = entry.get(field, '')  # Handle missing fields gracefully
+            # Format numbers to remove insignificant decimals
+            if isinstance(value, (int, float)):
+                formatted = f"{value:.5g}".rstrip('0').rstrip('.') if '.' in f"{value}" else f"{value}"
+            else:
+                formatted = str(value)
+            row.append(formatted)
         writer2.writerow(row)
 
 # Get the CSV string
