@@ -101,7 +101,7 @@ def getCoalPropertiesCSV():
     for row in rows:
         writer.writerow(row)
     raw_data = output.getvalue()
-    data = [ast.literal_eval(item.replace("'", "\"")) for item in raw_data]
+    data = [ast.literal_eval(item) for item in raw_data]
 # Define the column order (no headers needed)
     field_order = [
     'CoalName', 'Ash', 'VolatileMatter', 'Moisture', 'MaxContraction',
@@ -113,7 +113,7 @@ def getCoalPropertiesCSV():
 # Generate CSV output without headers
     output2 = io.StringIO()
     writer2 = csv.writer(
-        output,
+        output2,
         quoting=csv.QUOTE_NONE,    # No quotes
         escapechar='\\',           # Escape character if needed
         lineterminator='\n'        # Unix-style line endings
@@ -121,7 +121,11 @@ def getCoalPropertiesCSV():
 
 # Write only the data rows
     for entry in data:
-        row = [format_number(entry[field]) for field in field_order]
+        row = [
+            # Format numbers to remove trailing zeros (e.g., 0.6000 → 0.6)
+            f"{entry[field]:.5g}" if isinstance(entry[field], (int, float)) else str(entry[field])
+            for field in field_order
+        ]
         writer2.writerow(row)
 
 # Get the CSV string
