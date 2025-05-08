@@ -123,7 +123,9 @@ def getCoalPropertiesCSV():
 
     csv_text = output.getvalue()
     output.close()
-    return csv_text@app.route('/')
+    return csv_text
+
+@app.route('/')
 def index():
     return render_template('index.html')
 
