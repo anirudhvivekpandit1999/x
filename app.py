@@ -94,8 +94,29 @@ def getCoalPropertiesCSV():
     # data rows
     for row in rows:
         writer.writerow(row)
-    # 4) Get entire CSV text
-    return output.getvalue()
+    data = output.getvalue()
+
+# Define the column order (no headers needed)
+    field_order = [
+    'CoalName', 'Ash', 'VolatileMatter', 'Moisture', 'MaxContraction',
+    'MaxExpansion', 'Maxfluidityddpm', 'MMR', 'HGI', 'SofteningTemperaturec',
+    'ResolidificationTempRangeMinc', 'ResolidificationTempRangeMaxc',
+    'PlasticRangec', 'Sulphur', 'Phosphorous', 'CSN', 'CostPerTonRs'
+]
+
+# Generate CSV output without headers
+    output2 = io.StringIO()
+    writer2 = csv.writer(output2, quoting=csv.QUOTE_ALL)
+
+# Write only the data rows
+    for entry in data:
+        row = [str(entry[field]) for field in field_order]
+        writer.writerow(row)
+
+# Get the CSV string
+    csv_content = output2.getvalue()
+    print(csv_content)
+    return output2.getvalue()
 
 @app.route('/')
 def index():
