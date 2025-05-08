@@ -7,7 +7,7 @@ import csv
 import os
 import time
 import io, json
-from io import BytesIO
+from io import BytesIO, StringIO
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
 from flask_cors import CORS
@@ -965,6 +965,8 @@ coal_costs = []
 @app.route('/cost', methods=['POST'])
 def cost():
     p =  getCoalPropertiesCSV();
+    csv_buffer = StringIO(p)
+    P = np.loadtxt(csv_buffer, delimiter=',')
     P =  np.loadtxt(p, delimiter=',') 
     print(P);
     P_tensor = tf.constant(P, dtype=tf.float32)
