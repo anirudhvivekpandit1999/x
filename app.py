@@ -37,34 +37,47 @@ CORS(app,resources={r"/*": {"origins": "*"}})
 _SECRET_KEY = b"qwertyuiopasdfghjklzxcvbnm123456"
 _IV         = b"1234567890123456"
 
-def encrypt_data(data):
-    plaintext = json.dumps(data).encode('utf-8')
-    padded    = pad(plaintext, AES.block_size, style='pkcs7')       # <-- correct pad
+def encrypt_data(payload: dict) -> str:
+    plaintext = json.dumps(payload).encode('utf-8')
+    padded    = pad(plaintext, AES.block_size, style='pkcs7')
     cipher    = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
-    ct        = cipher.encrypt(padded)
-    return hexlify(ct).decode()
-
+    ciphertext= cipher.encrypt(padded)
+    return hexlify(ciphertext).decode('ascii')
 
 def decrypt_data(encrypted_hex: str) -> dict:
-    """
-    Hex-decode → AES-CBC-PKCS7 decrypt → JSON-parse
-    """
-    raw = unhexlify(encrypted_hex)
-    cipher = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
-    padded = cipher.decrypt(raw)
+    raw       = unhexlify(encrypted_hex)
+    cipher    = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
+    padded    = cipher.decrypt(raw)
     plaintext = unpad(padded, AES.block_size, style='pkcs7')
-    return json.loads(plaintext.decode("utf-8"))
-
+    return json.loads(plaintext.decode('utf-8'))
 
 def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
+    """
+    Mirrors your JS:
+     - encryptData
+     - axios.post
+     - first try result.data.coalProperties
+     - fallback to result.data.response
+     - decryptData
+    """
     encrypted = encrypt_data(payload)
+
+    # synchronous HTTP POST
     resp = requests.post(url, json={"encryptedData": encrypted}, timeout=timeout)
     resp.raise_for_status()
     body = resp.json()
-    print(body,"body")
-    enc = body.get("data").get("response")
+    print("🔒 Raw server response:", body)
+
+    # exactly like JS: try coalProperties first, then .data.response
+    if 'coalProperties' in body:
+        enc = body['coalProperties']
+    else:
+        enc = body.get('data', {}).get('response')
+
     if not enc:
-        raise ValueError("No encrypted payload in data.response")
+        raise ValueError("No encrypted payload in `coalProperties` or `data.response`")
+
+    # decrypt and return
     return decrypt_data(enc)
 
 def getCoalPropertiesCSV():
