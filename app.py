@@ -1,7 +1,3 @@
-import hashlib
-import hmac
-import subprocess
-import threading
 import pandas as pd
 import numpy as np
 import csv
@@ -10,8 +6,11 @@ import time
 import io, json
 from io import BytesIO
 from datetime import datetime
-from flask import Flask, abort, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
+from flask import Flask, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
 from flask_cors import CORS
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 from werkzeug.utils import secure_filename
 from flask_mysqldb import MySQL
@@ -24,44 +23,22 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 from tensorflow.keras import layers  # type: ignore
-import requests
 
 
 app = Flask(__name__)
 CORS(app,resources={r"/*": {"origins": "*"}})
 
-WEBHOOK_SECRET = 'qwertyuiopasdfghjklzxcvbnm123456'
-DEPLOY_SCRIPT = '/home/ec2-user/x/deploy.sh'
-def verify_signature(req):
-        signature = req.headers.get('X-Hub-Signature-256')
-        if not signature:
-            abort(400)
-        sha_name, sig = signature.split('=',1)
-        mac = hmac.new(WEBHOOK_SECRET.encode(), req.data, hashlib.sha256)
-        if not hmac.compare_digest(mac.hexdigest(), sig):
-            abort(400)
+
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/github-deploy', methods=['POST'])
-def github_deploy():
-        verify_signature(request)
-        payload = request.get_json() or {}
-        if payload.get('ref') != 'refs/heads/main':
-            return jsonify({'status':'ignored'}), 200
-
-        # Run deploy.sh in the background
-        threading.Thread(target=lambda: subprocess.run([DEPLOY_SCRIPT], check=True)).start()
-        return jsonify({'status':'triggered'}), 202
 
 @app.route('/index.html')
 def index_html():
     return render_template('index.html')
-
-@app.route('/hi.html')
-def index_html2():
-    return render_template('hi.html')
 
 @app.route('/coal-properties.html')
 def properties():
@@ -91,7 +68,7 @@ def login():
 #training page 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'xls', 'xlsx'}
-
+SUBMITTED_CSV_PATH = 'submitted_training_coal_data.csv'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 TRAINING_DATA = 'training_data_file.csv'
 INDIVIDUAL_UPLOADS_FOLDER = os.path.join(UPLOAD_FOLDER, 'individual_uploads')
@@ -113,7 +90,7 @@ def get_next_index():
                 last_index = 0
                 for row in rows:
                     try:
-                        
+
                         if row[0].strip():  
                             last_index = max(last_index, int(row[0]))
                     except ValueError:
@@ -123,7 +100,7 @@ def get_next_index():
                 return 1  # If the CSV is empty, start with 1
     else:
         return 1  # If the CSV doesn't exist, start with 1
-    
+
 
 # UPLOAD EXCEL FILE IN TRAINING PAGE 
 
@@ -214,11 +191,11 @@ def download_template():
     except Exception as e:
         print("Error in /download-template:", e)
         return jsonify({'error': str(e)}), 500
-    
+
 def format_list_to_string(data_list):
     if not data_list or all(pd.isna(x) for x in data_list):
         return None
-    
+
     formatted_list = []
     for item in data_list:
         if pd.isna(item):
@@ -232,7 +209,7 @@ def format_list_to_string(data_list):
                 formatted_list.append(float(item))
             except ValueError:
                 formatted_list.append(item)
-    
+
     if not formatted_list:
         return None
 
@@ -256,7 +233,7 @@ def upload_excel_training():
 
         # 2. Save it
         filename = secure_filename(file.filename)
-        filepath = os.path.join("uploads", filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
         # 3. Read Excel
@@ -341,22 +318,22 @@ def upload_excel_training():
 #FUNCTION TO SAVE THE TRAINING FORM IN CSV 
 
 def load_coal_data():
-    
+
     df = pd.read_csv('individual_coal_prop.csv', header=None)
     coal_data = {}
-    
+
     for _, row in df.iterrows():
         coal_type = row[0] 
         properties = row[1:-1].tolist()  
         coal_data[coal_type] = {
             'properties': properties
         }
-    
+
     return coal_data
 
 
 coal_data = load_coal_data()
-       
+
 # Route to fetch coal data for the dropdown (via AJAX)
 
 
@@ -435,7 +412,7 @@ def save_to_csv(data, coal_data, filename):
     with open(filename, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile,quoting=csv.QUOTE_MINIMAL)
         writer.writerows(rows)
- 
+
 
 @app.route('/submit_training_data', methods=['POST'])
 def submit_form():
@@ -470,14 +447,70 @@ def get_uploaded_files():
 @app.route('/delete_uploaded_file', methods=['POST'])
 def delete_uploaded_file():
     filename = request.json['filename']
-    file_path = os.path.join("uploads", filename)
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if os.path.exists(file_path):
         os.remove(file_path)
-        
+
         # Remove data from training data CSV
-            
+        df = pd.read_csv(TRAINING_DATA)
+        df = df[df['File Name'] != filename]
+        df.to_csv(TRAINING_DATA, index=False)
+
         return jsonify({'message': 'File deleted successfully'}), 200
     return jsonify({'error': 'File not found'}), 404
+
+@app.route('/upload-excel', methods=['POST'])
+def upload_excel():
+    if 'file' not in request.files:
+        return jsonify({'message': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'message': 'No selected file'}), 400
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+
+        try:
+            df = pd.read_excel(file_path)
+
+            headers_list = ['Ash', 'VM', 'Moisture', 'Max. Contraction', 'Max. Expansion', 'Max. fluidity', 'MMR', 'HGI', 'Softening temperature (degC)',
+                            'Resolidification temp min (degC)', 'Resolidification temp max (degC)', 'Plastic range (degC)', 'Sulphur', 'Phosphorous', 'CSN']
+            df = df[~df.iloc[:, 3:18].apply(lambda row: all(col in headers_list for col in row.dropna()), axis=1)]
+
+            rows_to_write = []
+            index_number = get_next_index()
+
+            for _, row in df.iterrows():
+                date = row.get('Date', None)
+                coal_type = row.get('Coal Type', None)
+                value = row.get('Current Value', None)
+
+                coal_properties = format_list_to_string(row.iloc[3:19].tolist())
+                blended_coal_params = format_list_to_string(row.iloc[19:35].tolist())
+                coke_params = format_list_to_string(row.iloc[35:42].tolist())
+                process_params = format_list_to_string(row.iloc[42:].tolist())
+
+                current_index = index_number if pd.notna(date) else None
+                if pd.notna(date):
+                    index_number = get_next_index()
+
+                rows_to_write.append([current_index, date, coal_type, value, coal_properties, blended_coal_params, coke_params, process_params])
+
+        except Exception as e:
+            return jsonify({'message': 'Error reading the Excel file', 'error': str(e)}), 500
+
+        try:
+            with open(SUBMITTED_CSV_PATH, 'a', newline='') as f:
+                writer = csv.writer(f)
+                for row in rows_to_write:
+                    writer.writerow(row)
+            return jsonify({'message': 'File uploaded and data saved successfully!'}), 200
+
+        except Exception as e:
+            return jsonify({'message': 'Error saving data to CSV', 'error': str(e)}), 500
+
+    return jsonify({'message': 'Invalid file type. Only .xls and .xlsx are allowed.'}), 400
 
 
 
@@ -487,15 +520,15 @@ def get_coal_types():
     # Read the CSV file
     file_path = 'individual_coal_prop.csv' 
     coal_data = pd.read_csv(file_path, header=None)
-    
+
     coal_types = coal_data.iloc[:, 0].tolist() 
     coal_properties = coal_data.iloc[:, :-1].values.tolist() 
-    
+
     return jsonify({
         "coal_types": coal_types,
         "coal_properties": coal_properties
     })
-    
+
 @app.route('/get_proposed_coal_types', methods=['GET'])
 def get_proposed_coal_types():
     # Replace 'coal_data.csv' with the path to your CSV file
@@ -505,12 +538,64 @@ def get_proposed_coal_types():
     coal_info = [{"type": coal_types[i], "cost": coal_costs[i]} for i in range(len(coal_types))]
 
     return jsonify({'coal_info': coal_info})
-      
+
+
+def load_csv():
+    print("load_csvhit")
+    """Load the CSV file and return it as a DataFrame."""
+    if os.path.exists(MINMAX_FILE_PATH):
+        return pd.read_csv(MINMAX_FILE_PATH)
+    else:
+        raise FileNotFoundError(f"{CSV_FILE} not found!")
+
+def prepare_ranges():
+    """Prepare the range data from the CSV."""
+
+    df = load_csv()
+    if df.empty:
+        return {}
+
+    # Assuming only one row of data in the CSV
+    row = df.iloc[0]
+
+    def to_int(x):
+        # If it’s a NumPy scalar, .item() will give you a Python int/float
+        return x.item() if hasattr(x, 'item') else int(x)
+
+    def to_float(x):
+        return x.item() if hasattr(x, 'item') else float(x)
+
+
+    ranges = {
+        'ash': {'lower': to_int(row['ash_lower']), 'upper': to_int(row['ash_upper']), 'default': to_float((row['ash_lower'] + row['ash_upper']) / 2)},
+        'vm': {'lower': to_int(row['vm_lower']), 'upper': to_int(row['vm_upper']), 'default': to_float((row['vm_lower'] + row['vm_upper']) / 2)},
+        'm40': {'lower': to_int(row['m40_lower']), 'upper': to_int(row['m40_upper']), 'default': to_float((row['m40_lower'] + row['m40_upper']) / 2)},
+        'm10': {'lower': to_int(row['m10_lower']), 'upper': to_float(row['m10_upper']), 'default': to_float((row['m10_lower'] + row['m10_upper']) / 2)},
+        'csr': {'lower': to_int(row['csr_lower']), 'upper': to_int(row['csr_upper']), 'default': to_float((row['csr_lower'] + row['csr_upper']) / 2)},
+        'cri': {'lower': to_int(row['cri_lower']), 'upper': to_int(row['cri_upper']), 'default':to_float( (row['cri_lower'] + row['cri_upper']) / 2)},
+        'ams': {'lower': to_int(row['ams_lower']), 'upper': to_int(row['ams_upper']), 'default': to_float((row['ams_lower'] + row['ams_upper']) / 2)}
+    }
+    return ranges
+
+@app.route('/get_ranges', methods=['GET'])
+def get_ranges():
+
+    try:
+        ranges = prepare_ranges()
+        return jsonify(ranges)
+    except FileNotFoundError as e:
+        print(e)
+        return jsonify({'error': str(e)}), 404
+
+
+#model for cost ai page
+
+
 
 #model for cost ai page
 def read_min_max_values():
             df = pd.read_csv('min-maxvalues.csv')
-            
+
             return {
                 'ash': {
                     'lower': df['ash_lower'].iloc[0],
@@ -550,11 +635,12 @@ def read_min_max_values():
                 'cost_weightage': df['cost_weightage'].iloc[0],
                 'coke_quality': df['coke_quality'].iloc[0]
             }
-            
+
 min_max_values = read_min_max_values()
-        
+
 
 file_path = 'training_data_file.csv'
+file_path = 'submitted_training_coal_data.csv'
 coal_percentages = []
 coal_properties = []
 blends = []
@@ -590,12 +676,12 @@ with open(file_path, 'r') as file:
 
                         coal_property_values = [float(val) if val != 'nan' else 0 for val in row[4].strip('{}').replace(', ', ',').split(',')]
                         coal_properties.append(coal_property_values[:15])
-                        
+
                         if row[6].strip('{}') != '{nan}':
                             coke_output = [float(val) if val != 'nan' else 0 for val in row[6].strip('{}').replace(', ', ',').split(',')]
                             last_coke_output = coke_output
                         coke_outputs.append(last_coke_output)
-                        
+
                         if row[7].strip('{}') != '{nan}':
                             process_params_str = row[7].replace("'", '"')
                             process_params_str = process_params_str.replace(': ', ':')
@@ -606,12 +692,12 @@ with open(file_path, 'r') as file:
                             except json.JSONDecodeError:
                                 last_process_params = [0] * len(process_parameter_keys)
                         process_parameters.append(last_process_params)
-                        
+
                         if row[5].strip('{}') != '{nan}':
                             blend_values = [float(val) if val != 'nan' else 0 for val in row[5].strip('{}').replace(', ', ',').split(',')]
                             last_blend_values = blend_values
                         blends.append(last_blend_values)
-                        
+
                         processed_serial_numbers.add(serial_number)
                     else:
                         coal_property_values = [float(val) if val != 'nan' else 0 for val in row[4].strip('{}').replace(', ', ',').split(',')]
@@ -635,29 +721,8 @@ for i in range(len(coke_output)):
 D= np.loadtxt('coal_percentages.csv', delimiter=',')  
 P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',')  
 Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
-
-def get_coal_properties(company_id=1):
-    url = "http://3.111.89.109:3000/api/getCoalProperties"
-    payload = { "companyId": company_id }
-
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        result = response.json()
-        
-        coal_data = result[0]["CoalData"]["CoalProperties"]
-        df = pd.DataFrame(coal_data)
-        df = df.astype(str)
-        df.columns = range(df.shape[1])
-
-        return df
-    except Exception as e:
-        print("Error fetching coal properties:", e)
-        return pd.DataFrame()
-    
-data1 = get_coal_properties(company_id=1) 
-print(data1)     
-
+data1 = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')       
+I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data1.shape[1] - 2)) 
 D_tensor = tf.constant(D, dtype=tf.float32)
 P_tensor = tf.constant(P, dtype=tf.float32)
 daily_vectors = []
@@ -676,24 +741,24 @@ input_train, input_test, target_train, target_test = train_test_split(
         )       
 input_scaler = MinMaxScaler()
 output_scaler = MinMaxScaler()
-        
+
 input_train_reshaped = input_train.reshape(input_train.shape[0], -1)
 input_test_reshaped = input_test.reshape(input_test.shape[0], -1)
-        
+
 input_train_scaled = input_scaler.fit_transform(input_train_reshaped)
 input_test_scaled = input_scaler.transform(input_test_reshaped)
 input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
 input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
-        
-        
+
+
 target_train_scaled = output_scaler.fit_transform(target_train)
 target_test_scaled = output_scaler.transform(target_test)
-        
+
 input_train_scaled = input_train_scaled.reshape(input_train.shape)
 input_test_scaled = input_test_scaled.reshape(input_test.shape)
 input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
 input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
-        
+
         # Define model
 modelq = keras.Sequential([
 layers.Input(shape=(14, 15)),
@@ -702,37 +767,37 @@ layers.BatchNormalization(),
 layers.Dense(512, activation='relu'),
 layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
 layers.LayerNormalization(),
-        
+
 layers.Dense(256, activation='tanh'),
 layers.Dropout(0.3),
 layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
 layers.Dropout(0.3),
-        
+
 layers.Dense(128, activation='relu'),
 layers.BatchNormalization(),
 layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
 layers.LayerNormalization(),
-        
+
 layers.Dense(64, activation='relu'),
 layers.Dropout(0.2),
-        
+
 layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
 layers.Dropout(0.25),
-        
+
 layers.Dense(32, activation='relu'),
 layers.BatchNormalization(),
-        
+
 layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
 layers.LayerNormalization(),
 layers.Dense(15, activation='linear')
         ])
-        
+
 modelq.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                     loss='mse',
                     metrics=['mae'])
 modelq.summary()
-        
-        
+
+
         # modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
 y_pred = modelq.predict(input_test_scaled)
 y_pred = output_scaler.inverse_transform(y_pred)
@@ -746,31 +811,31 @@ rf_model= keras.Sequential([
             layers.Dense(512, activation='relu'),
             layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
             layers.LayerNormalization(),
-        
+
             layers.Dense(256, activation='tanh'),
             layers.Dropout(0.3),
             layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
             layers.Dropout(0.3),
-        
+
             layers.Dense(128, activation='relu'),
             layers.BatchNormalization(),
             layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
             layers.LayerNormalization(),
-        
+
             layers.Dense(64, activation='relu'),
             layers.Dropout(0.2),
-        
+
             layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
             layers.Dropout(0.25),
-        
+
             layers.Dense(32, activation='relu'),
             layers.BatchNormalization(),
-        
+
             layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
             layers.LayerNormalization(),
             layers.Dense(15, activation='linear')
         ])
-        
+
 rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                     loss='mse',
                     metrics=['mae'])
@@ -779,93 +844,93 @@ P_tensor = tf.constant(P_, dtype=tf.float32)
 daily_vectors = []
 differences = []
 coal_costs = []
-        
+
 @app.route('/cost', methods=['POST'])
 def cost():
     try:
         data = request.json
         if not data:
             return jsonify({"error": "No data received in the request"}), 400
-            
+
         coal_blends = data.get("blends", [])
         if not coal_blends:
             return jsonify({"error": "No blend data provided"}), 400
-            
+
         coal_types = [blk["coalType"] for blk in coal_blends]
         coal_count = len(coal_blends)
-        
+
         min_percentages = np.array([int(blk["minPercentage"]) for blk in coal_blends])
         max_percentages = np.array([int(blk["maxPercentage"]) for blk in coal_blends])
-        
+
         pad_size = 14 - coal_count
         min_percentages_padded = np.pad(min_percentages, (0, pad_size), 'constant')
         max_percentages_padded = np.pad(max_percentages, (0, pad_size), 'constant')
-        
+
         desired_coke_params = data.get("cokeParameters", {})
         if not desired_coke_params:
             return jsonify({"error": "Missing coke parameters"}), 400
-        
+
         oneblends = data.get('blendcoal', [])
         user_input_values_padded = np.zeros(14)
-        
+
         if oneblends:
             user_input_values = np.array([blend['currentRange'] for blend in oneblends])
             if not np.isclose(user_input_values.sum(), 100):
                 return jsonify({"error": "The total of current range must add up to 100."}), 400
-            
+
             user_input_values_padded[:len(user_input_values)] = user_input_values
             user_input_values_padded = user_input_values_padded.reshape(1, -1)
-        
+
         try:
             Option = int(data.get("processType", 0))
             if Option not in [1, 2, 3]:
                 return jsonify({"error": f"Invalid option value: {Option}"}), 400
         except (ValueError, TypeError):
             return jsonify({"error": f"Invalid process type: {data.get('processType')}"}), 400
-        
+
         proces_para = data.get("processParameters", {})
-        
+
         process_parameter_files = {
             1: 'Process_parameter_for_Rec_Top_Char.csv',
             2: 'Process_parameter_for_Rec_Stam_Char.csv',
             3: 'Process_parameter_for_Non_Rec_Stam_Char.csv'
         }
-        
+
         Process_parameters = np.loadtxt(process_parameter_files[Option], delimiter=',')
         if Option == 3:
             Process_parameters = np.pad(Process_parameters, ((0, 0), (0, 2)), 'constant')
-        
+
         Conv_matrix = Blended_coal_parameters + Process_parameters
-        
+
         X_train, X_test, y_train, y_test = train_test_split(
             Conv_matrix, Coke_properties, test_size=0.2, random_state=42
         )
-        
+
         input_train_reshaped = X_train.reshape(X_train.shape[0], -1)
         input_test_reshaped = X_test.reshape(X_test.shape[0], -1)
-        
+
         input_train_scaled = input__scaler.fit_transform(input_train_reshaped)
         input_test_scaled = input__scaler.transform(input_test_reshaped)
         target_train_scaled = output__scaler.fit_transform(y_train)
         target_test_scaled = output__scaler.transform(y_test)
-        
+
         y_pred = rf_model.predict(input_test_scaled)
         y_pred_inv = output_scaler.inverse_transform(y_pred)
         mse = np.mean(np.square(y_test - y_pred_inv))
-        
+
         def generate_combinations_batch(min_vals, max_vals, coal_count, target_sum=100, batch_size=1000):
             """Generate valid combinations in memory-efficient batches"""
             min_vals = min_vals[:coal_count]
             max_vals = max_vals[:coal_count]
-            
+
             min_required = np.sum(min_vals)
-            
+
             if min_required > target_sum:
                 return np.empty((0, 14))  
-            
+
             def generate_batch():
                 combinations_batch = []
-                
+
                 if coal_count <= 3:
                     if coal_count == 2:
                         v1_values = np.arange(min_vals[0], min(max_vals[0] + 1, target_sum - min_vals[1] + 1))
@@ -879,7 +944,7 @@ def cost():
                                 if len(combinations_batch) >= batch_size:
                                     yield np.array(combinations_batch)
                                     combinations_batch = []
-                    
+
                     elif coal_count == 3:
                         v1_values = np.arange(min_vals[0], min(max_vals[0] + 1, target_sum - min_vals[1] - min_vals[2] + 1))
                         for v1 in v1_values:
@@ -897,64 +962,64 @@ def cost():
                                         combinations_batch = []
                 else:
                     current = min_vals.copy()
-                    
+
                     remaining = target_sum - current.sum()
-                    
+
                     for _ in range(batch_size * 5): 
                         current = min_vals.copy()
                         remaining = target_sum - current.sum()
-                        
+
                         for i in range(coal_count - 1):
                             max_additional = min(max_vals[i] - min_vals[i], remaining)
                             if max_additional <= 0:
                                 continue
-                                
+
                             additional = np.random.randint(0, max_additional + 1)
                             current[i] += additional
                             remaining -= additional
-                        
+
                         if min_vals[coal_count - 1] <= current[coal_count - 1] + remaining <= max_vals[coal_count - 1]:
                             current[coal_count - 1] += remaining
                             padded = np.zeros(14)
                             padded[:coal_count] = current
                             combinations_batch.append(padded)
-                    
+
                     if combinations_batch:
                         yield np.array(combinations_batch)
-                
+
                 if combinations_batch:
                     yield np.array(combinations_batch)
-            
+
             return generate_batch()
-        
-      
+
+
         combination_generator = generate_combinations_batch(
             min_percentages_padded, 
             max_percentages_padded, 
             coal_count,
             batch_size=5000  
         )
-        
+
         best_performance_blend = None
         best_performance_prediction = None
         best_performance_blended_coal = None
         best_performance_cost = float('inf')
         best_performance_score = float('-inf')
-        
+
         cheapest_blend = None
         cheapest_prediction = None
         cheapest_blended_coal = None
         cheapest_cost = float('inf')
-        
+
         best_combined_blend = None
         best_combined_prediction = None
         best_combined_blended_coal = None
         best_combined_cost = float('inf')
         best_combined_score = float('-inf')
-        
+
         coal_cost_map = {row[0]: float(row[-2]) for row in data1.itertuples(index=False)}
         coal_costs = np.array([coal_cost_map.get(coal_type, 0.0) for coal_type in coal_types])
-        
+
         desired_params = {
             "ash": desired_coke_params["ASH"],
             "vm": desired_coke_params["VM"],
@@ -964,7 +1029,7 @@ def cost():
             "cri": desired_coke_params["CRI"],
             "ams": desired_coke_params["AMS"]
         }
-        
+
         weights = np.array([
             min_max_values['ash']['weight'],
             min_max_values['vm']['weight'],
@@ -974,7 +1039,7 @@ def cost():
             min_max_values['cri']['weight'],
             min_max_values['ams']['weight']
         ])
-        
+
         target_values = np.array([
             desired_params["ash"],
             desired_params["vm"],
@@ -984,45 +1049,45 @@ def cost():
             desired_params["cri"],
             desired_params["ams"]
         ])
-        
+
         lower_better_indices = [0, 1, 3, 5]
         higher_better_indices = [2, 4, 6] 
-        
+
         cost_weight = min_max_values['cost_weightage']
         performance_weight = min_max_values['coke_quality']
-        
+
         total_valid_predictions = 0
-        
+
         for batch_idx, all_combinations in enumerate(combination_generator):
             if len(all_combinations) == 0:
                 continue
-            
+
             if Option == 3 and batch_idx == 0:  # Only need to do this once
                 proces_para = np.pad(proces_para, (0, 2), 'constant')
-            
+
             D_tensor = tf.constant(all_combinations, dtype=tf.float32)
-            
+
             D_expanded = tf.expand_dims(D_tensor, 2)  # shape: [n, d, 1]
             P_expanded = tf.expand_dims(P_tensor, 0)  # shape: [1, d, m]
-            
+
             daily_vectors = tf.multiply(D_expanded, P_expanded)
             daily_vectors = tf.transpose(daily_vectors, perm=[0, 2, 1])
-            
+
             b1 = daily_vectors.numpy().reshape(daily_vectors.shape[0], -1)
             b1_scaled = input_scaler.transform(b1)
             b1_reshaped = b1.reshape(-1, 14, 15)
-            
+
             prediction_batch_size = min(128, len(b1_reshaped))
             blend1 = modelq.predict(b1_reshaped, batch_size=prediction_batch_size)
             blended_coal_properties = output_scaler.inverse_transform(blend1)
-            
+
             blend1_with_process = blend1 + proces_para
             blend1_flattened = blend1_with_process.reshape(blend1_with_process.shape[0], -1)
             blend1_scaled = input__scaler.transform(blend1_flattened)
-            
+
             coke = rf_model.predict(blend1_scaled, batch_size=prediction_batch_size)
             predictions = output__scaler.inverse_transform(coke)
-            
+
             ash_mask = (min_max_values['ash']['lower'] <= predictions[:, 0]) & (predictions[:, 0] <= min_max_values['ash']['upper'])
             vm_mask = (min_max_values['vm']['lower'] <= predictions[:, 1]) & (predictions[:, 1] <= min_max_values['vm']['upper'])
             m40_mask = (min_max_values['m40']['lower'] <= predictions[:, 9]) & (predictions[:, 9] <= min_max_values['m40']['upper'])
@@ -1030,19 +1095,19 @@ def cost():
             csr_mask = (min_max_values['csr']['lower'] <= predictions[:, 12]) & (predictions[:, 12] <= min_max_values['csr']['upper'])
             cri_mask = (min_max_values['cri']['lower'] <= predictions[:, 13]) & (predictions[:, 13] <= min_max_values['cri']['upper'])
             ams_mask = (min_max_values['ams']['lower'] <= predictions[:, 14]) & (predictions[:, 14] <= min_max_values['ams']['upper'])
-            
+
             valid_mask = ash_mask & vm_mask & m40_mask & m10_mask & csr_mask & cri_mask & ams_mask
             valid_indices = np.where(valid_mask)[0]
-            
+
             total_valid_predictions += len(valid_indices)
-            
+
             if len(valid_indices) == 0:
                 continue
-            
+
             valid_predictions = predictions[valid_indices]
             valid_combinations = all_combinations[valid_indices]
             valid_blended_coal_properties = blended_coal_properties[valid_indices]
-            
+
             pred_cols = np.column_stack([
                 valid_predictions[:, 0],  
                 valid_predictions[:, 1],  
@@ -1052,65 +1117,65 @@ def cost():
                 valid_predictions[:, 13],  
                 valid_predictions[:, 14]  
             ])
-            
+
             diff_matrix = np.zeros_like(pred_cols)
-            
+
             diff_matrix[:, lower_better_indices] = (target_values[lower_better_indices] - pred_cols[:, lower_better_indices]) / target_values[lower_better_indices]
             diff_matrix[:, higher_better_indices] = (pred_cols[:, higher_better_indices] - target_values[higher_better_indices]) / target_values[higher_better_indices]
-            
+
             weighted_diffs = diff_matrix * weights
-            
+
             performance_scores = np.sum(weighted_diffs, axis=1)
-            
+
             coal_percentages = valid_combinations[:, :coal_count]
             batch_costs = np.sum(coal_percentages * coal_costs / 100, axis=1)
-            
+
             batch_best_perf_idx = np.argmax(performance_scores)
             batch_best_perf_score = performance_scores[batch_best_perf_idx]
             batch_best_perf_cost = batch_costs[batch_best_perf_idx]
-            
+
             if batch_best_perf_score > best_performance_score:
                 best_performance_score = batch_best_perf_score
                 best_performance_blend = valid_combinations[batch_best_perf_idx].copy()
                 best_performance_prediction = valid_predictions[batch_best_perf_idx].copy()
                 best_performance_blended_coal = valid_blended_coal_properties[batch_best_perf_idx].copy()
                 best_performance_cost = batch_best_perf_cost
-            
+
             batch_cheapest_idx = np.argmin(batch_costs)
             batch_cheapest_cost = batch_costs[batch_cheapest_idx]
-            
+
             if batch_cheapest_cost < cheapest_cost:
                 cheapest_cost = batch_cheapest_cost
                 cheapest_blend = valid_combinations[batch_cheapest_idx].copy()
                 cheapest_prediction = valid_predictions[batch_cheapest_idx].copy()
                 cheapest_blended_coal = valid_blended_coal_properties[batch_cheapest_idx].copy()
-            
+
             if len(batch_costs) > 1 and np.max(batch_costs) > np.min(batch_costs):
                 norm_costs = (batch_costs - np.min(batch_costs)) / (np.max(batch_costs) - np.min(batch_costs))
             else:
                 norm_costs = np.zeros_like(batch_costs)
-                
+
             if len(performance_scores) > 1 and np.max(performance_scores) > np.min(performance_scores):
                 norm_performance = (performance_scores - np.min(performance_scores)) / (np.max(performance_scores) - np.min(performance_scores))
             else:
                 norm_performance = np.zeros_like(performance_scores)
-            
+
             combined_scores = (cost_weight * norm_costs) + (performance_weight * norm_performance)
-            
+
             batch_best_combined_idx = np.argmin(combined_scores)
             batch_best_combined_score = combined_scores[batch_best_combined_idx]
             batch_best_combined_cost = batch_costs[batch_best_combined_idx]
-            
+
             if best_combined_blend is None or batch_best_combined_score < best_combined_score:
                 best_combined_score = batch_best_combined_score
                 best_combined_blend = valid_combinations[batch_best_combined_idx].copy()
                 best_combined_prediction = valid_predictions[batch_best_combined_idx].copy()
                 best_combined_blended_coal = valid_blended_coal_properties[batch_best_combined_idx].copy()
                 best_combined_cost = batch_best_combined_cost
-        
+
         if total_valid_predictions == 0:
             return jsonify({"error": "No valid coal blends found that meet the specified criteria."}), 400
-        
+
         response = {
             "blend1": {
                 "composition": best_performance_blend.tolist(),
@@ -1132,25 +1197,25 @@ def cost():
             },
             "valid_predictions_count": total_valid_predictions
         }
-        
+
         if np.any(user_input_values_padded != 0):
             user_daily_vectors = tf.multiply(
                 tf.expand_dims(tf.constant(user_input_values_padded, dtype=tf.float32), 2),
                 tf.expand_dims(P_tensor, 0)
             )
             user_daily_vectors = tf.transpose(user_daily_vectors, perm=[0, 2, 1])
-            
+
             user_vectors_reshaped = user_daily_vectors.numpy().reshape(1, -1)
             user_vectors_scaled = input_scaler.transform(user_vectors_reshaped).reshape(-1, 14, 15)
-            
+
             user_prediction_scaled = modelq.predict(user_vectors_scaled)
             user_prediction = output_scaler.inverse_transform(user_prediction_scaled)
-            
+
             user_conv = proces_para + user_prediction
             user_conv_scaled = input__scaler.transform(user_conv)
             user_coke = rf_model.predict(user_conv_scaled)
             user_predictions = output__scaler.inverse_transform(user_coke)
-            
+
             response["ProposedCoal"] = {
                 "Blend2": user_prediction.tolist(),
                 "Coke2": user_predictions.tolist()
@@ -1159,16 +1224,14 @@ def cost():
             response["ProposedCoal"] = {
                 "message": "No custom blend data provided."
             }
-        
+
         return jsonify(response), 200
-        
+
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
         app.logger.error(f"Error in cost calculation: {error_details}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500  @app.route('/download-template-properties')
-
-
 def download_template_properties():
     # Define the column headers for the template
     columns = [
@@ -1194,7 +1257,7 @@ def download_template_properties():
         download_name='coal-properties-template.xlsx',
         as_attachment=True
     )
-    
+
 CSV_FILE = 'individual_coal_prop.csv'
 
 def read_csv():
@@ -1208,7 +1271,7 @@ def write_csv(data):
     with open(CSV_FILE, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(data)
-        
+
 def write1_csv(new_data):
     # Validate that new_data is not None or empty
     if not new_data or not isinstance(new_data, list):
@@ -1233,7 +1296,7 @@ def get_coal_data():
     data = read_csv()   
     if not data:  
         return jsonify({"error": "CSV file is empty or malformed"}), 400
-    
+
     coal_types = [row[0] for row in data if len(row) > 0] 
     if not coal_types:
         return jsonify({"error": "No valid coal types found in the CSV"}), 400
@@ -1249,10 +1312,10 @@ def add_coal():
         new_data = request.json.get('data')
         if not new_data:
             return jsonify({'error': 'No data provided'}), 400
-        
-    
+
+
         new_data.append(datetime.now().strftime('%d %B %Y'))
-        
+
         write1_csv(new_data)
         return jsonify({'message': 'Data added successfully'}), 200
     except ValueError as e:
@@ -1282,9 +1345,9 @@ def modify_coal():
     else:
         return jsonify({'message': 'Invalid coal index'}), 400
 
-    
+
 #min-max page
-    
+
 MINMAX_FILE_PATH = 'min-maxvalues.csv'
 
 @app.route('/minmax_get_data', methods=['GET'])
@@ -1318,6 +1381,4 @@ def min_max():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-
-
 
