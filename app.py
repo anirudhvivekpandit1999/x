@@ -22,6 +22,7 @@ from flask_bcrypt import Bcrypt
 import MySQLdb.cursors
 from google.cloud import translate_v2 as translate
 from bs4 import BeautifulSoup
+import yaml
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
@@ -101,7 +102,7 @@ def getCoalPropertiesCSV():
     for row in rows:
         writer.writerow(row)
     raw_data = output.getvalue()
-    data = [ast.literal_eval(item) for item in raw_data]
+    data = [yaml.safe_load(item) for item in raw_data]
 # Define the column order (no headers needed)
     field_order = [
     'CoalName', 'Ash', 'VolatileMatter', 'Moisture', 'MaxContraction',
