@@ -827,7 +827,6 @@
                 }
             } catch (error) {
                 console.error("❌ Decryption error:", error.message);
-                console.log("Raw encrypted input:", encryptedHexData);
                 return null;
             }
         }
@@ -885,7 +884,6 @@
                 }
 
                 const jsonData = await response.json();
-                console.log("Response from AI:", jsonData);
                 return jsonData.response;
             } catch (error) {
                 console.error("Error sending request:", error.message);
@@ -1030,7 +1028,6 @@
                 const range = parseFloat(rangeInput.value) || 0;
 
                 if (selectedCoal && range > 0 && window.coalProperties) {
-                    console.log("selectedCoal" , selectedCoal);
                     const coalData = window.coalProperties.find(row => row.CoalName === selectedCoal);
                     if (coalData) {
                         const costPerTon = parseFloat(coalData.CostPerTonRs); // Assuming cost is in the 17th column
@@ -1061,7 +1058,6 @@
                 // 2. extract & parse your ranges payload
                 //    (assuming `CoalPropertiesFormatted` is JSON-stringified in the response)
                 const formatted = apiResult[0].CoalPropertiesFormatted;
-                console.log(formatted);
 
 
                 // 3. loop through each property and wire up the sliders
@@ -1551,8 +1547,6 @@
             resultSection.appendChild(propertiesSection);
 
 
-            console.log(result.ProposedCoal?.Blend2);
-            console.log(result.ProposedCoal?.Coke2);
 
             if (showProposed) {
                 const proposedresultContainer = document.createElement('div');
@@ -1837,7 +1831,6 @@
                         ];
 
                         // Log the data to verify it
-                        console.log(`combinedData for Blend ${blendNumber}:`, combinedData);
 
                         // Validate combinedData before passing it to aoa_to_sheet
                         if (Array.isArray(combinedData) && Array.isArray(combinedData[0])) {

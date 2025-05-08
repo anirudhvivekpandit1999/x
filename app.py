@@ -1,3 +1,4 @@
+from binascii import unhexlify
 import pandas as pd
 import numpy as np
 import csv
@@ -23,12 +24,60 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 from tensorflow.keras import layers  # type: ignore
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
 
 
 app = Flask(__name__)
 CORS(app,resources={r"/*": {"origins": "*"}})
 
 
+_SECRET_KEY = b"qwertyuiopasdfghjklzxcvbnm123456"
+_IV         = b"1234567890123456"
+
+def encrypt_data(data: dict) -> str:
+    """
+    JSON‐serialize + AES-CBC-PKCS7 encrypt → return hex‐encoded ciphertext
+    """
+    # 1) JSON → bytes
+    plaintext = json.dumps(data).encode("utf-8")
+    # 2) Pad to 16-byte blocks
+    padded = np.pad(plaintext, AES.block_size, style='pkcs7')
+    # 3) Encrypt
+    cipher = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
+    ciphertext = cipher.encrypt(padded)
+    # 4) Hex-encode for transport
+    return hexlify(ciphertext).decode("ascii")
+
+
+def decrypt_data(encrypted_hex: str) -> dict:
+    """
+    Hex-decode → AES-CBC-PKCS7 decrypt → JSON-parse
+    """
+    raw = unhexlify(encrypted_hex)
+    cipher = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
+    padded = cipher.decrypt(raw)
+    plaintext = unpad(padded, AES.block_size, style='pkcs7')
+    return json.loads(plaintext.decode("utf-8"))
+
+
+async def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
+    """
+    Encrypts `payload`, POSTs { encryptedData: <hex> }, then
+    decrypts result['coalProperties'] and returns that object.
+    """
+    # 1) Encrypt the outgoing payload
+    encrypted = encrypt_data(payload)
+    # 2) POST
+    resp =await  requests.post_encrypted(url, json={"encryptedData": encrypted}, timeout=timeout)
+    resp.raise_for_status()
+    body = resp.json()
+    # 3) Pull out the server’s encrypted hex
+    enc_response = body.get("coalProperties")
+    if not enc_response:
+        raise ValueError("No 'coalProperties' in response")
+    # 4) Decrypt
+    return decrypt_data(enc_response)
 
 
 @app.route('/')
@@ -189,7 +238,6 @@ def download_template():
                          mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
     except Exception as e:
-        print("Error in /download-template:", e)
         return jsonify({'error': str(e)}), 500
 
 def format_list_to_string(data_list):
@@ -719,7 +767,10 @@ coke_output = [np.array(row) for row in coke_outputs]
 for i in range(len(coke_output)):
             coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
 D= np.loadtxt('coal_percentages.csv', delimiter=',')  
-P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',')  
+print(D);
+
+P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',') 
+print(P);
 Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
 data1 = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')       
 I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data1.shape[1] - 2)) 

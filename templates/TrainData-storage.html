@@ -150,7 +150,6 @@
                 });
         
                 if (response.status === 200) {
-                    console.log('File deleted successfully:', response.data);
                     return response.data;
                 } else {
                     throw new Error(`Error deleting file: ${response.status}`);

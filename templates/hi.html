@@ -460,8 +460,6 @@
                     throw jsonErr;
                 }
             } catch (error) {
-                console.error("❌ Decryption error:", error.message);
-                console.log("Raw encrypted input:", encryptedHexData);
                 return null;
             }
         }
@@ -696,7 +694,6 @@
                 if (response.ok) {
                     alert('Data submitted successfully!');
                     window.location.reload();
-                    console.log('Form submitted successfully');
 
                 } else {
                     console.error('Error submitting form');

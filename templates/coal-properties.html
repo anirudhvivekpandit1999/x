@@ -401,8 +401,7 @@
           throw jsonErr;
         }
       } catch (error) {
-        console.error("❌ Decryption error:", error.message);
-        console.log("Raw encrypted input:", encryptedHexData);
+        
         return null;
       }
     }
@@ -465,10 +464,10 @@
 
     async function fetchCoalData() {
       try {
-        const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 })
-        console.log("🚀 Data fetched successfully:", result);
+        const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId:1})
         const data = result[0];
         coalData = data.CoalData.CoalProperties;
+        console.log(coalData);
         coalTypes = data.CoalData.CoalTypes;
 
         populateCoalDropdown();
@@ -479,7 +478,6 @@
     }
 
     function populateCoalDropdown() {
-      console.log(coalTypes);
       const selectCoal = document.getElementById("selectCoal");
       selectCoal.innerHTML = "";
 
@@ -567,7 +565,6 @@
         10
       );
       const result = await postEncrypted("http://3.111.89.109:3000/api/getIndividualCoalProperty", { p_CompanyId: 1 , p_CoalId : (selectedIndex + 1) })
-      console.log(result);
       if (selectedIndex >= 0 && selectedIndex < coalData.length) {
         const selectedCoal = coalData[selectedIndex];
 
@@ -600,7 +597,6 @@
           document.getElementById("selectCoal").value,
           10
         );
-        console.log(selectedIndex);
 
         // These should be available based on how you're managing IDs
         const coalId = selectedIndex + 1; // Assuming select dropdown value = CoalId

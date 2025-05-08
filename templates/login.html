@@ -213,8 +213,6 @@
                 throw jsonErr;
             }
         } catch (error) {
-            console.error("❌ Decryption error:", error.message);
-            console.log("Raw encrypted input:", encryptedHexData);
             return null;
         }
     }
@@ -267,7 +265,6 @@
 
         try {
             const response = await postEncrypted('http://3.111.89.109:3000/api/login', payload);
-            console.log(response);
             // Handle successful login (you can change this based on what the backend returns)
             if (response) {
                 // Example: save token to localStorage and redirect
