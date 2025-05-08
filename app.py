@@ -1,5 +1,5 @@
+import asyncio
 from binascii import hexlify, unhexlify
-import aiohttp
 import pandas as pd
 import numpy as np
 import csv
@@ -71,12 +71,9 @@ async def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     # 1) Encrypt the outgoing payload
     encrypted = encrypt_data(payload)
     # 2) POST
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url,
-                                json={"encryptedData": encrypted},
-                                timeout=timeout) as resp:
-                resp.raise_for_status()
-                body = resp.json()
+    resp =await  requests.post(url, json={"encryptedData": encrypted}, timeout=timeout)
+    resp.raise_for_status()
+    body = resp.json()
     # 3) Pull out the server’s encrypted hex
     enc_response = body.get("data", {}).get("response")
     if not enc_response:
@@ -85,8 +82,8 @@ async def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     return decrypt_data(enc_response)
 
 def getCoalPropertiesCSV():
-    response =  post_encrypted('http://3.111.89.109:3000/getCoalPropertiesCSV', {"companyId":1}
-    );
+    response = asyncio.run( post_encrypted('http://3.111.89.109:3000/getCoalPropertiesCSV', {"companyId":1}
+    ));
     rows = response
     headers = [
         "CoalName",
@@ -917,8 +914,8 @@ differences = []
 coal_costs = []
 
 @app.route('/cost', methods=['POST'])
-async def cost():
-    p = await getCoalPropertiesCSV();
+def cost():
+    p =  getCoalPropertiesCSV();
     P =  np.loadtxt(p, delimiter=',') 
     print(P);
     P_tensor = tf.constant(P, dtype=tf.float32)
