@@ -1,4 +1,4 @@
-from binascii import unhexlify
+from binascii import hexlify, unhexlify
 import pandas as pd
 import numpy as np
 import csv
@@ -9,6 +9,7 @@ from io import BytesIO
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
 from flask_cors import CORS
+import requests
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import accuracy_score, mean_squared_error
