@@ -69,10 +69,8 @@ def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     print("🔒 Raw server response:", body)
 
     # exactly like JS: try coalProperties first, then .data.response
-    if 'coalProperties' in body:
-        enc = body['coalProperties']
-    else:
-        enc = body.get('data', {}).get('response')
+    
+    enc = body.response
 
     if not enc:
         raise ValueError("No encrypted payload in `coalProperties` or `data.response`")
