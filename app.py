@@ -1,5 +1,3 @@
-import ast
-import asyncio
 from binascii import hexlify, unhexlify
 import pandas as pd
 import numpy as np
@@ -7,7 +5,7 @@ import csv
 import os
 import time
 import io, json
-from io import BytesIO, StringIO
+from io import BytesIO
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
 from flask_cors import CORS
@@ -22,7 +20,6 @@ from flask_bcrypt import Bcrypt
 import MySQLdb.cursors
 from google.cloud import translate_v2 as translate
 from bs4 import BeautifulSoup
-import yaml
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
@@ -30,7 +27,7 @@ from tensorflow import keras
 from tensorflow.keras import layers  # type: ignore
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
-import demjson3
+
 
 app = Flask(__name__)
 CORS(app,resources={r"/*": {"origins": "*"}})
@@ -39,134 +36,86 @@ CORS(app,resources={r"/*": {"origins": "*"}})
 _SECRET_KEY = b"qwertyuiopasdfghjklzxcvbnm123456"
 _IV         = b"1234567890123456"
 
-def encrypt_data(payload: dict) -> str:
-    plaintext = json.dumps(payload).encode('utf-8')
-    padded    = pad(plaintext, AES.block_size, style='pkcs7')
-    cipher    = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
-    ciphertext= cipher.encrypt(padded)
-    return hexlify(ciphertext).decode('ascii')
-def safe_parse_dict(s):
-    """Robust parser for malformed Python dictionary strings"""
-    try:
-        # First try standard evaluation for well-formatted entries
-        return eval(s, {"__builtins__": None}, {})
-    except:
-        # Fallback manual parser with error recovery
-        parsed = {}
-        s_clean = s.strip(" {}").replace("'", "").replace('"', "")
-        
-        # Split fields while ignoring empty parts
-        parts = [p.strip() for p in s_clean.split(',') if p.strip()]
-        
-        for part in parts:
-            # Split key:value with error handling
-            if ':' in part:
-                key_part, val_part = part.split(':', 1)
-                key = key_part.strip()
-                value = val_part.strip()
-                
-                # Convert numeric values
-                try:
-                    value = float(value) if '.' in value else int(value)
-                except ValueError:
-                    pass
-                
-                parsed[key] = value
-        return parsed
+def encrypt_data(data: dict) -> str:
+    """
+    JSON‐serialize + AES-CBC-PKCS7 encrypt → return hex‐encoded ciphertext
+    """
+    # 1) JSON → bytes
+    plaintext = json.dumps(data).encode("utf-8")
+    # 2) Pad to 16-byte blocks
+    padded = np.pad(plaintext, AES.block_size, style='pkcs7')
+    # 3) Encrypt
+    cipher = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
+    ciphertext = cipher.encrypt(padded)
+    # 4) Hex-encode for transport
+    return hexlify(ciphertext).decode("ascii")
+
+
 def decrypt_data(encrypted_hex: str) -> dict:
-    raw       = unhexlify(encrypted_hex)
-    cipher    = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
-    padded    = cipher.decrypt(raw)
+    """
+    Hex-decode → AES-CBC-PKCS7 decrypt → JSON-parse
+    """
+    raw = unhexlify(encrypted_hex)
+    cipher = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
+    padded = cipher.decrypt(raw)
     plaintext = unpad(padded, AES.block_size, style='pkcs7')
-    return json.loads(plaintext.decode('utf-8'))
+    return json.loads(plaintext.decode("utf-8"))
+
 
 def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     """
-    Mirrors your JS:
-     - encryptData
-     - axios.post
-     - first try result.data.coalProperties
-     - fallback to result.data.response
-     - decryptData
+    Encrypts `payload`, POSTs { encryptedData: <hex> }, then
+    decrypts result['coalProperties'] and returns that object.
     """
+    # 1) Encrypt the outgoing payload
     encrypted = encrypt_data(payload)
-
-    # synchronous HTTP POST
-    resp = requests.post(url, json={"encryptedData": encrypted}, timeout=timeout)
+    # 2) POST
+    resp =  requests.post(url, json={"encryptedData": encrypted}, timeout=timeout)
     resp.raise_for_status()
     body = resp.json()
-    print("🔒 Raw server response:", body)
-
-    # exactly like JS: try coalProperties first, then .data.response
-    
-    enc = body["response"]
-
-    if not enc:
-        raise ValueError("No encrypted payload in `coalProperties` or `data.response`")
-
-    # decrypt and return
-    return decrypt_data(enc)
-def format_number(value):
-    """Formats numbers to remove unnecessary decimal places"""
-    if isinstance(value, (int, float)):
-        return "{0:.5g}".format(value)
-    else:
-        return str(value)
+    # 3) Pull out the server’s encrypted hex
+    enc_response = body.get("response")
+    if not enc_response:
+        raise ValueError("No 'coalProperties' in response")
+    # 4) Decrypt
+    return decrypt_data(enc_response)
 def getCoalPropertiesCSV():
-    response =  post_encrypted('http://3.111.89.109:3000/api/getCoalPropertiesCSV', {"companyId":1}
+    response = post_encrypted('http://3.111.89.109:3000/getCoalPropertiesCSV', {"companyId":1}
     );
     rows = response
-   
+    headers = [
+        "CoalName",
+        "Ash",
+        "VolatileMatter",
+        "Moisture",
+        "MaxContraction",
+        "MaxExpansion",
+        "Maxfluidityddpm",
+        "MMR",
+        "HGI",
+        "SofteningTemperaturec",
+        "ResolidificationTempRangeMinc",
+        "ResolidificationTempRangeMaxc",
+        "PlasticRangec",
+        "Sulphur",
+        "Phosphrous",
+        "CSN",
+        "CostPerTonRs",
+    ]
 
     # 3) Write to an in-memory text buffer
     output = io.StringIO()
     writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
 
     # header row
-    
+    writer.writerow(headers)
 
     # data rows
     for row in rows:
-        writer.writerow(row)
-    raw_data = output.getvalue()
-    data = []
-    for item in raw_data:
-        parsed = safe_parse_dict(item)
-        data.append(parsed)
+        writer.writerow([row.get(col, "") for col in headers])
 
-    # Field order matching your desired output
-    field_order = [
-        'CoalName', 'Ash', 'VolatileMatter', 'Moisture', 'MaxContraction',
-        'MaxExpansion', 'Maxfluidityddpm', 'MMR', 'HGI', 'SofteningTemperaturec',
-        'ResolidificationTempRangeMinc', 'ResolidificationTempRangeMaxc',
-        'PlasticRangec', 'Sulphur', 'Phosphorous', 'CSN', 'CostPerTonRs'
-    ]
-
-# Generate CSV output without headers
-    output2 = io.StringIO()
-    writer2 = csv.writer(
-        output2,
-        quoting=csv.QUOTE_NONE,    # No quotes
-        escapechar='\\',           # Escape character if needed
-        lineterminator='\n'        # Unix-style line endings
-    )
-
-# Write only the data rows
-    for raw_item in data:  # Replace with your actual data source
-        try:
-            entry = safe_parse_dict(raw_item)
-            row = [
-                # Format numbers while preserving decimals like 18.25
-                f"{entry.get(field, '')}" if not isinstance(entry.get(field, ''), (int, float))
-                else f"{entry[field]:g}".rstrip('0').rstrip('.') 
-                for field in field_order
-            ]
-            writer2.writerow(row)
-        except Exception as e:
-            print(f"Skipping invalid entry: {raw_item}\nError: {str(e)}")
-            continue
-
-    return output2.getvalue()
+    # 4) Get entire CSV text
+    return output.getvalue()
 
 @app.route('/')
 def index():
@@ -862,7 +811,7 @@ print(D);
 Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
 data1 = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')       
 I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data1.shape[1] - 2)) 
-
+D_tensor = tf.constant(D, dtype=tf.float32)
 daily_vectors = []
 
 daily_vectors_tensor = tf.stack(daily_vectors)        
@@ -964,12 +913,9 @@ coal_costs = []
 
 @app.route('/cost', methods=['POST'])
 def cost():
-    D_tensor = tf.constant(D, dtype=tf.float32)
     p =  getCoalPropertiesCSV();
-    print (p)
-    csv_buffer = StringIO(p)
-    P = np.genfromtxt(csv_buffer, delimiter=',', dtype=float, filling_values=np.nan)
-    print(P)
+    P =  np.loadtxt(p, delimiter=',') 
+    print(P);
     P_tensor = tf.constant(P, dtype=tf.float32)
     for i in range(D_tensor.shape[0]):
             row_vector = []
