@@ -647,12 +647,16 @@ def get_coal_properties(company_id=1):
         
         coal_data = result[0]["CoalData"]["CoalProperties"]
         df = pd.DataFrame(coal_data)
+        df = df.astype(str)
+        df.columns = range(df.shape[1])
+
         return df
     except Exception as e:
         print("Error fetching coal properties:", e)
         return pd.DataFrame()
     
-data1 = get_coal_properties(company_id=1)      
+data1 = get_coal_properties(company_id=1) 
+print(data1)     
 
 D_tensor = tf.constant(D, dtype=tf.float32)
 P_tensor = tf.constant(P, dtype=tf.float32)
