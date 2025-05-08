@@ -1,3 +1,4 @@
+import ast
 import asyncio
 from binascii import hexlify, unhexlify
 import pandas as pd
@@ -77,7 +78,12 @@ def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
 
     # decrypt and return
     return decrypt_data(enc)
-
+def format_number(value):
+    """Formats numbers to remove unnecessary decimal places"""
+    if isinstance(value, (int, float)):
+        return "{0:.5g}".format(value)
+    else:
+        return str(value)
 def getCoalPropertiesCSV():
     response =  post_encrypted('http://3.111.89.109:3000/api/getCoalPropertiesCSV', {"companyId":1}
     );
@@ -94,8 +100,8 @@ def getCoalPropertiesCSV():
     # data rows
     for row in rows:
         writer.writerow(row)
-    data = output.getvalue()
-
+    raw_data = output.getvalue()
+    data = [ast.literal_eval(item.replace("'", "\"")) for item in raw_data]
 # Define the column order (no headers needed)
     field_order = [
     'CoalName', 'Ash', 'VolatileMatter', 'Moisture', 'MaxContraction',
@@ -106,12 +112,17 @@ def getCoalPropertiesCSV():
 
 # Generate CSV output without headers
     output2 = io.StringIO()
-    writer2 = csv.writer(output2, quoting=csv.QUOTE_ALL)
+    writer2 = csv.writer(
+        output,
+        quoting=csv.QUOTE_NONE,    # No quotes
+        escapechar='\\',           # Escape character if needed
+        lineterminator='\n'        # Unix-style line endings
+    )
 
 # Write only the data rows
     for entry in data:
-        row = [str(entry[field]) for field in field_order]
-        writer.writerow(row)
+        row = [format_number(entry[field]) for field in field_order]
+        writer2.writerow(row)
 
 # Get the CSV string
     csv_content = output2.getvalue()
