@@ -1,4 +1,5 @@
 from binascii import hexlify, unhexlify
+import aiohttp
 import pandas as pd
 import numpy as np
 import csv
@@ -70,9 +71,12 @@ async def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     # 1) Encrypt the outgoing payload
     encrypted = encrypt_data(payload)
     # 2) POST
-    resp =await  requests.post(url, json={"encryptedData": encrypted}, timeout=timeout)
-    resp.raise_for_status()
-    body = resp.json()
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url,
+                                json={"encryptedData": encrypted},
+                                timeout=timeout) as resp:
+                resp.raise_for_status()
+                body = resp.json()
     # 3) Pull out the server’s encrypted hex
     enc_response = body.get("data", {}).get("response")
     if not enc_response:
@@ -80,8 +84,8 @@ async def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     # 4) Decrypt
     return decrypt_data(enc_response)
 
-async def getCoalPropertiesCSV():
-    response = await post_encrypted('http://3.111.89.109:3000/getCoalPropertiesCSV', {"companyId":1}
+def getCoalPropertiesCSV():
+    response =  post_encrypted('http://3.111.89.109:3000/getCoalPropertiesCSV', {"companyId":1}
     );
     rows = response
     headers = [
