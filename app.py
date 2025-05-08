@@ -67,8 +67,8 @@ def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     return decrypt_data(enc)
 
 def getCoalPropertiesCSV():
-    response = asyncio.run( post_encrypted('http://3.111.89.109:3000/getCoalPropertiesCSV', {"companyId":1}
-    ));
+    response =  post_encrypted('http://3.111.89.109:3000/getCoalPropertiesCSV', {"companyId":1}
+    );
     rows = response
     headers = [
         "CoalName",
