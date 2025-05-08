@@ -117,13 +117,20 @@ def getCoalPropertiesCSV():
     output = io.StringIO()
     writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
 
-    for tup in rows:
-        rowdict = dict(zip(columns, tup))
-        writer.writerow([rowdict.get(col, "") for col in columns])
+    for entry in rows:
+        if isinstance(entry, dict):
+            # pull out only the numeric columns
+            row_vals = [ entry.get(f, "") for f in columns ]
+        elif isinstance(entry, (list, tuple)):
+            # already a sequence of values
+            row_vals = entry
+        else:
+            # give up—treat as single‐column
+            row_vals = [ entry ]
 
-    csv_text = output.getvalue()
-    output.close()
-    return csv_text
+        writer.writerow(row_vals)
+
+    return output.getvalue()
 
 @app.route('/')
 def index():
