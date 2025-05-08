@@ -93,7 +93,7 @@ def getCoalPropertiesCSV():
     rows = response   # e.g. [ { "CoalName":"Captive 2", "Ash":18.25, ... }, { ... }, ... ]
 
     # 2) define the exact field order you want
-    field_order = [
+    columns = [
         "CoalName",
         "Ash",
         "VolatileMatter",
@@ -117,10 +117,9 @@ def getCoalPropertiesCSV():
     output = io.StringIO()
     writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
 
-    for entry in rows:
-        # pull out the numeric values in order
-        row_vals = [ entry.get(f, "") for f in field_order ]
-        writer.writerow(row_vals)
+    for tup in rows:
+        rowdict = dict(zip(columns, tup))
+        writer.writerow([rowdict.get(col, "") for col in columns])
 
     csv_text = output.getvalue()
     output.close()
