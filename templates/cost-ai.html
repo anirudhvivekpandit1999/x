@@ -1145,15 +1145,21 @@
         function calculateProposedBlendCost() {
             let totalCost = 0;
 
-            // Get all selected coal types and their inputted current ranges
             document.querySelectorAll('.blend-entry').forEach(entry => {
-                const selectedCoal = entry.querySelector('select').value;
-                const currentRange = parseFloat(entry.querySelector('input[type="number"]').value) || 0;
-
-                if (selectedCoal && coalCostMap[selectedCoal]) {
-                    totalCost += (coalCostMap[selectedCoal] * currentRange) / 100;
+                const selectedCoal = entry.querySelector('select')?.value;
+                const currentRange = parseFloat(entry.querySelector('input[type="number"]')?.value) || 0;
+        
+                if (selectedCoal && window.coalProperties) {
+                    // Find the coal object that matches the selected type
+                    const coal = window.coalProperties.find(c => c.Type === selectedCoal);
+        
+                    if (coal && coal.Cost) {
+                        const cost = parseFloat(coal.Cost);
+                        totalCost += (cost * currentRange) / 100;
+                    }
                 }
             });
+        
 
             return totalCost.toFixed(2);
         }
