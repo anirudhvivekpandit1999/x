@@ -37,19 +37,12 @@ CORS(app,resources={r"/*": {"origins": "*"}})
 _SECRET_KEY = b"qwertyuiopasdfghjklzxcvbnm123456"
 _IV         = b"1234567890123456"
 
-def encrypt_data(data: dict) -> str:
-    """
-    JSON‐serialize + AES-CBC-PKCS7 encrypt → return hex‐encoded ciphertext
-    """
-    # 1) JSON → bytes
-    plaintext = json.dumps(data).encode("utf-8")
-    # 2) Pad to 16-byte blocks
-    padded = np.pad(plaintext, AES.block_size, style='pkcs7')
-    # 3) Encrypt
-    cipher = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
-    ciphertext = cipher.encrypt(padded)
-    # 4) Hex-encode for transport
-    return hexlify(ciphertext).decode("ascii")
+def encrypt_data(data):
+    plaintext = json.dumps(data).encode('utf-8')
+    padded    = pad(plaintext, AES.block_size, style='pkcs7')       # <-- correct pad
+    cipher    = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
+    ct        = cipher.encrypt(padded)
+    return hexlify(ct).decode()
 
 
 def decrypt_data(encrypted_hex: str) -> dict:
