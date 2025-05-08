@@ -113,11 +113,11 @@ def getCoalPropertiesCSV():
     writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
 
     # header row
-    writer.writerow(headers)
+    
 
     # data rows
     for row in rows:
-        writer.writerow([row.get(col, "") for col in headers])
+        writer.writerow(row)
 
     # 4) Get entire CSV text
     return output.getvalue()
