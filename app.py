@@ -862,7 +862,7 @@ print(D);
 Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
 data1 = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')       
 I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data1.shape[1] - 2)) 
-D_tensor = tf.constant(D, dtype=tf.float32)
+
 daily_vectors = []
 
 daily_vectors_tensor = tf.stack(daily_vectors)        
@@ -964,6 +964,7 @@ coal_costs = []
 
 @app.route('/cost', methods=['POST'])
 def cost():
+    D_tensor = tf.constant(D, dtype=tf.float32)
     p =  getCoalPropertiesCSV();
     print (p)
     csv_buffer = StringIO(p)
