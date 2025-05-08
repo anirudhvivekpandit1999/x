@@ -965,10 +965,10 @@ coal_costs = []
 @app.route('/cost', methods=['POST'])
 def cost():
     p =  getCoalPropertiesCSV();
+    print (p)
     csv_buffer = StringIO(p)
-    P = np.loadtxt(csv_buffer, delimiter=',')
-    P =  np.loadtxt(p, delimiter=',') 
-    print(P);
+    P = np.genfromtxt(csv_buffer, delimiter=',', dtype=float, filling_values=np.nan)
+    print(P)
     P_tensor = tf.constant(P, dtype=tf.float32)
     for i in range(D_tensor.shape[0]):
             row_vector = []
