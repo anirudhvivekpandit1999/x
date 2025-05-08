@@ -45,7 +45,14 @@ def encrypt_data(payload: dict) -> str:
     cipher    = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
     ciphertext= cipher.encrypt(padded)
     return hexlify(ciphertext).decode('ascii')
-
+def safe_parse_dict(s):
+    """Safely parses Python-style dictionary strings with error handling"""
+    try:
+        return eval(s, {"__builtins__": None}, {})  # Restricted eval for safety
+    except:
+        # Fallback for problematic entries
+        return {k.strip(" '"): v.strip(" '") for k, v in 
+                [part.split(':', 1) for part in s.strip("{}").split(',')]}
 def decrypt_data(encrypted_hex: str) -> dict:
     raw       = unhexlify(encrypted_hex)
     cipher    = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
@@ -104,16 +111,10 @@ def getCoalPropertiesCSV():
     raw_data = output.getvalue()
     data = []
     for item in raw_data:
-        try:
-            # Convert Python-style dict to valid JSON
-            json_str = item.replace("'", '"').replace('True', 'true').replace('False', 'false')
-            parsed = demjson3.decode(json_str)
-            data.append(parsed)
-        except demjson3.JSONDecodeError as e:
-            print(f"Error parsing item: {item}")
-            raise
+        parsed = safe_parse_dict(item)
+        data.append(parsed)
 
-    # Field order matching your target format
+    # Field order matching your desired output
     field_order = [
         'CoalName', 'Ash', 'VolatileMatter', 'Moisture', 'MaxContraction',
         'MaxExpansion', 'Maxfluidityddpm', 'MMR', 'HGI', 'SofteningTemperaturec',
@@ -134,13 +135,17 @@ def getCoalPropertiesCSV():
     for entry in data:
         row = []
         for field in field_order:
-            value = entry.get(field, '')  # Handle missing fields gracefully
-            # Format numbers to remove insignificant decimals
+            value = entry.get(field, '')
+            
+            # Special number formatting
             if isinstance(value, (int, float)):
-                formatted = f"{value:.5g}".rstrip('0').rstrip('.') if '.' in f"{value}" else f"{value}"
+                # Remove trailing zeros and .0 decimals
+                s_value = f"{value}".rstrip('0').rstrip('.')
+                # Convert scientific notation to decimal
+                row.append(s_value if 'e' not in s_value else f"{value:.5f}")
             else:
-                formatted = str(value)
-            row.append(formatted)
+                row.append(str(value))
+
         writer2.writerow(row)
 
 # Get the CSV string
