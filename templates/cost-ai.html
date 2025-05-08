@@ -839,7 +839,7 @@
                     encryptedData: encryptedPayload,
                 });
 
-                const encryptedResponse = result.data.coalProperties;
+                const encryptedResponse = result?.data?.coalProperties ?? result.data.response;
                 //  const firstResultSet = encryptedResponse[0];
 
                 //  if (!encryptedResponse) {
@@ -889,7 +889,7 @@
                 console.error("Error sending request:", error.message);
             }
         }
-
+       
 
         function updateTotalRange() {
             totalCurrentRange = 0;
@@ -1055,8 +1055,50 @@
                     { p_CompanyId: 1 }
                 );
 
+                 
+           const response  = await postEncrypted("http://3.111.89.109:3000/api/getCoalPropertiescsv",{p_CompanyId : 1});
+              const csvData = response;
+              console.log(csvData,"csvData");
+        
+const rows = response;  
+  if (!rows.length) return '';
+  const headers = [
+    'CoalName',
+    'Ash',
+    'VolatileMatter',
+    'Moisture',
+    'MaxContraction',
+    'MaxExpansion',
+    'Maxfluidityddpm',
+    'MMR',
+    'HGI',
+    'SofteningTemperaturec',
+    'ResolidificationTempRangeMinc',
+    'ResolidificationTempRangeMaxc',
+    'PlasticRangec',
+    'Sulphur',
+    'Phosphorous',
+    'CSN',
+    'CostPerTonRs'
+  ];
+
+  const csvLines = [
+                                    // header row
+    ...rows.map(r =>
+      headers
+        .map(h => {
+          const v = r[h];
+          // escape any embedded quotes by doubling them
+          const s = v == null ? '' : String(v).replace(/"/g, '""');
+          return `"${s}"`;                            // wrap every field in quotes
+        })
+        .join(',')
+    )
+  ];
+  console.log(csvLines.join('\n'), "csvLines");
                 // 2. extract & parse your ranges payload
                 //    (assuming `CoalPropertiesFormatted` is JSON-stringified in the response)
+                
                 const formatted = apiResult[0].CoalPropertiesFormatted;
 
 

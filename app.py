@@ -70,7 +70,7 @@ async def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     # 1) Encrypt the outgoing payload
     encrypted = encrypt_data(payload)
     # 2) POST
-    resp =await  requests.post_encrypted(url, json={"encryptedData": encrypted}, timeout=timeout)
+    resp =await  requests.post(url, json={"encryptedData": encrypted}, timeout=timeout)
     resp.raise_for_status()
     body = resp.json()
     # 3) Pull out the server’s encrypted hex
@@ -80,6 +80,43 @@ async def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     # 4) Decrypt
     return decrypt_data(enc_response)
 
+async def getCoalPropertiesCSV():
+    response = post_encrypted('http://3.111.89.109:3000/getCoalPropertiesCSV', {"companyId":1}
+    );
+    rows = response
+    headers = [
+        "CoalName",
+        "Ash",
+        "VolatileMatter",
+        "Moisture",
+        "MaxContraction",
+        "MaxExpansion",
+        "Maxfluidityddpm",
+        "MMR",
+        "HGI",
+        "SofteningTemperaturec",
+        "ResolidificationTempRangeMinc",
+        "ResolidificationTempRangeMaxc",
+        "PlasticRangec",
+        "Sulphur",
+        "Phosphrous",
+        "CSN",
+        "CostPerTonRs",
+    ]
+
+    # 3) Write to an in-memory text buffer
+    output = io.StringIO()
+    writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+
+    # header row
+    writer.writerow(headers)
+
+    # data rows
+    for row in rows:
+        writer.writerow([row.get(col, "") for col in headers])
+
+    # 4) Get entire CSV text
+    return output.getvalue()
 
 @app.route('/')
 def index():
@@ -770,46 +807,27 @@ for i in range(len(coke_output)):
 D= np.loadtxt('coal_percentages.csv', delimiter=',')  
 print(D);
 
-P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',') 
-print(P);
+
+
 Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
 data1 = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')       
 I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data1.shape[1] - 2)) 
 D_tensor = tf.constant(D, dtype=tf.float32)
-P_tensor = tf.constant(P, dtype=tf.float32)
 daily_vectors = []
-for i in range(D_tensor.shape[0]):
-            row_vector = []
-            for j in range(P_tensor.shape[1]):
-                product_vector = tf.multiply(D_tensor[i], P_tensor[:, j])
-                row_vector.append(product_vector)
-            daily_vectors.append(tf.stack(row_vector))
+
 daily_vectors_tensor = tf.stack(daily_vectors)        
 input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
 daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(52, -1) 
 Blended_coal_parameters = np.loadtxt('blended_coal_data.csv', delimiter=',')
-input_train, input_test, target_train, target_test = train_test_split(
-            daily_vectors_tensor.numpy(), Blended_coal_parameters, test_size=0.2, random_state=42
-        )       
+      
 input_scaler = MinMaxScaler()
 output_scaler = MinMaxScaler()
 
-input_train_reshaped = input_train.reshape(input_train.shape[0], -1)
-input_test_reshaped = input_test.reshape(input_test.shape[0], -1)
-
-input_train_scaled = input_scaler.fit_transform(input_train_reshaped)
-input_test_scaled = input_scaler.transform(input_test_reshaped)
-input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
-input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
 
 
-target_train_scaled = output_scaler.fit_transform(target_train)
-target_test_scaled = output_scaler.transform(target_test)
 
-input_train_scaled = input_train_scaled.reshape(input_train.shape)
-input_test_scaled = input_test_scaled.reshape(input_test.shape)
-input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
-input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
+
+
 
         # Define model
 modelq = keras.Sequential([
@@ -851,9 +869,7 @@ modelq.summary()
 
 
         # modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
-y_pred = modelq.predict(input_test_scaled)
-y_pred = output_scaler.inverse_transform(y_pred)
-mse = np.mean((target_test - y_pred) ** 2)
+
 input__scaler = MinMaxScaler()
 output__scaler = MinMaxScaler()        
 rf_model= keras.Sequential([
@@ -891,14 +907,50 @@ rf_model= keras.Sequential([
 rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                     loss='mse',
                     metrics=['mae'])
-P_ = P
-P_tensor = tf.constant(P_, dtype=tf.float32)
+
 daily_vectors = []
 differences = []
 coal_costs = []
 
 @app.route('/cost', methods=['POST'])
-def cost():
+async def cost():
+    p = await getCoalPropertiesCSV();
+    P =  np.loadtxt(p, delimiter=',') 
+    print(P);
+    P_tensor = tf.constant(P, dtype=tf.float32)
+    for i in range(D_tensor.shape[0]):
+            row_vector = []
+            for j in range(P_tensor.shape[1]):
+                product_vector = tf.multiply(D_tensor[i], P_tensor[:, j])
+                row_vector.append(product_vector)
+            daily_vectors.append(tf.stack(row_vector))
+    P_ = P
+    input_train, input_test, target_train, target_test = train_test_split(
+            daily_vectors_tensor.numpy(), Blended_coal_parameters, test_size=0.2, random_state=42
+        ) 
+    input_train_reshaped = input_train.reshape(input_train.shape[0], -1)
+    input_test_reshaped = input_test.reshape(input_test.shape[0], -1)
+    input_train_scaled = input_scaler.fit_transform(input_train_reshaped)
+    input_test_scaled = input_scaler.transform(input_test_reshaped)
+    input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
+    input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
+    target_train_scaled = output_scaler.fit_transform(target_train)
+    target_test_scaled = output_scaler.transform(target_test)
+
+    input_train_scaled = input_train_scaled.reshape(input_train.shape)
+    input_test_scaled = input_test_scaled.reshape(input_test.shape)
+    input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
+    input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
+    y_pred = modelq.predict(input_test_scaled)
+    y_pred = output_scaler.inverse_transform(y_pred)
+    mse = np.mean((target_test - y_pred) ** 2)
+    P_tensor = tf.constant(P_, dtype=tf.float32)
+
+
+
+
+
+
     try:
         data = request.json
         if not data:
