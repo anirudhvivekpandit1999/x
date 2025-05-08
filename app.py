@@ -1,4 +1,6 @@
+import base64
 from binascii import hexlify, unhexlify
+import binascii
 import pandas as pd
 import numpy as np
 import csv
@@ -37,20 +39,23 @@ _SECRET_KEY = b"qwertyuiopasdfghjklzxcvbnm123456"
 _IV         = b"1234567890123456"
 
 def encrypt_data(data: dict) -> str:
-    """
-    JSON‐serialize + AES-CBC-PKCS7 encrypt → return hex‐encoded ciphertext
-    """
-    # 1) JSON → bytes
-    plaintext = json.dumps(data).encode("utf-8")
-    # 2) Pad to 16-byte blocks
-    padded = np.pad(plaintext, AES.block_size, style='pkcs7')
-    # 3) Encrypt
-    cipher = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
-    ciphertext = cipher.encrypt(padded)
-    # 4) Hex-encode for transport
-    return hexlify(ciphertext).decode("ascii")
-
-
+    # 32-byte (256-bit) key
+    secret_key = b"qwertyuiopasdfghjklzxcvbnm123456"  # UTF-8 parsed key
+    # 16-byte IV
+    iv = b"1234567890123456"  # UTF-8 parsed IV
+    
+    # 1. JSON stringify
+    json_str = json.dumps(data)
+    
+    # 2. Encrypt with AES-CBC-PKCS7
+    cipher = AES.new(secret_key, AES.MODE_CBC, iv=iv)
+    ciphertext = cipher.encrypt(pad(json_str.encode('utf-8'), AES.block_size))
+    
+    # 3. Convert to Base64 then to Hex (exact JS equivalent)
+    base64_cipher = base64.b64encode(ciphertext).decode('utf-8')
+    hex_cipher = binascii.hexlify(base64.b64decode(base64_cipher)).decode('utf-8')
+    
+    return hex_cipher
 def decrypt_data(encrypted_hex: str) -> dict:
     """
     Hex-decode → AES-CBC-PKCS7 decrypt → JSON-parse
@@ -80,7 +85,7 @@ def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     # 4) Decrypt
     return decrypt_data(enc_response)
 def getCoalPropertiesCSV():
-    response = post_encrypted('http://3.111.89.109:3000/getCoalPropertiesCSV', {"companyId":1}
+    response = post_encrypted('http://3.111.89.109:3000/api/getCoalPropertiesCSV', {"companyId":1}
     );
     rows = response
     headers = [
@@ -724,7 +729,6 @@ def read_min_max_values():
 min_max_values = read_min_max_values()
 
 
-file_path = 'training_data_file.csv'
 file_path = 'submitted_training_coal_data.csv'
 coal_percentages = []
 coal_properties = []
