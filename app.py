@@ -56,23 +56,15 @@ def decrypt_data(encrypted_hex: str) -> dict:
     return json.loads(plaintext.decode("utf-8"))
 
 
-async def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
-    """
-    Encrypts `payload`, POSTs { encryptedData: <hex> }, then
-    decrypts result['coalProperties'] and returns that object.
-    """
-    # 1) Encrypt the outgoing payload
+def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     encrypted = encrypt_data(payload)
-    # 2) POST
-    resp =await  requests.post(url, json={"encryptedData": encrypted}, timeout=timeout)
+    resp = requests.post(url, json={"encryptedData": encrypted}, timeout=timeout)
     resp.raise_for_status()
     body = resp.json()
-    # 3) Pull out the server’s encrypted hex
-    enc_response = body.get("data", {}).get("response")
-    if not enc_response:
-        raise ValueError("No 'coalProperties' in response")
-    # 4) Decrypt
-    return decrypt_data(enc_response)
+    enc = body.get("data", {}).get("response")
+    if not enc:
+        raise ValueError("No encrypted payload in data.response")
+    return decrypt_data(enc)
 
 def getCoalPropertiesCSV():
     response = asyncio.run( post_encrypted('http://3.111.89.109:3000/getCoalPropertiesCSV', {"companyId":1}
