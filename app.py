@@ -117,7 +117,7 @@ def getCoalPropertiesCSV():
 
     # data rows
     for row in rows:
-        writer.writerow(row.values())
+        writer.writerow(row)
 
     # 4) Get entire CSV text
     return output.getvalue()
@@ -918,7 +918,7 @@ coal_costs = []
 @app.route('/cost', methods=['POST'])
 def cost():
     p =  getCoalPropertiesCSV();
-    P =  np.loadtxt(p, delimiter=',') 
+    P =  np.loadtxt(io.StringIO(p), delimiter=',') 
     print(P);
     P_tensor = tf.constant(P, dtype=tf.float32)
     for i in range(D_tensor.shape[0]):
