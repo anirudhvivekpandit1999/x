@@ -82,37 +82,18 @@ def getCoalPropertiesCSV():
     response =  post_encrypted('http://3.111.89.109:3000/api/getCoalPropertiesCSV', {"companyId":1}
     );
     rows = response
-    headers = [
-        "CoalName",
-        "Ash",
-        "VolatileMatter",
-        "Moisture",
-        "MaxContraction",
-        "MaxExpansion",
-        "Maxfluidityddpm",
-        "MMR",
-        "HGI",
-        "SofteningTemperaturec",
-        "ResolidificationTempRangeMinc",
-        "ResolidificationTempRangeMaxc",
-        "PlasticRangec",
-        "Sulphur",
-        "Phosphrous",
-        "CSN",
-        "CostPerTonRs",
-    ]
+   
 
     # 3) Write to an in-memory text buffer
     output = io.StringIO()
     writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
 
     # header row
-    writer.writerow(headers)
+    
 
     # data rows
     for row in rows:
-        writer.writerow([row.get(col, "") for col in headers])
-
+        writer.writerow(row)
     # 4) Get entire CSV text
     return output.getvalue()
 
