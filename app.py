@@ -1284,7 +1284,7 @@ def cost():
         error_details = traceback.format_exc()
         app.logger.error(f"Error in cost calculation: {error_details}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
-    
+
 def download_template_properties():
     # Define the column headers for the template
     columns = [
