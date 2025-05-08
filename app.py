@@ -61,6 +61,7 @@ def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     resp = requests.post(url, json={"encryptedData": encrypted}, timeout=timeout)
     resp.raise_for_status()
     body = resp.json()
+    print(body,"body")
     enc = body.get("data").get("response")
     if not enc:
         raise ValueError("No encrypted payload in data.response")
