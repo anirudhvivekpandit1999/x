@@ -46,13 +46,33 @@ def encrypt_data(payload: dict) -> str:
     ciphertext= cipher.encrypt(padded)
     return hexlify(ciphertext).decode('ascii')
 def safe_parse_dict(s):
-    """Safely parses Python-style dictionary strings with error handling"""
+    """Robust parser for malformed Python dictionary strings"""
     try:
-        return eval(s, {"__builtins__": None}, {})  # Restricted eval for safety
+        # First try standard evaluation for well-formatted entries
+        return eval(s, {"__builtins__": None}, {})
     except:
-        # Fallback for problematic entries
-        return {k.strip(" '"): v.strip(" '") for k, v in 
-                [part.split(':', 1) for part in s.strip("{}").split(',')]}
+        # Fallback manual parser with error recovery
+        parsed = {}
+        s_clean = s.strip(" {}").replace("'", "").replace('"', "")
+        
+        # Split fields while ignoring empty parts
+        parts = [p.strip() for p in s_clean.split(',') if p.strip()]
+        
+        for part in parts:
+            # Split key:value with error handling
+            if ':' in part:
+                key_part, val_part = part.split(':', 1)
+                key = key_part.strip()
+                value = val_part.strip()
+                
+                # Convert numeric values
+                try:
+                    value = float(value) if '.' in value else int(value)
+                except ValueError:
+                    pass
+                
+                parsed[key] = value
+        return parsed
 def decrypt_data(encrypted_hex: str) -> dict:
     raw       = unhexlify(encrypted_hex)
     cipher    = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
@@ -132,25 +152,20 @@ def getCoalPropertiesCSV():
     )
 
 # Write only the data rows
-    for entry in data:
-        row = []
-        for field in field_order:
-            value = entry.get(field, '')
-            
-            # Special number formatting
-            if isinstance(value, (int, float)):
-                # Remove trailing zeros and .0 decimals
-                s_value = f"{value}".rstrip('0').rstrip('.')
-                # Convert scientific notation to decimal
-                row.append(s_value if 'e' not in s_value else f"{value:.5f}")
-            else:
-                row.append(str(value))
+    for raw_item in data:  # Replace with your actual data source
+        try:
+            entry = safe_parse_dict(raw_item)
+            row = [
+                # Format numbers while preserving decimals like 18.25
+                f"{entry.get(field, '')}" if not isinstance(entry.get(field, ''), (int, float))
+                else f"{entry[field]:g}".rstrip('0').rstrip('.') 
+                for field in field_order
+            ]
+            writer2.writerow(row)
+        except Exception as e:
+            print(f"Skipping invalid entry: {raw_item}\nError: {str(e)}")
+            continue
 
-        writer2.writerow(row)
-
-# Get the CSV string
-    csv_content = output2.getvalue()
-    print(csv_content)
     return output2.getvalue()
 
 @app.route('/')
