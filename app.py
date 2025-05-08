@@ -74,7 +74,7 @@ async def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     resp.raise_for_status()
     body = resp.json()
     # 3) Pull out the server’s encrypted hex
-    enc_response = body.get("response")
+    enc_response = resp.data.response;
     if not enc_response:
         raise ValueError("No 'coalProperties' in response")
     # 4) Decrypt
