@@ -85,10 +85,15 @@ def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
     # 4) Decrypt
     return decrypt_data(enc_response)
 def getCoalPropertiesCSV():
-    response = post_encrypted('http://3.111.89.109:3000/api/getCoalPropertiesCSV', {"companyId":1}
-    );
-    rows = response
-    headers = [
+    # 1) fetch the list of dicts
+    response = post_encrypted(
+        'http://3.111.89.109:3000/api/getCoalPropertiesCSV',
+        { "companyId": 1 }
+    )
+    rows = response   # e.g. [ { "CoalName":"Captive 2", "Ash":18.25, ... }, { ... }, ... ]
+
+    # 2) define the exact field order you want
+    field_order = [
         "CoalName",
         "Ash",
         "VolatileMatter",
@@ -108,21 +113,18 @@ def getCoalPropertiesCSV():
         "CostPerTonRs",
     ]
 
-    # 3) Write to an in-memory text buffer
+    # 3) write only those numeric fields to an in-memory CSV
     output = io.StringIO()
     writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
 
-    # header row
-    
+    for entry in rows:
+        # pull out the numeric values in order
+        row_vals = [ entry.get(f, "") for f in field_order ]
+        writer.writerow(row_vals)
 
-    # data rows
-    for row in rows:
-        writer.writerow(row)
-
-    # 4) Get entire CSV text
-    return output.getvalue()
-
-@app.route('/')
+    csv_text = output.getvalue()
+    output.close()
+    return csv_text@app.route('/')
 def index():
     return render_template('index.html')
 
