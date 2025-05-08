@@ -117,7 +117,7 @@ def getCoalPropertiesCSV():
 
     # data rows
     for row in rows:
-        writer.writerow(row)
+        writer.writerow(row.values())
 
     # 4) Get entire CSV text
     return output.getvalue()
