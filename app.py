@@ -1274,12 +1274,13 @@ def cost():
         best_combined_blended_coal = None
         best_combined_cost = float('inf')
         best_combined_score = float('-inf')
-        p = get_coal_properties_csv().strip()
+        p = get_coal_properties_csv()
+        
         reader = csv.reader(io.StringIO(p))
-        print(p)
+        print(reader)
 
         coal_cost_map = {
-    row[0]: row[-1]   # CoalName → CostPerTonRs
+    row[0]: float(row[-1])   # CoalName → CostPerTonRs
     for row in reader
 }        
         coal_costs = np.array([coal_cost_map.get(coal_type, 0.0) for coal_type in coal_types])
