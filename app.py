@@ -1,6 +1,7 @@
-import base64
-from binascii import hexlify, unhexlify
-import binascii
+import hashlib
+import hmac
+import subprocess
+import threading
 import pandas as pd
 import numpy as np
 import csv
@@ -9,9 +10,9 @@ import time
 import io, json
 from io import BytesIO
 from datetime import datetime
+from flask import Flask, abort, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
 from flask import Flask, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
 from flask_cors import CORS
-import requests
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import accuracy_score, mean_squared_error
@@ -27,119 +28,47 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 from tensorflow.keras import layers  # type: ignore
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
+import requests
 
 
 app = Flask(__name__)
 CORS(app,resources={r"/*": {"origins": "*"}})
 
-
-_SECRET_KEY = b"qwertyuiopasdfghjklzxcvbnm123456"
-_IV         = b"1234567890123456"
-
-def encrypt_data(data: dict) -> str:
-    # 32-byte (256-bit) key
-    secret_key = b"qwertyuiopasdfghjklzxcvbnm123456"  # UTF-8 parsed key
-    # 16-byte IV
-    iv = b"1234567890123456"  # UTF-8 parsed IV
-    
-    # 1. JSON stringify
-    json_str = json.dumps(data)
-    
-    # 2. Encrypt with AES-CBC-PKCS7
-    cipher = AES.new(secret_key, AES.MODE_CBC, iv=iv)
-    ciphertext = cipher.encrypt(pad(json_str.encode('utf-8'), AES.block_size))
-    
-    # 3. Convert to Base64 then to Hex (exact JS equivalent)
-    base64_cipher = base64.b64encode(ciphertext).decode('utf-8')
-    hex_cipher = binascii.hexlify(base64.b64decode(base64_cipher)).decode('utf-8')
-    
-    return hex_cipher
-def decrypt_data(encrypted_hex: str) -> dict:
-    """
-    Hex-decode → AES-CBC-PKCS7 decrypt → JSON-parse
-    """
-    raw = unhexlify(encrypted_hex)
-    cipher = AES.new(_SECRET_KEY, AES.MODE_CBC, iv=_IV)
-    padded = cipher.decrypt(raw)
-    plaintext = unpad(padded, AES.block_size, style='pkcs7')
-    return json.loads(plaintext.decode("utf-8"))
+WEBHOOK_SECRET = 'qwertyuiopasdfghjklzxcvbnm123456'
+DEPLOY_SCRIPT = '/home/ec2-user/x/deploy.sh'
+def verify_signature(req):
+        signature = req.headers.get('X-Hub-Signature-256')
+        if not signature:
+            abort(400)
+        sha_name, sig = signature.split('=',1)
+        mac = hmac.new(WEBHOOK_SECRET.encode(), req.data, hashlib.sha256)
+        if not hmac.compare_digest(mac.hexdigest(), sig):
+            abort(400)
 
 
-def post_encrypted(url: str, payload: dict, timeout: int = 10) -> dict:
-    """
-    Encrypts `payload`, POSTs { encryptedData: <hex> }, then
-    decrypts result['coalProperties'] and returns that object.
-    """
-    # 1) Encrypt the outgoing payload
-    encrypted = encrypt_data(payload)
-    # 2) POST
-    resp =  requests.post(url, json={"encryptedData": encrypted}, timeout=timeout)
-    resp.raise_for_status()
-    body = resp.json()
-    # 3) Pull out the server’s encrypted hex
-    enc_response = body.get("response")
-    if not enc_response:
-        raise ValueError("No 'coalProperties' in response")
-    # 4) Decrypt
-    return decrypt_data(enc_response)
-def getCoalPropertiesCSV():
-    # 1) fetch the list of dicts
-    response = post_encrypted(
-        'http://3.111.89.109:3000/api/getCoalPropertiesCSV',
-        { "companyId": 1 }
-    )
-    rows = response   # e.g. [ { "CoalName":"Captive 2", "Ash":18.25, ... }, { ... }, ... ]
-
-    # 2) define the exact field order you want
-    columns = [
-        "CoalName",
-        "Ash",
-        "VolatileMatter",
-        "Moisture",
-        "MaxContraction",
-        "MaxExpansion",
-        "Maxfluidityddpm",
-        "MMR",
-        "HGI",
-        "SofteningTemperaturec",
-        "ResolidificationTempRangeMinc",
-        "ResolidificationTempRangeMaxc",
-        "PlasticRangec",
-        "Sulphur",
-        "Phosphrous",
-        "CSN",
-        "CostPerTonRs",
-    ]
-
-    # 3) write only those numeric fields to an in-memory CSV
-    output = io.StringIO()
-    writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
-
-    for entry in rows:
-        if isinstance(entry, dict):
-            # pull out only the numeric columns
-            row_vals = [ entry.get(f, "") for f in columns ]
-        elif isinstance(entry, (list, tuple)):
-            # already a sequence of values
-            row_vals = entry
-        else:
-            # give up—treat as single‐column
-            row_vals = [ entry ]
-
-        writer.writerow(row_vals)
-
-    return output.getvalue()
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/github-deploy', methods=['POST'])
+def github_deploy():
+        verify_signature(request)
+        payload = request.get_json() or {}
+        if payload.get('ref') != 'refs/heads/main':
+            return jsonify({'status':'ignored'}), 200
+
+        # Run deploy.sh in the background
+        threading.Thread(target=lambda: subprocess.run([DEPLOY_SCRIPT], check=True)).start()
+        return jsonify({'status':'triggered'}), 202
 
 @app.route('/index.html')
 def index_html():
     return render_template('index.html')
+
+@app.route('/hi.html')
+def index_html2():
+    return render_template('hi.html')
 
 @app.route('/coal-properties.html')
 def properties():
@@ -169,6 +98,7 @@ def login():
 #training page 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'xls', 'xlsx'}
+
 SUBMITTED_CSV_PATH = 'submitted_training_coal_data.csv'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 TRAINING_DATA = 'training_data_file.csv'
@@ -191,6 +121,7 @@ def get_next_index():
                 last_index = 0
                 for row in rows:
                     try:
+                        
 
                         if row[0].strip():  
                             last_index = max(last_index, int(row[0]))
@@ -201,6 +132,7 @@ def get_next_index():
                 return 1  # If the CSV is empty, start with 1
     else:
         return 1  # If the CSV doesn't exist, start with 1
+    
 
 
 # UPLOAD EXCEL FILE IN TRAINING PAGE 
@@ -290,11 +222,14 @@ def download_template():
                          mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
     except Exception as e:
+        print("Error in /download-template:", e)
         return jsonify({'error': str(e)}), 500
+    
 
 def format_list_to_string(data_list):
     if not data_list or all(pd.isna(x) for x in data_list):
         return None
+    
 
     formatted_list = []
     for item in data_list:
@@ -309,6 +244,7 @@ def format_list_to_string(data_list):
                 formatted_list.append(float(item))
             except ValueError:
                 formatted_list.append(item)
+    
 
     if not formatted_list:
         return None
@@ -333,6 +269,7 @@ def upload_excel_training():
 
         # 2. Save it
         filename = secure_filename(file.filename)
+        filepath = os.path.join("uploads", filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
@@ -418,9 +355,11 @@ def upload_excel_training():
 #FUNCTION TO SAVE THE TRAINING FORM IN CSV 
 
 def load_coal_data():
+    
 
     df = pd.read_csv('individual_coal_prop.csv', header=None)
     coal_data = {}
+    
 
     for _, row in df.iterrows():
         coal_type = row[0] 
@@ -428,11 +367,13 @@ def load_coal_data():
         coal_data[coal_type] = {
             'properties': properties
         }
+    
 
     return coal_data
 
 
 coal_data = load_coal_data()
+       
 
 # Route to fetch coal data for the dropdown (via AJAX)
 
@@ -512,6 +453,7 @@ def save_to_csv(data, coal_data, filename):
     with open(filename, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile,quoting=csv.QUOTE_MINIMAL)
         writer.writerows(rows)
+ 
 
 
 @app.route('/submit_training_data', methods=['POST'])
@@ -547,11 +489,14 @@ def get_uploaded_files():
 @app.route('/delete_uploaded_file', methods=['POST'])
 def delete_uploaded_file():
     filename = request.json['filename']
+    file_path = os.path.join("uploads", filename)
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if os.path.exists(file_path):
         os.remove(file_path)
+        
 
         # Remove data from training data CSV
+            
         df = pd.read_csv(TRAINING_DATA)
         df = df[df['File Name'] != filename]
         df.to_csv(TRAINING_DATA, index=False)
@@ -620,14 +565,17 @@ def get_coal_types():
     # Read the CSV file
     file_path = 'individual_coal_prop.csv' 
     coal_data = pd.read_csv(file_path, header=None)
+    
 
     coal_types = coal_data.iloc[:, 0].tolist() 
     coal_properties = coal_data.iloc[:, :-1].values.tolist() 
+    
 
     return jsonify({
         "coal_types": coal_types,
         "coal_properties": coal_properties
     })
+    
 
 @app.route('/get_proposed_coal_types', methods=['GET'])
 def get_proposed_coal_types():
@@ -638,6 +586,7 @@ def get_proposed_coal_types():
     coal_info = [{"type": coal_types[i], "cost": coal_costs[i]} for i in range(len(coal_types))]
 
     return jsonify({'coal_info': coal_info})
+      
 
 
 def load_csv():
@@ -695,6 +644,7 @@ def get_ranges():
 #model for cost ai page
 def read_min_max_values():
             df = pd.read_csv('min-maxvalues.csv')
+            
 
             return {
                 'ash': {
@@ -735,10 +685,13 @@ def read_min_max_values():
                 'cost_weightage': df['cost_weightage'].iloc[0],
                 'coke_quality': df['coke_quality'].iloc[0]
             }
+            
 
 min_max_values = read_min_max_values()
+        
 
 
+file_path = 'training_data_file.csv'
 file_path = 'submitted_training_coal_data.csv'
 coal_percentages = []
 coal_properties = []
@@ -775,11 +728,13 @@ with open(file_path, 'r') as file:
 
                         coal_property_values = [float(val) if val != 'nan' else 0 for val in row[4].strip('{}').replace(', ', ',').split(',')]
                         coal_properties.append(coal_property_values[:15])
+                        
 
                         if row[6].strip('{}') != '{nan}':
                             coke_output = [float(val) if val != 'nan' else 0 for val in row[6].strip('{}').replace(', ', ',').split(',')]
                             last_coke_output = coke_output
                         coke_outputs.append(last_coke_output)
+                        
 
                         if row[7].strip('{}') != '{nan}':
                             process_params_str = row[7].replace("'", '"')
@@ -791,11 +746,13 @@ with open(file_path, 'r') as file:
                             except json.JSONDecodeError:
                                 last_process_params = [0] * len(process_parameter_keys)
                         process_parameters.append(last_process_params)
+                        
 
                         if row[5].strip('{}') != '{nan}':
                             blend_values = [float(val) if val != 'nan' else 0 for val in row[5].strip('{}').replace(', ', ',').split(',')]
                             last_blend_values = blend_values
                         blends.append(last_blend_values)
+                        
 
                         processed_serial_numbers.add(serial_number)
                     else:
@@ -818,29 +775,74 @@ coke_output = [np.array(row) for row in coke_outputs]
 for i in range(len(coke_output)):
             coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
 D= np.loadtxt('coal_percentages.csv', delimiter=',')  
-print(D);
-
-
-
+P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',')  
 Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
+
+def get_coal_properties(company_id=1):
+    url = "http://3.111.89.109:3000/api/getCoalProperties"
+    payload = { "companyId": company_id }
+
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        result = response.json()
+        
+        coal_data = result[0]["CoalData"]["CoalProperties"]
+        df = pd.DataFrame(coal_data)
+        df = df.astype(str)
+        df.columns = range(df.shape[1])
+
+        return df
+    except Exception as e:
+        print("Error fetching coal properties:", e)
+        return pd.DataFrame()
+    
+data1 = get_coal_properties(company_id=1) 
+print(data1)     
+
 data1 = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')       
 I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data1.shape[1] - 2)) 
 D_tensor = tf.constant(D, dtype=tf.float32)
+P_tensor = tf.constant(P, dtype=tf.float32)
 daily_vectors = []
-
+for i in range(D_tensor.shape[0]):
+            row_vector = []
+            for j in range(P_tensor.shape[1]):
+                product_vector = tf.multiply(D_tensor[i], P_tensor[:, j])
+                row_vector.append(product_vector)
+            daily_vectors.append(tf.stack(row_vector))
 daily_vectors_tensor = tf.stack(daily_vectors)        
 input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
 daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(52, -1) 
 Blended_coal_parameters = np.loadtxt('blended_coal_data.csv', delimiter=',')
-      
+input_train, input_test, target_train, target_test = train_test_split(
+            daily_vectors_tensor.numpy(), Blended_coal_parameters, test_size=0.2, random_state=42
+        )       
 input_scaler = MinMaxScaler()
 output_scaler = MinMaxScaler()
+        
+
+input_train_reshaped = input_train.reshape(input_train.shape[0], -1)
+input_test_reshaped = input_test.reshape(input_test.shape[0], -1)
+        
+
+input_train_scaled = input_scaler.fit_transform(input_train_reshaped)
+input_test_scaled = input_scaler.transform(input_test_reshaped)
+input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
+input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
+        
+        
 
 
+target_train_scaled = output_scaler.fit_transform(target_train)
+target_test_scaled = output_scaler.transform(target_test)
+        
 
-
-
-
+input_train_scaled = input_train_scaled.reshape(input_train.shape)
+input_test_scaled = input_test_scaled.reshape(input_test.shape)
+input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
+input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
+        
 
         # Define model
 modelq = keras.Sequential([
@@ -850,39 +852,50 @@ layers.BatchNormalization(),
 layers.Dense(512, activation='relu'),
 layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
 layers.LayerNormalization(),
+        
 
 layers.Dense(256, activation='tanh'),
 layers.Dropout(0.3),
 layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
 layers.Dropout(0.3),
+        
 
 layers.Dense(128, activation='relu'),
 layers.BatchNormalization(),
 layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
 layers.LayerNormalization(),
+        
 
 layers.Dense(64, activation='relu'),
 layers.Dropout(0.2),
+        
 
 layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
 layers.Dropout(0.25),
+        
 
 layers.Dense(32, activation='relu'),
 layers.BatchNormalization(),
+        
 
 layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
 layers.LayerNormalization(),
 layers.Dense(15, activation='linear')
         ])
+        
 
 modelq.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                     loss='mse',
                     metrics=['mae'])
 modelq.summary()
+        
+        
 
 
         # modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8, validation_data=(input_test_scaled, target_test_scaled))
-
+y_pred = modelq.predict(input_test_scaled)
+y_pred = output_scaler.inverse_transform(y_pred)
+mse = np.mean((target_test - y_pred) ** 2)
 input__scaler = MinMaxScaler()
 output__scaler = MinMaxScaler()        
 rf_model= keras.Sequential([
@@ -892,78 +905,50 @@ rf_model= keras.Sequential([
             layers.Dense(512, activation='relu'),
             layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
             layers.LayerNormalization(),
+        
 
             layers.Dense(256, activation='tanh'),
             layers.Dropout(0.3),
             layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
             layers.Dropout(0.3),
+        
 
             layers.Dense(128, activation='relu'),
             layers.BatchNormalization(),
             layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
             layers.LayerNormalization(),
+        
 
             layers.Dense(64, activation='relu'),
             layers.Dropout(0.2),
+        
 
             layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
             layers.Dropout(0.25),
+        
 
             layers.Dense(32, activation='relu'),
             layers.BatchNormalization(),
+        
 
             layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
             layers.LayerNormalization(),
             layers.Dense(15, activation='linear')
         ])
+        
 
 rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                     loss='mse',
                     metrics=['mae'])
-
+P_ = P
+P_tensor = tf.constant(P_, dtype=tf.float32)
 daily_vectors = []
 differences = []
 coal_costs = []
+        
 
 @app.route('/cost', methods=['POST'])
 def cost():
-    p =  getCoalPropertiesCSV();
-    P =  np.loadtxt(io.StringIO(p), delimiter=',') 
-    print(P);
-    P_tensor = tf.constant(P, dtype=tf.float32)
-    for i in range(D_tensor.shape[0]):
-            row_vector = []
-            for j in range(P_tensor.shape[1]):
-                product_vector = tf.multiply(D_tensor[i], P_tensor[:, j])
-                row_vector.append(product_vector)
-            daily_vectors.append(tf.stack(row_vector))
-    P_ = P
-    input_train, input_test, target_train, target_test = train_test_split(
-            daily_vectors_tensor.numpy(), Blended_coal_parameters, test_size=0.2, random_state=42
-        ) 
-    input_train_reshaped = input_train.reshape(input_train.shape[0], -1)
-    input_test_reshaped = input_test.reshape(input_test.shape[0], -1)
-    input_train_scaled = input_scaler.fit_transform(input_train_reshaped)
-    input_test_scaled = input_scaler.transform(input_test_reshaped)
-    input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
-    input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
-    target_train_scaled = output_scaler.fit_transform(target_train)
-    target_test_scaled = output_scaler.transform(target_test)
-
-    input_train_scaled = input_train_scaled.reshape(input_train.shape)
-    input_test_scaled = input_test_scaled.reshape(input_test.shape)
-    input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
-    input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
-    y_pred = modelq.predict(input_test_scaled)
-    y_pred = output_scaler.inverse_transform(y_pred)
-    mse = np.mean((target_test - y_pred) ** 2)
-    P_tensor = tf.constant(P_, dtype=tf.float32)
-
-
-
-
-
-
     try:
         data = request.json
         if not data:
@@ -1429,9 +1414,9 @@ def cost():
         import traceback
         error_details = traceback.format_exc()
         app.logger.error(f"Error in cost calculation: {error_details}")
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500 
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500  @app.route('/download-template-properties')
 
-@app.route('/download-template-properties')
+
 def download_template_properties():
     # Define the column headers for the template
     columns = [
@@ -1457,6 +1442,7 @@ def download_template_properties():
         download_name='coal-properties-template.xlsx',
         as_attachment=True
     )
+    
 
 CSV_FILE = 'individual_coal_prop.csv'
 
@@ -1471,6 +1457,7 @@ def write_csv(data):
     with open(CSV_FILE, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(data)
+        
 
 def write1_csv(new_data):
     # Validate that new_data is not None or empty
@@ -1496,6 +1483,7 @@ def get_coal_data():
     data = read_csv()   
     if not data:  
         return jsonify({"error": "CSV file is empty or malformed"}), 400
+    
 
     coal_types = [row[0] for row in data if len(row) > 0] 
     if not coal_types:
@@ -1512,9 +1500,12 @@ def add_coal():
         new_data = request.json.get('data')
         if not new_data:
             return jsonify({'error': 'No data provided'}), 400
+        
+    
 
 
         new_data.append(datetime.now().strftime('%d %B %Y'))
+        
 
         write1_csv(new_data)
         return jsonify({'message': 'Data added successfully'}), 200
@@ -1545,8 +1536,10 @@ def modify_coal():
     else:
         return jsonify({'message': 'Invalid coal index'}), 400
 
+    
 
 #min-max page
+    
 
 MINMAX_FILE_PATH = 'min-maxvalues.csv'
 
@@ -1581,4 +1574,3 @@ def min_max():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-
