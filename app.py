@@ -1274,7 +1274,7 @@ def cost():
         best_combined_blended_coal = None
         best_combined_cost = float('inf')
         best_combined_score = float('-inf')
-        p = get_coal_properties_csv()
+        p = get_coal_properties_csv().strip()
         reader = csv.reader(io.StringIO(p))
         print(p)
 
