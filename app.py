@@ -915,7 +915,7 @@ p_padded = "\n".join(padded_lines)
 print(p_padded)
 
 # 5) Now load it safely with numpy
-P = np.loadtxt("individual_coal_properties.csv", delimiter=',')
+P = np.loadtxt("Individual_coal_properties.csv", delimiter=',')
 data1 = csv.reader(io.StringIO(p))
 print(p)
 
