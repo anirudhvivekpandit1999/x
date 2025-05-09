@@ -1279,7 +1279,7 @@ def cost():
         print(p)
 
         coal_cost_map = {
-    row[0]: float(row[-1])   # CoalName → CostPerTonRs
+    row[0]: float(row[17])   # CoalName → CostPerTonRs
     for row in reader
 }        
         coal_costs = np.array([coal_cost_map.get(coal_type, 0.0) for coal_type in coal_types])
