@@ -1,3 +1,4 @@
+import binascii
 import hashlib
 import hmac
 import subprocess
@@ -29,6 +30,12 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 from tensorflow.keras import layers  # type: ignore
 import requests
+import json
+import base64
+import binascii
+import requests
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
 
 
 app = Flask(__name__)
@@ -45,7 +52,120 @@ def verify_signature(req):
         if not hmac.compare_digest(mac.hexdigest(), sig):
             abort(400)
 
+def encrypt_data(data):
+    """
+    Encrypt data using AES-CBC with PKCS7 padding.
+    
+    Args:
+        data: Any JSON-serializable object
+        
+    Returns:
+        Hex string of encrypted data
+    """
+    # Secret key and IV - same as in JavaScript version
+    secret_key = b'qwertyuiopasdfghjklzxcvbnm123456'
+    iv = b'1234567890123456'
+    
+    # Convert data to JSON string and encode as bytes
+    json_str = json.dumps(data)
+    json_bytes = json_str.encode('utf-8')
+    
+    # Create cipher object and encrypt
+    cipher = AES.new(secret_key, AES.MODE_CBC, iv)
+    padded = pad(json_bytes, AES.block_size)
+    encrypted_bytes = cipher.encrypt(padded)
+    
+    # Convert to hex string (equivalent to Base64→Hex in JS version)
+    hex_str = binascii.hexlify(encrypted_bytes).decode('utf-8')
+    
+    return hex_str
 
+def decrypt_data(encrypted_hex_data):
+    """
+    Decrypt AES-CBC encrypted hex data.
+    
+    Args:
+        encrypted_hex_data: Hex string of encrypted data
+        
+    Returns:
+        Decrypted object or None if decryption fails
+    """
+    try:
+        # Secret key and IV - same as in JavaScript version
+        secret_key = b'qwertyuiopasdfghjklzxcvbnm123456'
+        iv = b'1234567890123456'
+        
+        # Input validation
+        if not encrypted_hex_data or len(encrypted_hex_data) < 16:
+            print("⚠️ Encrypted data is missing or too short:", encrypted_hex_data)
+            return None
+        
+        # Convert hex to bytes
+        encrypted_bytes = binascii.unhexlify(encrypted_hex_data)
+        
+        # Create cipher object and decrypt
+        cipher = AES.new(secret_key, AES.MODE_CBC, iv)
+        decrypted_bytes = unpad(cipher.decrypt(encrypted_bytes), AES.block_size)
+        
+        # Convert bytes to string and parse JSON
+        decrypted_str = decrypted_bytes.decode('utf-8')
+        
+        try:
+            return json.loads(decrypted_str)
+        except json.JSONDecodeError as json_err:
+            print(f"❌ JSON parse failed. Decrypted string: {decrypted_str}")
+            raise json_err
+            
+    except Exception as error:
+        print(f"❌ Decryption error: {str(error)}")
+        return None
+
+def post_encrypted(endpoint, data):
+    """
+    Post encrypted data to an endpoint and return decrypted response.
+    
+    Args:
+        endpoint: URL endpoint to post to
+        data: Data to encrypt and send
+        
+    Returns:
+        Decrypted response data
+    """
+    try:
+        # Encrypt the payload
+        encrypted_payload = encrypt_data(data)
+        
+        # Send request
+        response = requests.post(endpoint, json={"encryptedData": encrypted_payload})
+        response_data = response.json()
+        
+        # Extract encrypted response
+        encrypted_response = response_data.get('response')
+        
+        # Decrypt the response
+        decrypted_response = decrypt_data(encrypted_response)
+        
+        # Process the result similar to JS version
+        if decrypted_response and isinstance(decrypted_response, list) and len(decrypted_response) > 0 and isinstance(decrypted_response[0], dict):
+            result_row = decrypted_response[0]
+        else:
+            result_row = decrypted_response
+            
+        return result_row or {}
+        
+    except Exception as error:
+        print(f"🚨 Secure POST Error: {str(error)}")
+        raise error
+    
+def get_coal_properties_csv():
+    response = post_encrypted('http://3.111.89.109:3000/api/getCoalPropertiescsv',{"companyId":1})
+    
+    x = response
+    y = x[0][0]['csv_output']
+    csv_rows = y.split('\n')
+    csv_output = '\n'.join(csv_rows)
+    print(csv_output)
+    return csv_output
 
 @app.route('/')
 def index():
@@ -774,34 +894,34 @@ conv_matrix = blendY + process_par
 coke_output = [np.array(row) for row in coke_outputs]
 for i in range(len(coke_output)):
             coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
-D= np.loadtxt('coal_percentages.csv', delimiter=',')  
-P =  np.loadtxt('Individual_coal_properties.csv', delimiter=',')  
+D= np.loadtxt('coal_percentages.csv', delimiter=',')
+p = get_coal_properties_csv().strip()
+
+
+# 2) Split into lines
+lines = p.splitlines()
+
+# 3) Prefix every line with "0,"
+#    and for the FIRST line also suffix ",0"
+padded_lines = []
+for idx, line in enumerate(lines):
+    new_line = line
+    if idx == 0:
+        new_line += ",0"
+    padded_lines.append(new_line)
+
+# 4) Re-join into a single CSV string
+p_padded = "\n".join(padded_lines)
+print(p_padded)
+
+# 5) Now load it safely with numpy
+P = np.loadtxt("individual_coal_properties.csv", delimiter=',')
+data1 = csv.reader(io.StringIO(p))
+print(p)
+
 Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
 
-def get_coal_properties(company_id=1):
-    url = "http://3.111.89.109:3000/api/getCoalProperties"
-    payload = { "companyId": company_id }
 
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        result = response.json()
-        
-        coal_data = result[0]["CoalData"]["CoalProperties"]
-        df = pd.DataFrame(coal_data)
-        df = df.astype(str)
-        df.columns = range(df.shape[1])
-
-        return df
-    except Exception as e:
-        print("Error fetching coal properties:", e)
-        return pd.DataFrame()
-    
-data1 = get_coal_properties(company_id=1) 
-print(data1)     
-
-data1 = pd.read_csv('individual_coal_prop.csv', dtype=str,header=None, on_bad_lines='skip')       
-I = np.loadtxt('individual_coal_prop.csv', delimiter=',', usecols=range(1, data1.shape[1] - 2)) 
 D_tensor = tf.constant(D, dtype=tf.float32)
 P_tensor = tf.constant(P, dtype=tf.float32)
 daily_vectors = []
@@ -1154,9 +1274,14 @@ def cost():
         best_combined_blended_coal = None
         best_combined_cost = float('inf')
         best_combined_score = float('-inf')
-        
+        p = get_coal_properties_csv()
+        reader = csv.reader(io.StringIO(p))
+        print(p)
 
-        coal_cost_map = {row[0]: float(row[-2]) for row in data1.itertuples(index=False)}
+        coal_cost_map = {
+    row[0]: float(row[-1])   # CoalName → CostPerTonRs
+    for row in reader
+}        
         coal_costs = np.array([coal_cost_map.get(coal_type, 0.0) for coal_type in coal_types])
         
 
@@ -1414,7 +1539,9 @@ def cost():
         import traceback
         error_details = traceback.format_exc()
         app.logger.error(f"Error in cost calculation: {error_details}")
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500  @app.route('/download-template-properties')
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+@app.route('/download-template-properties')
 
 
 def download_template_properties():
