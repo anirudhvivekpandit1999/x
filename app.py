@@ -177,6 +177,17 @@ def get_coal_percentages_csv():
 
     return csv_output
 
+def get_Individual_coal_properties_csv():
+    response = post_encrypted('http://3.111.89.109:3000/api/getIndividualCoalPropertiescsv',{"companyId":1})
+
+    x = response
+    y = x[0][0]['csv_output']
+    csv_rows = y.split('\n')
+    csv_output = '\n'.join(csv_rows)
+    print(csv_output)
+
+    return csv_output
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -926,7 +937,8 @@ p_padded = "\n".join(padded_lines)
 print(p_padded)
 
 # 5) Now load it safely with numpy
-P = np.loadtxt("Individual_coal_properties.csv", delimiter=',')
+p = get_Individual_coal_properties_csv()
+P = np.loadtxt(io.StringIO(p), delimiter=',')
 data1 = csv.reader(io.StringIO(p))
 print(p)
 
