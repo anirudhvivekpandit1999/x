@@ -188,6 +188,17 @@ def get_Individual_coal_properties_csv():
 
     return csv_output
 
+def get_coke_properties_csv():
+    response = post_encrypted('http://3.111.89.109:3000/api/getCokePropertiescsv',{"companyId":1})
+
+    x = response
+    y = x[0][0]['csv_output']
+    csv_rows = y.split('\n')
+    csv_output = '\n'.join(csv_rows)
+    print(csv_output)
+
+    return csv_output
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -941,8 +952,8 @@ p = get_Individual_coal_properties_csv()
 P = np.loadtxt(io.StringIO(p), delimiter=',')
 data1 = csv.reader(io.StringIO(p))
 print(p)
-
-Coke_properties = np.loadtxt('coke_properties.csv', delimiter=',')
+coke_properties = get_coke_properties_csv()
+Coke_properties = np.loadtxt(io.StringIO(coke_properties), delimiter=',')
 
 
 D_tensor = tf.constant(D, dtype=tf.float32)
