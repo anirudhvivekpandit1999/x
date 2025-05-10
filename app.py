@@ -166,6 +166,16 @@ def get_coal_properties_csv():
     csv_output = '\n'.join(csv_rows)
     print(csv_output)
     return csv_output
+def get_coal_percentages_csv():
+    response = post_encrypted('http://3.111.89.109:3000/api/getCoalPercentagescsv',{"companyId":1})
+
+    x = response
+    y = x[0][0]['csv_output']
+    csv_rows = y.split('\n')
+    csv_output = '\n'.join(csv_rows)
+    print(csv_output)
+
+    return csv_output
 
 @app.route('/')
 def index():
@@ -894,7 +904,8 @@ conv_matrix = blendY + process_par
 coke_output = [np.array(row) for row in coke_outputs]
 for i in range(len(coke_output)):
             coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
-D= np.loadtxt('coal_percentages.csv', delimiter=',')
+d = get_coal_percentages_csv()            
+D= np.loadtxt(io.StringIO(d), delimiter=',')
 p = get_coal_properties_csv().strip()
 
 
