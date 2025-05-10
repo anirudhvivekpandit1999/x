@@ -212,6 +212,17 @@ def get_blended_coal_properties_csv():
     return csv_output
 
 
+def get_non_recovery_stamp_charge_csv():
+    response = post_encrypted('http://3.111.89.109:3000/api/getNonRecoveryStampChargecsv',{"companyId":1})
+
+    x = response
+    y = x[0][0]['csv_output']
+    csv_rows = y.split('\n')
+    csv_output = '\n'.join(csv_rows)
+    print(csv_output)
+
+    return csv_output
+
 
 @app.route('/')
 def index():
@@ -1172,11 +1183,11 @@ def cost():
 
         proces_para = data.get("processParameters", {})
         
-
+        aniru = get_non_recovery_stamp_charge_csv()
         process_parameter_files = {
             1: 'Process_parameter_for_Rec_Top_Char.csv',
             2: 'Process_parameter_for_Rec_Stam_Char.csv',
-            3: 'Process_parameter_for_Non_Rec_Stam_Char.csv'
+            3: io.StringIO(aniru)
         }
         
 
