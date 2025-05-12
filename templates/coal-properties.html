@@ -543,7 +543,7 @@
     deleteButton.className = "delete-button";
     deleteButton.onclick = async () => {
       try {
-        const response = await postEncrypted('http://3.111.89.109:3000/api/deleteCoalProperties',{p_CoalId : row.CoalId})
+        const response = await postEncrypted('http://3.111.89.109:3000/api/deleteCoalProperties',{p_CoalId : row.CoalId < 15 ?row.CoalId : row.CoalId + 2})
 
         fetchCoalData();
         alert("Deleted Coal");
