@@ -1187,17 +1187,16 @@ const rows = response;
                 const selectedCoal = entry.querySelector('select')?.value;
                 const currentRange = parseFloat(entry.querySelector('input[type="number"]')?.value) || 0;
         
-                if (selectedCoal && window.coalProperties) {
+                if (selectedCoal && currentRange > 0 && window.coalProperties) {
                     // Find the coal object that matches the selected type
-                    const coal = window.coalProperties.find(c => c.Type === selectedCoal);
+                    const coal = window.coalProperties.find(row => row.CoalName === selectedCoal);
         
-                    if (coal && coal.Cost) {
-                        const cost = parseFloat(coal.Cost);
+                    if (coal) {
+                        const cost = parseFloat(coal.CostPerTonRs);
                         totalCost += (cost * currentRange) / 100;
                     }
                 }
             });
-        
 
             return totalCost.toFixed(2);
         }
