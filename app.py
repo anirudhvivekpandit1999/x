@@ -222,8 +222,18 @@ def get_non_recovery_stamp_charge_csv():
     print(csv_output)
 
     return csv_output
+def get_coal_count():
+    response = post_encrypted('http://3.111.89.109:3000/api/getCoalCount',{"companyId":1})
 
+    x = response
+    y = x[0][0]['csv_output']
+    print("y",y)
 
+    
+
+    return y
+
+coal_count_number = get_coal_count()
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -898,7 +908,7 @@ for i in range(len(coke_output)):
             coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
 d = get_coal_percentages_csv()            
 D= np.loadtxt(io.StringIO(d), delimiter=',')
-p = get_coal_properties_csv().strip()
+p = get_coal_properties_csv().strip()   
 
 
 # 2) Split into lines
@@ -937,7 +947,7 @@ for i in range(D_tensor.shape[0]):
                 row_vector.append(product_vector)
             daily_vectors.append(tf.stack(row_vector))
 daily_vectors_tensor = tf.stack(daily_vectors)        
-input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
+input_data = tf.reshape(daily_vectors_tensor, [-1,coal_count_number ])
 daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(52, -1)
 anir = get_blended_coal_properties_csv()
 Blended_coal_parameters = np.loadtxt(io.StringIO(anir), delimiter=',')
@@ -954,8 +964,8 @@ input_test_reshaped = input_test.reshape(input_test.shape[0], -1)
 
 input_train_scaled = input_scaler.fit_transform(input_train_reshaped)
 input_test_scaled = input_scaler.transform(input_test_reshaped)
-input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
-input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
+input_train_scaled = input_train_scaled.reshape(-1, coal_count_number, 15)
+input_test_scaled = input_test_scaled.reshape(-1, coal_count_number, 15)
         
         
 
@@ -966,13 +976,13 @@ target_test_scaled = output_scaler.transform(target_test)
 
 input_train_scaled = input_train_scaled.reshape(input_train.shape)
 input_test_scaled = input_test_scaled.reshape(input_test.shape)
-input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
-input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
+input_train_scaled = input_train_scaled.reshape(-1, coal_count_number, 15)
+input_test_scaled = input_test_scaled.reshape(-1, coal_count_number, 15)
         
 
         # Define model
 modelq = keras.Sequential([
-layers.Input(shape=(14, 15)),
+layers.Input(shape=(coal_count_number, 15)),
 layers.Flatten(),
 layers.BatchNormalization(),
 layers.Dense(512, activation='relu'),
@@ -1094,7 +1104,7 @@ def cost():
         max_percentages = np.array([int(blk["maxPercentage"]) for blk in coal_blends])
         
 
-        pad_size = 14 - coal_count
+        pad_size = coal_count_number - coal_count
         min_percentages_padded = np.pad(min_percentages, (0, pad_size), 'constant')
         max_percentages_padded = np.pad(max_percentages, (0, pad_size), 'constant')
         
@@ -1105,7 +1115,7 @@ def cost():
         
 
         oneblends = data.get('blendcoal', [])
-        user_input_values_padded = np.zeros(14)
+        user_input_values_padded = np.zeros(coal_count_number)
         
 
         if oneblends:
@@ -1174,7 +1184,7 @@ def cost():
             
 
             if min_required > target_sum:
-                return np.empty((0, 14))  
+                return np.empty((0, coal_count_number))  
             
 
             def generate_batch():
@@ -1187,7 +1197,7 @@ def cost():
                         for v1 in v1_values:
                             v2 = target_sum - v1
                             if min_vals[1] <= v2 <= max_vals[1]:
-                                combo = np.zeros(14)
+                                combo = np.zeros(coal_count_number)
                                 combo[0] = v1
                                 combo[1] = v2
                                 combinations_batch.append(combo)
@@ -1203,7 +1213,7 @@ def cost():
                             for v2 in v2_values:
                                 v3 = target_sum - v1 - v2
                                 if min_vals[2] <= v3 <= max_vals[2]:
-                                    combo = np.zeros(14)
+                                    combo = np.zeros(coal_count_number)
                                     combo[0] = v1
                                     combo[1] = v2
                                     combo[2] = v3
@@ -1236,7 +1246,7 @@ def cost():
 
                         if min_vals[coal_count - 1] <= current[coal_count - 1] + remaining <= max_vals[coal_count - 1]:
                             current[coal_count - 1] += remaining
-                            padded = np.zeros(14)
+                            padded = np.zeros(coal_count_number)
                             padded[:coal_count] = current
                             combinations_batch.append(padded)
                     
@@ -1358,7 +1368,7 @@ def cost():
 
             b1 = daily_vectors.numpy().reshape(daily_vectors.shape[0], -1)
             b1_scaled = input_scaler.transform(b1)
-            b1_reshaped = b1.reshape(-1, 14, 15)
+            b1_reshaped = b1.reshape(-1, coal_count_number, 15)
             
 
             prediction_batch_size = min(128, len(b1_reshaped))
@@ -1516,7 +1526,7 @@ def cost():
             
 
             user_vectors_reshaped = user_daily_vectors.numpy().reshape(1, -1)
-            user_vectors_scaled = input_scaler.transform(user_vectors_reshaped).reshape(-1, 14, 15)
+            user_vectors_scaled = input_scaler.transform(user_vectors_reshaped).reshape(-1, coal_count_number, 15)
             
 
             user_prediction_scaled = modelq.predict(user_vectors_scaled)
