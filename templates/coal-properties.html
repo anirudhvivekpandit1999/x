@@ -543,7 +543,7 @@
     deleteButton.className = "delete-button";
     deleteButton.onclick = async () => {
       try {
-        const response = await postEncrypted('http://3.111.89.109:3000/api/deleteCoalProperties',{p_CoalId : row.CoalId < 15 ?row.CoalId : row.CoalId + 2})
+        const response = await postEncrypted('http://3.111.89.109:3000/api/deleteCoalProperties',{p_CoalId : row.CoalId < 15 ?row.CoalId : row.CoalId + 3})
 
         fetchCoalData();
         alert("Deleted Coal");
@@ -604,32 +604,32 @@
         const companyId = 1; // Replace with actual companyId logic
 
         const modifiedCoalData = {
-          p_CoalId: coalId,
-          p_Ash: parseFloat(document.getElementById("ash").value),
-          p_VolatileMatter: parseFloat(document.getElementById("volatile_matter").value),
-          p_Moisture: parseFloat(document.getElementById("moisture").value),
-          p_MaxContraction: parseFloat(document.getElementById("max_contraction").value),
-          p_MaxExpansion: parseFloat(document.getElementById("max_expansion").value),
-          p_Maxfluidityddpm: parseFloat(document.getElementById("max_fluidity").value),
-          p_MMR: parseFloat(document.getElementById("mmr").value),
-          p_HGI: parseFloat(document.getElementById("hgi").value),
-          p_SofteningTemperaturec: parseFloat(document.getElementById("softening_temp").value),
-          p_ResolidificationTempRangeMinc: parseFloat(document.getElementById("resolidification_min").value),
-          p_ResolidificationTempRangeMaxc: parseFloat(document.getElementById("resolidification_max").value),
-          p_PlasticRangec: parseFloat(document.getElementById("plastic_range").value),
-          p_Sulphur: parseFloat(document.getElementById("sulphur").value),
-          p_Phosphorous: parseFloat(document.getElementById("phosphorous").value),
-          p_CSN: parseFloat(document.getElementById("csn").value),
-          p_CostPerTonRs: parseFloat(document.getElementById("cost").value),
-          p_FileId: 1,
-          p_CompanyId: 1,
-          p_CoalName: document.getElementById("coal").value
-        };
-
-        try {
+  p_CoalId: coalId,
+  p_CoalName: document.getElementById("coal").value,
+  p_ColumnNames: "Ash,VolatileMatter,Moisture,MaxContraction,MaxExpansion,Maxfluidityddpm,MMR,HGI,SofteningTemperaturec,ResolidificationTempRangeMinc,ResolidificationTempRangeMaxc,PlasticRangec,Sulphur,Phosphorous,CSN,CostPerTonRs",
+  p_Values: [
+    parseFloat(document.getElementById("ash").value),
+    parseFloat(document.getElementById("volatile_matter").value),
+    parseFloat(document.getElementById("moisture").value),
+    parseFloat(document.getElementById("max_contraction").value),
+    parseFloat(document.getElementById("max_expansion").value),
+    parseFloat(document.getElementById("max_fluidity").value),
+    parseFloat(document.getElementById("mmr").value),
+    parseFloat(document.getElementById("hgi").value),
+    parseFloat(document.getElementById("softening_temp").value),
+    parseFloat(document.getElementById("resolidification_min").value),
+    parseFloat(document.getElementById("resolidification_max").value),
+    parseFloat(document.getElementById("plastic_range").value),
+    parseFloat(document.getElementById("sulphur").value),
+    parseFloat(document.getElementById("phosphorous").value),
+    parseFloat(document.getElementById("csn").value),
+    parseFloat(document.getElementById("cost").value)
+  ].join(",") // Converts array to "11.5,22.1,..."
+};
+        try { 
           const response = await postEncrypted(
             "http://3.111.89.109:3000/api/updateCoalProperties",
-            modifiedCoalData
+            {"p_CoalId":coalId ,"p_CoalName":document.getElementById("coal").value ,"p_ColumnNames":modifiedCoalData.p_ColumnNames, "p_Values":modifiedCoalData.p_Values}
           );
 
           fetchCoalData(); // Refresh table
