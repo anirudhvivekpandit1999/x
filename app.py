@@ -1142,7 +1142,7 @@ def cost():
         process_parameter_files = {
             1: 'Process_parameter_for_Rec_Top_Char.csv',
             2: 'Process_parameter_for_Rec_Stam_Char.csv',
-            3: 'Process_parameter_for_Rec_Top_Char.csv'
+            3: 'Process_parameter_for_Non_Rec_Stam_Char.csv'
         }
         
 
@@ -1153,11 +1153,13 @@ def cost():
 
         Conv_matrix = Blended_coal_parameters + Process_parameters
         
-
+        print("Conv_matrix shape:", Conv_matrix.shape)
+        print("Coke_properties shape:", Coke_properties.shape)
         X_train, X_test, y_train, y_test = train_test_split(
             Conv_matrix, Coke_properties, test_size=0.2, random_state=42
         )
-        
+        print("y_test shape:", y_test.shape)
+        print("y_pred_inv shape:", y_pred_inv.shape)
 
         input_train_reshaped = X_train.reshape(X_train.shape[0], -1)
         input_test_reshaped = X_test.reshape(X_test.shape[0], -1)
@@ -1171,7 +1173,7 @@ def cost():
 
         y_pred = rf_model.predict(input_test_scaled)
         y_pred_inv = output_scaler.inverse_transform(y_pred)
-        
+        mse = np.mean(np.square(y_test - y_pred_inv))
         
 
         def generate_combinations_batch(min_vals, max_vals, coal_count, target_sum=100, batch_size=1000):
