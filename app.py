@@ -1142,7 +1142,7 @@ def cost():
         process_parameter_files = {
             1: 'Process_parameter_for_Rec_Top_Char.csv',
             2: 'Process_parameter_for_Rec_Stam_Char.csv',
-            3: io.StringIO(aniru)
+            3: 'Process_parameter_for_Rec_Top_Char.csv'
         }
         
 
