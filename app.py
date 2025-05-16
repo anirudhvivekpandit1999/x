@@ -1171,7 +1171,7 @@ def cost():
 
         y_pred = rf_model.predict(input_test_scaled)
         y_pred_inv = output_scaler.inverse_transform(y_pred)
-        mse = np.mean(np.square(y_test - y_pred_inv))
+        
         
 
         def generate_combinations_batch(min_vals, max_vals, coal_count, target_sum=100, batch_size=1000):
