@@ -1158,8 +1158,7 @@ def cost():
         X_train, X_test, y_train, y_test = train_test_split(
             Conv_matrix, Coke_properties, test_size=0.2, random_state=42
         )
-        print("y_test shape:", y_test.shape)
-        print("y_pred_inv shape:", y_pred_inv.shape)
+        
 
         input_train_reshaped = X_train.reshape(X_train.shape[0], -1)
         input_test_reshaped = X_test.reshape(X_test.shape[0], -1)
@@ -1174,7 +1173,8 @@ def cost():
         y_pred = rf_model.predict(input_test_scaled)
         y_pred_inv = output_scaler.inverse_transform(y_pred)
         mse = np.mean(np.square(y_test - y_pred_inv))
-        
+        print("y_test shape:", y_test.shape)
+        print("y_pred_inv shape:", y_pred_inv.shape)
 
         def generate_combinations_batch(min_vals, max_vals, coal_count, target_sum=100, batch_size=1000):
             """Generate valid combinations in memory-efficient batches"""
