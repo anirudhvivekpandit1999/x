@@ -467,7 +467,7 @@
         const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId:1})
         const data = result[0];
         coalData = data.CoalData.CoalProperties;
-        console.log(coalData);
+        console.log(coalData,"coalData");
         coalTypes = data.CoalData.CoalTypes;
 
         populateCoalDropdown();
@@ -543,7 +543,7 @@
     deleteButton.className = "delete-button";
     deleteButton.onclick = async () => {
       try {
-        const response = await postEncrypted('http://3.111.89.109:3000/api/deleteCoalProperties',{p_CoalId : row.CoalId})
+        const response = await postEncrypted('http://3.111.89.109:3000/api/deleteCoalProperties',{p_CoalId : row.coal})
 
         fetchCoalData();
         alert("Deleted Coal");
