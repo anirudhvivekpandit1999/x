@@ -230,7 +230,8 @@
     <thead>
       <tr>
         <th>Index</th>
-        <th>Coal</th>
+        <th>Coal Name</th>
+        <th>Type of Coal</th>
         <th>Ash (%)</th>
         <th>Volatile Matter (%)</th>
         <th>Moisture (%)</th>
@@ -267,6 +268,7 @@
         <!-- Coal options will be dynamically populated here --></select><br />
 
       <label for="coal">Coal:</label><input type="text" id="coal" required /><br />
+      <label for="coaltype">Type of Coal:</label><input type="text" id="coaltype" required /><br />
       <label for="ash">Ash (%):</label><input type="number" id="ash" step="0.001" required /><br />
       <label for="volatile_matter">Volatile Matter (%):</label><input type="number" id="volatile_matter" step="0.001"
         required /><br />
@@ -302,6 +304,7 @@
       <span id="closeForm" class="close-btn">&times;</span>
       <h2>Enter Coal Data</h2>
       <label for="add_coal">Coal:</label><input type="text" id="add_coal" required /><br />
+      <label for="add_coaltype">Type of Coal:</label><input type="text" id="add_coaltype" required /><br />
       <label for="add_ash">Ash (%):</label><input type="number" id="add_ash" step="0.01" required /><br />
       <label for="add_volatile_matter">Volatile Matter (%):</label><input type="number" id="add_volatile_matter"
         step="0.01" required /><br />
@@ -502,6 +505,7 @@
 
   const columnOrder = [
     "CoalName",
+    "CoalType",
     "Ash",
     "VolatileMatter",
     "Moisture",
@@ -569,6 +573,7 @@
         const selectedCoal = coalData[selectedIndex];
 
         document.getElementById("coal").value = selectedCoal.CoalName;
+         document.getElementById("coaltype").value = selectedCoal.CoalName;
         document.getElementById("ash").value = selectedCoal.Ash;
         document.getElementById("volatile_matter").value = selectedCoal.VolatileMatter;
         document.getElementById("moisture").value = selectedCoal.Moisture;
@@ -606,8 +611,9 @@
         const modifiedCoalData = {
   p_CoalId: coalId,
   p_CoalName: document.getElementById("coal").value,
-  p_ColumnNames: "Ash,VolatileMatter,Moisture,MaxContraction,MaxExpansion,Maxfluidityddpm,MMR,HGI,SofteningTemperaturec,ResolidificationTempRangeMinc,ResolidificationTempRangeMaxc,PlasticRangec,Sulphur,Phosphorous,CSN,CostPerTonRs",
+  p_ColumnNames: "CoalType,Ash,VolatileMatter,Moisture,MaxContraction,MaxExpansion,Maxfluidityddpm,MMR,HGI,SofteningTemperaturec,ResolidificationTempRangeMinc,ResolidificationTempRangeMaxc,PlasticRangec,Sulphur,Phosphorous,CSN,CostPerTonRs",
   p_Values: [
+    parseFloat(document.getElementById("coaltype").value),
     parseFloat(document.getElementById("ash").value),
     parseFloat(document.getElementById("volatile_matter").value),
     parseFloat(document.getElementById("moisture").value),
@@ -662,6 +668,7 @@
 
     const formFields = [
       "coal",
+      "coaltype",
       "ash",
       "volatile_matter",
       "moisture",
@@ -701,6 +708,7 @@
   const newCoalData = { 
     p_CoalId: null, // Assuming 0 for new insert, or generate dynamically
     p_CoalName: (document.getElementById("add_coal").value).toString(),
+    p_CoalType: parseFloat(document.getElementById("add_coaltype").value),
     p_Ash: parseFloat(document.getElementById("add_ash").value),
     p_VolatileMatter: parseFloat(document.getElementById("add_volatile_matter").value),
     p_Moisture: parseFloat(document.getElementById("add_moisture").value),
