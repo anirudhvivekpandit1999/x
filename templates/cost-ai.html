@@ -1887,7 +1887,6 @@ const rows = response;
                 }
 
                
-
                 const coalblendPropertyNames = [
                     'Blended Coal Ash (%)', 'Blended Coal VM (%)', 'Blended Coal Moisture (%)', 'Max. Contraction',
                     'Max. Expansion', 'Max. fluidity', 'Crushing index < 3.15mm', 'Crushing Index < 0.5mm',
@@ -1895,21 +1894,39 @@ const rows = response;
                     'Resolidification temp range Max (°C)', 'Plastic range (°C)', 'Sulphur (%)', 'Phosphorous (%)', 'CSN'
                 ];
 
-                const cokePropertyNames = ['ASH', 'VM', 'M_40MM', 'M_10MM', 'CSR', 'CRI', 'AMS'];
+                const cokeDisplayNames = ['ASH (%)', 'VOLATILE MATTER (%)', 'M_40MM (%)', 'M_10MM (%)', 'CSR (%)', 'CRI (%)', 'AMS'];
+
+                const cokePropertyNames = [
+                    'ASH (%)', 'VOLATILE MATTER (%)', 'MOISTURE', 'S_100MM', 'S_80MM (%)', 'S_50MM', 'S_40MM',
+                    'S_30MM', 'S_MINUS_30MM', 'M_40MM (%)', 'M_10MM (%)', 'M_MINUS_10MM (%)',
+                    'CSR (%)', 'CRI (%)', 'AMS'
+                ];
+
+
+                const blendValues = result.ProposedCoal?.Blend2?.[0] ? Object.values(result.ProposedCoal.Blend2[0]) : Array(coalblendPropertyNames.length).fill('N/A');
+                
+                const cokeValues = result.ProposedCoal?.Coke2?.[0] ? Object.values(result.ProposedCoal.Coke2[0]) : Array(cokePropertyNames.length).fill('N/A');
+
+                const cokeDisplayNameMap = {};
+                cokeDisplayNames.forEach((displayName) => {
+                    const index = cokePropertyNames.indexOf(displayName);
+                    cokeDisplayNameMap[displayName] = index;
+                });
 
                 const proposedParameters = [
                     ['Proposed Blended Coal Parameters', 'Value'],
                     ...coalblendPropertyNames.map((param, index) => {
-                        const value = result.ProposedCoal?.Blend2?.[0]?.[param] || 'N/A';
+                        const value = blendValues[index];
                         return [param, value.toFixed ? value.toFixed(2) : value];
                     }),
                     ['', ''],
                     ['Proposed Coke Parameters', 'Value'],
-                    ...cokePropertyNames.map((param, index) => {
-                        const value = result.ProposedCoal?.Coke2?.[0]?.[param] || 'N/A';
-                        return [param, value.toFixed ? value.toFixed(2) : value];
-                    })
-                ];
+                    ...cokeDisplayNames.map((param) => {
+                    const index = cokeDisplayNameMap[param];
+                    const value = cokeValues[index];
+                    return [param, value.toFixed ? value.toFixed(2) : value];
+                })
+            ];
                 // Validate proposedParameters before passing it to aoa_to_sheet
                 if (Array.isArray(proposedParameters) && Array.isArray(proposedParameters[0])) {
                     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(proposedParameters), "Proposed Parameters");
@@ -2010,7 +2027,7 @@ const rows = response;
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(combinedCokeAndProcessData), "Coke and Process Parameters");
 
                 const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-                const blob = new Blob([wbout], { type: 'application/octet-stream' });
+                const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });;
                 saveAs(blob, 'results.xlsx');
             }
 
