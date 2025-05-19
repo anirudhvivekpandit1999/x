@@ -707,8 +707,9 @@
 
   const newCoalData = { 
     p_CoalId: null, // Assuming 0 for new insert, or generate dynamically
+    p_CoalType: (document.getElementById("add_coaltype").value).toString(),
     p_CoalName: (document.getElementById("add_coal").value).toString(),
-    p_CoalType: parseFloat(document.getElementById("add_coaltype").value),
+    
     p_Ash: parseFloat(document.getElementById("add_ash").value),
     p_VolatileMatter: parseFloat(document.getElementById("add_volatile_matter").value),
     p_Moisture: parseFloat(document.getElementById("add_moisture").value),

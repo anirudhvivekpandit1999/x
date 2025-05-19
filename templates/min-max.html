@@ -477,7 +477,7 @@
             };
 
             try {
-                const response = await postEncrypted('http://3.111.89.109:5000/api/updateMinMaxValues', data);
+                const response = await postEncrypted('http://3.111.89.109:3000/api/updateMinMaxValues', data);
                 alert('Data submitted successfully!');
             } catch (error) {
                 alert('Error: ' + error.message);
