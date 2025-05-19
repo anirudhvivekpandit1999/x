@@ -1566,7 +1566,7 @@ def cost():
 def download_template_properties():
     # Define the column headers for the template
     columns = [
-        "Coal", "Ash (%)", "Volatile Matter (%)", "Moisture (%)", "Max. Contraction",
+        "Coal","Type of Coal", "Ash (%)", "Volatile Matter (%)", "Moisture (%)", "Max. Contraction",
         "Max. Expansion", "Max. fluidity (ddpm)", "MMR", "HGI", "Softening temperature (°C)",
         "Resolidification temp range Min (°C)", "Resolidification temp range Max (°C)",
         "Plastic range (°C)", "Sulphur (%)", "Phosphorous (%)", "CSN", "Cost per Ton (Rs.)"

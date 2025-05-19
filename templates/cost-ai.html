@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <style>
@@ -1626,6 +1627,8 @@ const rows = response;
 
                 proposedCoalContainer.appendChild(proposedCoalBox);
 
+                
+
                 // Proposed Coke Container
                 const proposedCokeContainer = document.createElement('div');
                 const proposedCokeTitle = document.createElement('h3');
@@ -1658,13 +1661,14 @@ const rows = response;
                             })
                             .join('');
                     }).join('');
-
                     proposedCokeBox.innerHTML = proposedCokeFormattedResults;
                 } else {
                     proposedCokeBox.innerHTML = '<p>No coke data available.</p>';
                 }
 
                 proposedCokeContainer.appendChild(proposedCokeBox);
+
+                
 
                 // Append both containers to the main result container
                 proposedresultContainer.appendChild(proposedCoalContainer);
@@ -1882,21 +1886,30 @@ const rows = response;
                     }
                 }
 
+               
+
+                const coalblendPropertyNames = [
+                    'Blended Coal Ash (%)', 'Blended Coal VM (%)', 'Blended Coal Moisture (%)', 'Max. Contraction',
+                    'Max. Expansion', 'Max. fluidity', 'Crushing index < 3.15mm', 'Crushing Index < 0.5mm',
+                    'Softening temperature (°C)', 'Resolidification temp range Min (°C)',
+                    'Resolidification temp range Max (°C)', 'Plastic range (°C)', 'Sulphur (%)', 'Phosphorous (%)', 'CSN'
+                ];
+
+                const cokePropertyNames = ['ASH', 'VM', 'M_40MM', 'M_10MM', 'CSR', 'CRI', 'AMS'];
 
                 const proposedParameters = [
                     ['Proposed Blended Coal Parameters', 'Value'],
-                    ...coalblendNames.map((param, index) => {
+                    ...coalblendPropertyNames.map((param, index) => {
                         const value = result.ProposedCoal?.Blend2?.[0]?.[param] || 'N/A';
                         return [param, value.toFixed ? value.toFixed(2) : value];
                     }),
                     ['', ''],
                     ['Proposed Coke Parameters', 'Value'],
-                    ...parameterNames.map((param, index) => {
+                    ...cokePropertyNames.map((param, index) => {
                         const value = result.ProposedCoal?.Coke2?.[0]?.[param] || 'N/A';
                         return [param, value.toFixed ? value.toFixed(2) : value];
                     })
                 ];
-
                 // Validate proposedParameters before passing it to aoa_to_sheet
                 if (Array.isArray(proposedParameters) && Array.isArray(proposedParameters[0])) {
                     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(proposedParameters), "Proposed Parameters");
@@ -1996,7 +2009,9 @@ const rows = response;
 
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(combinedCokeAndProcessData), "Coke and Process Parameters");
 
-                XLSX.writeFile(wb, 'results.xlsx');
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/octet-stream' });
+                saveAs(blob, 'results.xlsx');
             }
 
 
