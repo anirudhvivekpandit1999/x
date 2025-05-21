@@ -1,2 +1,2 @@
 ash_lower,ash_upper,ash_weight,vm_lower,vm_upper,vm_weight,m40_lower,m40_upper,m40_weight,m10_lower,m10_upper,m10_weight,csr_lower,csr_upper,csr_weight,cri_lower,cri_upper,cri_weight,ams_lower,ams_upper,ams_weight,cost_weightage,coke_quality
-0,200,1,0,200,1,0,200,1,0,200,1,0,200,1,0,200,1,0,200,1,1,1
+14,17,1,0.5,1,1,90,93,1,5,7,1,65,70,1,22,26,1,53,56,1,1,1
