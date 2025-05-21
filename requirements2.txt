@@ -1,0 +1,10 @@
+pandas
+flask
+flask_cors
+scikit-learn
+flask-mysqldb
+flask_bcrypt
+google-cloud-translate
+beautifulsoup4
+tensorflow
+pycryptodome

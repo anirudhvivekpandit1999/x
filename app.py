@@ -231,6 +231,13 @@ def get_coal_count():
     print("y",y)
     return y
 
+def get_min_max__values_csv():
+    response = post_encrypted('http://3.111.89.109:3000/api/getMinMaxValuescsv',{"companyId":1})
+    print("minmaxvaluesresponse",response)
+    x = response
+    y = x[0][0]['csv_output']
+    print("minmaxvaluescsv",y)
+    return y
 def get_min_max_csv():
     try:
         response = post_encrypted('http://3.111.89.109:3000/api/getMinMaxValues', {"p_CompanyId": 1})
@@ -243,7 +250,7 @@ def get_min_max_csv():
         print("An error occurred:", str(e))
         return None
 
-get_min_max_csv()
+get_min_max__values_csv()
 
 coal_count_number = get_coal_count()
 @app.route('/')
