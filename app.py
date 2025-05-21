@@ -238,19 +238,6 @@ def get_min_max__values_csv():
     y = x[0][0]['csv_output']
     print("minmaxvaluescsv",y)
     return y
-def get_min_max_csv():
-    try:
-        response = post_encrypted('http://3.111.89.109:3000/api/getMinMaxValues', {"p_CompanyId": 1})
-        
-        print("Raw response from endpoint:")
-        print(response)
-
-        return response  # You can return this or just inspect via print
-    except Exception as e:
-        print("An error occurred:", str(e))
-        return None
-
-get_min_max__values_csv()
 
 coal_count_number = get_coal_count()
 @app.route('/')
@@ -786,11 +773,34 @@ def read_min_max_values():
             }
             
 
-min_max_values = read_min_max_values()
-        
+min_max_values = get_min_max__values_csv()
+print(type(min_max_values))
+print(min_max_values)
+
+csv_str = get_min_max__values_csv()
+values = list(map(float, csv_str.strip().split(',')))
+
+property_names = ['ash', 'vm', 'm40', 'csr', 'cri', 'm10', 'ams', 'coke_quality', 'cost_weightage']
+min_max_values = {}
+
+i = 0
+for name in property_names:
+    if name in ['coke_quality', 'cost_weightage']:
+        min_max_values[name] = {
+            'weight': values[i]
+        }
+        i += 1
+    else:
+        min_max_values[name] = {
+            'lower': values[i],
+            'upper': values[i+1],
+            'weight': values[i+2]
+        }
+        i += 3
 
 
-file_path = 'submitted_training_coal_data.csv'
+
+file_path = 'training_data_file.csv'
 
 coal_percentages = []
 coal_properties = []
@@ -1362,7 +1372,7 @@ def cost():
             cri_mask = (min_max_values['cri']['lower'] <= predictions[:, 13]) & (predictions[:, 13] <= min_max_values['cri']['upper'])
             ams_mask = (min_max_values['ams']['lower'] <= predictions[:, 14]) & (predictions[:, 14] <= min_max_values['ams']['upper'])
             
-
+            
             valid_mask = ash_mask & vm_mask & m40_mask & m10_mask & csr_mask & cri_mask & ams_mask
             valid_indices = np.where(valid_mask)[0]
             
