@@ -228,9 +228,14 @@ def get_coal_count():
     x = response
     y = x[0][0]['csv_output']
     print("y",y)
+    return y
 
-    
-
+def get_min_max_values_csv():
+    response = post_encrypted('http://3.111.89.109:3000/api/getMinMaxValuescsv',{"companyId":1})
+    print("minmaxvaluesresponse",response)
+    x = response
+    y = x[0][0]['csv_output']
+    print("minmaxvaluescsv",y)
     return y
 
 coal_count_number = get_coal_count()
@@ -817,13 +822,36 @@ def read_min_max_values():
                 'cost_weightage': df['cost_weightage'].iloc[0],
                 'coke_quality': df['coke_quality'].iloc[0]
             }
-            
-
-min_max_values = read_min_max_values()
-        
 
 
-file_path = 'submitted_training_coal_data.csv'
+csv_str = get_min_max_values_csv()            
+rows = csv_str.strip().split('\n')
+# Skip the header row
+header_row = rows[0]
+values_row = rows[1] if len(rows) > 1 else ''
+values = list(map(float, values_row.strip().split(',')))
+
+property_names = ['ash', 'vm', 'm40', 'csr', 'cri', 'm10', 'ams', 'coke_quality', 'cost_weightage']
+min_max_values = {}
+
+i = 0
+for name in property_names:
+    if name in ['coke_quality', 'cost_weightage']:
+        min_max_values[name] = {
+            'weight': values[i]
+        }
+        i += 1
+    else:
+        min_max_values[name] = {
+            'lower': values[i],
+            'upper': values[i+1],
+            'weight': values[i+2]
+        }
+        i += 3
+
+print("Ash weight:", min_max_values['ash']['upper'])
+
+file_path = 'training_data_file.csv'
 
 coal_percentages = []
 coal_properties = []
