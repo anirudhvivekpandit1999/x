@@ -166,6 +166,7 @@ def get_coal_properties_csv():
     csv_output = '\n'.join(csv_rows)
     print(csv_output)
     return csv_output
+
 def get_coal_percentages_csv():
     response = post_encrypted('http://3.111.89.109:3000/api/getCoalPercentagescsv',{"companyId":1})
 
@@ -228,10 +229,13 @@ def get_coal_count():
     x = response
     y = x[0][0]['csv_output']
     print("y",y)
-
-    
-
     return y
+
+def get_min_max_csv():
+    response = post_encrypted('http://3.111.89.109:3000/api/getMinMaxValues',{"companyId":1})
+    
+   
+    return response
 
 coal_count_number = get_coal_count()
 @app.route('/')
@@ -768,8 +772,6 @@ def get_ranges():
         print(e)
         return jsonify({'error': str(e)}), 404
 
-
-#model for cost ai page
 
 
 
@@ -1559,10 +1561,10 @@ def cost():
         error_details = traceback.format_exc()
         app.logger.error(f"Error in cost calculation: {error_details}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+    
+    
 
 @app.route('/download-template-properties')
-
-
 def download_template_properties():
     # Define the column headers for the template
     columns = [
