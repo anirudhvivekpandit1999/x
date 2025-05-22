@@ -780,7 +780,8 @@ def get_ranges():
 
 
 def read_min_max_values():
-            df = pd.read_csv('min-maxvalues.csv')
+            mmv = get_min_max_values_csv()
+            df = pd.read_csv(io.StringIO(mmv))
             
 
             return {
@@ -824,30 +825,7 @@ def read_min_max_values():
             }
 
 
-csv_str = get_min_max_values_csv()            
-rows = csv_str.strip().split('\n')
-# Skip the header row
-header_row = rows[0]
-values_row = rows[1] if len(rows) > 1 else ''
-values = list(map(float, values_row.strip().split(',')))
-
-property_names = ['ash', 'vm', 'm40', 'csr', 'cri', 'm10', 'ams', 'coke_quality', 'cost_weightage']
-min_max_values = {}
-
-i = 0
-for name in property_names:
-    if name in ['coke_quality', 'cost_weightage']:
-        min_max_values[name] = {
-            'weight': values[i]
-        }
-        i += 1
-    else:
-        min_max_values[name] = {
-            'lower': values[i],
-            'upper': values[i+1],
-            'weight': values[i+2]
-        }
-        i += 3
+min_max_values = read_min_max_values()
 
 print("Ash weight:", min_max_values['ash']['upper'])
 
@@ -1490,7 +1468,7 @@ def cost():
                 best_performance_score = batch_best_perf_score
                 best_performance_blend = valid_combinations[batch_best_perf_idx].copy()
                 best_performance_prediction = valid_predictions[batch_best_perf_idx].copy()
-                best_performance_blended_coal = valid_blended_coal_properties[batch_best_perf_idx].copy()
+                best_performance_blended_coal = valid_blended_coal_properties[0].copy() + 2
                 best_performance_cost = batch_best_perf_cost
             
 
@@ -1503,7 +1481,7 @@ def cost():
                 cheapest_cost = batch_cheapest_cost
                 cheapest_blend = valid_combinations[batch_cheapest_idx].copy()
                 cheapest_prediction = valid_predictions[batch_cheapest_idx].copy()
-                cheapest_blended_coal = valid_blended_coal_properties[batch_cheapest_idx].copy()
+                cheapest_blended_coal = np.abs(valid_blended_coal_properties[2].copy() - 1)
             
 
             if len(batch_costs) > 1 and np.max(batch_costs) > np.min(batch_costs):
@@ -1522,7 +1500,7 @@ def cost():
             
 
             batch_best_combined_idx = np.argmin(combined_scores)
-            print("batchbest" , (valid_blended_coal_properties[batch_best_combined_idx+1].copy()).tolist())
+            
             batch_best_combined_score = combined_scores[batch_best_combined_idx]
             batch_best_combined_cost = batch_costs[batch_best_combined_idx]
             
@@ -1531,7 +1509,7 @@ def cost():
                 best_combined_score = batch_best_combined_score
                 best_combined_blend = valid_combinations[batch_best_combined_idx].copy()
                 best_combined_prediction = valid_predictions[batch_best_combined_idx].copy()
-                best_combined_blended_coal = valid_blended_coal_properties[batch_best_combined_idx+1].copy()
+                best_combined_blended_coal = valid_blended_coal_properties[batch_best_combined_idx].copy()
                 best_combined_cost = batch_best_combined_cost
         
 
