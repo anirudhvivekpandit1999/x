@@ -829,7 +829,7 @@ min_max_values = read_min_max_values()
 
 print("Ash weight:", min_max_values['ash']['upper'])
 
-file_path = 'training_data_file.csv'
+file_path = 'submitted_training_coal_data.csv'
 
 coal_percentages = []
 coal_properties = []
