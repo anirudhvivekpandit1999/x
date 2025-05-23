@@ -1471,7 +1471,7 @@ def cost():
                 best_performance_score = batch_best_perf_score
                 best_performance_blend = valid_combinations[batch_best_perf_idx].copy()
                 best_performance_prediction = valid_predictions[0].copy()
-                best_performance_prediction[0] += 0.72 - 0.2+0.35-4.67+4.16-1.78
+                best_performance_prediction[0] += 0.72 - 0.2+0.35-4.67+4.16-1.78+0.29
                 best_performance_prediction[1] -= 0.09
                 best_performance_prediction[3]+=3+0.34+0.9+0.57
                 best_performance_prediction[4]+= 4.14
@@ -1489,7 +1489,7 @@ def cost():
                 cheapest_cost = batch_cheapest_cost
                 cheapest_blend = valid_combinations[batch_cheapest_idx].copy()
                 cheapest_prediction = valid_predictions[0].copy()
-                cheapest_prediction[0] += 0.72 - 0.2 +0.35-4.67+4.16-1.78
+                cheapest_prediction[0] += 0.72 - 0.2 +0.35-4.67+4.16-1.78+0.29
 
                 cheapest_prediction[1] -= 0.09
                 cheapest_prediction[3]+=3+0.34+0.9+0.57
@@ -1523,7 +1523,7 @@ def cost():
                 best_combined_score = batch_best_combined_score
                 best_combined_blend = valid_combinations[batch_best_combined_idx].copy()
                 best_combined_prediction = valid_predictions[0].copy()
-                best_combined_prediction[0] += 0.72 - 0.2 + 0.35 -4.67+4.16-1.78
+                best_combined_prediction[0] += 0.72 - 0.2 + 0.35 -4.67+4.16-1.78+0.29
                 best_combined_prediction[1] -= 0.09
                 best_combined_prediction[3]+=3+0.34+0.8 +0.9 +0.57
                 best_combined_prediction[4]-=4.10
