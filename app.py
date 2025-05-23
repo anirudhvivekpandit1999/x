@@ -1396,13 +1396,13 @@ def cost():
             print("predictions at fancy 0",predictions[:, 0])
             print("1397",min_max_values['ash']['lower'] )
             print("13972",min_max_values['ash']['upper'])
-            ash_mask = (min_max_values['ash']['lower'] -min_max_values['ash']['lower']  <= predictions[0]) & (predictions[0] <= min_max_values['ash']['upper'] )
-            vm_mask = (min_max_values['vm']['lower'] - min_max_values['vm']['lower'] <= predictions[1]) & (predictions[1] <= min_max_values['vm']['upper'] )
-            m40_mask = (min_max_values['m40']['lower'] - min_max_values['m40']['lower'] <= predictions[9]) & (predictions[9] <= min_max_values['m40']['upper'])
-            m10_mask = (min_max_values['m10']['lower'] - min_max_values['m10']['lower'] <= predictions[10]) & (predictions[10] <= min_max_values['m10']['upper'] )
-            csr_mask = (min_max_values['csr']['lower'] - min_max_values['csr']['lower'] <= predictions[12]) & (predictions[12] <= min_max_values['csr']['upper'] )
-            cri_mask = (min_max_values['cri']['lower'] - min_max_values['cri']['lower']<= predictions[13]) & (predictions[13] <= min_max_values['cri']['upper'] )
-            ams_mask = (min_max_values['ams']['lower'] - min_max_values['ams']['lower'] <= predictions[14]) & (predictions[14] <= min_max_values['ams']['upper'])
+            ash_mask = (min_max_values['ash']['lower'] -min_max_values['ash']['lower']  <= predictions[0]) & (predictions[0] <= min_max_values['ash']['upper'] +min_max_values['ash']['upper'])
+            vm_mask = (min_max_values['vm']['lower'] - min_max_values['vm']['lower'] <= predictions[1]) & (predictions[1] <= min_max_values['vm']['upper'] +min_max_values['vm']['upper'])
+            m40_mask = (min_max_values['m40']['lower'] - min_max_values['m40']['lower'] <= predictions[9]) & (predictions[9] <= min_max_values['m40']['upper'] + min_max_values['m40']['upper'])
+            m10_mask = (min_max_values['m10']['lower'] - min_max_values['m10']['lower'] <= predictions[10]) & (predictions[10] <= min_max_values['m10']['upper']  + min_max_values['m10']['upper'])
+            csr_mask = (min_max_values['csr']['lower'] - min_max_values['csr']['lower'] <= predictions[12]) & (predictions[12] <= min_max_values['csr']['upper'] + min_max_values['csr']['upper'] )
+            cri_mask = (min_max_values['cri']['lower'] - min_max_values['cri']['lower']<= predictions[13]) & (predictions[13] <= min_max_values['cri']['upper'] + min_max_values['cri']['upper'] )
+            ams_mask = (min_max_values['ams']['lower'] - min_max_values['ams']['lower'] <= predictions[14]) & (predictions[14] <= min_max_values['ams']['upper'] + min_max_values['ams']['upper'])
             
             
             
