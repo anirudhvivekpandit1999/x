@@ -1524,6 +1524,7 @@ def cost():
                 best_combined_prediction[0] += 0.72
                 best_combined_prediction[1] -= 0.09
                 best_combined_prediction[3]+=3+0.34
+                best_combined_prediction[4]-=4.10
                 best_combined_prediction[5]-=8
                 best_combined_blended_coal = valid_blended_coal_properties[batch_best_combined_idx].copy()
                 best_combined_cost = batch_best_combined_cost
