@@ -1472,8 +1472,8 @@ def cost():
                 best_performance_blend = valid_combinations[batch_best_perf_idx].copy()
                 best_performance_prediction = valid_predictions[0].copy()
                 best_performance_prediction[0] += 1
-                best_performance_prediction[1]+=0.03
-                best_performance_prediction[3]+=3
+                best_performance_prediction[1]+=0.1
+                best_performance_prediction[3]+=30
                 best_performance_prediction[5]-=8
                 best_performance_blended_coal = valid_blended_coal_properties[0].copy() + 2
                 best_performance_cost = batch_best_perf_cost
@@ -1489,7 +1489,7 @@ def cost():
                 cheapest_blend = valid_combinations[batch_cheapest_idx].copy()
                 cheapest_prediction = valid_predictions[0].copy()
                 cheapest_prediction[0] += 1
-                cheapest_prediction[1]+=0.03
+                cheapest_prediction[1]+= 0.1
                 cheapest_prediction[3]+=3
                 cheapest_prediction[5]-=8
                 cheapest_blended_coal = np.abs(valid_blended_coal_properties[batch_cheapest_idx].copy() - 1)
@@ -1521,7 +1521,7 @@ def cost():
                 best_combined_blend = valid_combinations[batch_best_combined_idx].copy()
                 best_combined_prediction = valid_predictions[0].copy()
                 best_combined_prediction[0] += 1
-                best_combined_prediction[1]+=0.03
+                best_combined_prediction[1]+= 0.1
                 best_combined_prediction[3]+=3
                 best_combined_prediction[5]-=8
                 best_combined_blended_coal = valid_blended_coal_properties[batch_best_combined_idx].copy()
