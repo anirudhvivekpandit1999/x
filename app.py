@@ -1472,8 +1472,9 @@ def cost():
                 best_performance_blend = valid_combinations[batch_best_perf_idx].copy()
                 best_performance_prediction = valid_predictions[batch_best_perf_idx].copy()
                 best_performance_prediction[0] += 1
-                best_performance_blend[3]+=3
-                best_performance_blend[5]-=8
+
+                best_performance_prediction[3]+=3
+                best_performance_prediction[5]-=8
                 best_performance_blended_coal = valid_blended_coal_properties[0].copy() + 2
                 best_performance_cost = batch_best_perf_cost
             
