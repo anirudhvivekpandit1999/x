@@ -915,13 +915,13 @@ def cost():
     I = np.loadtxt(io.StringIO(anir), delimiter=',', usecols=range(1, data.shape[1] - 2))
 
     if Option == 1:
-        Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Rec_Top_Char.csv',
+        Process_parameters = np.loadtxt('Process_parameter_for_Rec_Top_Char.csv',
                                         delimiter=',')
     elif Option == 2:
-        Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Rec_Stam_Char.csv',
+        Process_parameters = np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv',
                                         delimiter=',')
     elif Option == 3:
-        Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Non_Rec_Stam_Char.csv',
+        Process_parameters = np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv',
                                         delimiter=',')
         print("This was running")
     else:
