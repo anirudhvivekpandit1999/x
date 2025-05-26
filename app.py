@@ -1278,7 +1278,7 @@ def cost():
         for j, coal_type in enumerate(coal_types):
             if j < len(blend):
                 # Map the coal type to the CSV file and retrieve the cost
-                coal_type_cost = float(data.loc[data[0] == coal_type, data.columns[-2]].values[0])
+                coal_type_cost = float(data.loc[data[0] == coal_type, data.columns[-1]].values[0])
                 coal_type_costs.append(coal_type_cost)
         coal_costs.append(coal_type_costs)
 
