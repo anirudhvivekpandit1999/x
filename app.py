@@ -971,7 +971,7 @@ def cost():
 
     # Define model
     modelq = keras.Sequential([
-        layers.Input(shape=(14, 15)),
+        layers.Input(shape=(coal_count_number, 15)),
         layers.Flatten(),
         layers.BatchNormalization(),
         layers.Dense(512, activation='relu'),
