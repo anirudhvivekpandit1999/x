@@ -1125,7 +1125,7 @@ def cost():
 
     def read_min_max_values():
         anirud = get_min_max_values_csv()
-        df = pd.read_csv(anirud)
+        df = pd.read_csv(io.StringIO(anirud))
         return {
             'ash': {
                 'lower': df['ash_lower'].iloc[0],
