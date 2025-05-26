@@ -7,6 +7,7 @@
   <title>SmartCoke</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -187,11 +188,11 @@
       border-radius: 4px;
       transition: background-color 0.2s ease-in-out;
     }
-    
+
     .delete-button:hover {
       background-color: #bd2130; /* Darker red on hover */
     }
-    
+
     .delete-button:active {
       transform: scale(0.95); /* Scale down on click */
     }
@@ -305,31 +306,32 @@
       <h2>Enter Coal Data</h2>
       <label for="add_coal">Coal:</label><input type="text" id="add_coal" required /><br />
       <label for="add_coaltype">Type of Coal:</label><input type="text" id="add_coaltype" required /><br />
-      <label for="add_ash">Ash (%):</label><input type="number" id="add_ash" step="0.001" required /><br />
+      <label for="add_ash">Ash (%):</label><input type="number" id="add_ash" step="0.01" required /><br />
       <label for="add_volatile_matter">Volatile Matter (%):</label><input type="number" id="add_volatile_matter"
-        step="0.001" /><br />
-      <label for="add_moisture">Moisture (%):</label><input type="number" id="add_moisture" step="0.001" /><br />
+        step="0.01" required /><br />
+      <label for="add_moisture">Moisture (%):</label><input type="number" id="add_moisture" step="0.01"
+        required /><br />
       <label for="add_max_contraction">Max. Contraction:</label><input type="number" id="add_max_contraction"
-        step="0.001"  /><br />
-      <label for="add_max_expansion">Max. Expansion:</label><input type="number" id="add_max_expansion" step="0.001"
-         /><br />
-      <label for="add_max_fluidity">Max. Fluidity (ddpm):</label><input type="number" id="add_max_fluidity" step="0.001"
-        /><br />
-      <label for="add_mmr">MMR:</label><input type="number" id="add_mmr" step="0.001"  /><br />
-      <label for="add_hgi">HGI:</label><input type="number" id="add_hgi" step="0.001" /><br />
+        step="0.01" required /><br />
+      <label for="add_max_expansion">Max. Expansion:</label><input type="number" id="add_max_expansion" step="0.01"
+        required /><br />
+      <label for="add_max_fluidity">Max. Fluidity (ddpm):</label><input type="number" id="add_max_fluidity" step="0.01"
+        required /><br />
+      <label for="add_mmr">MMR:</label><input type="number" id="add_mmr" step="0.01" required /><br />
+      <label for="add_hgi">HGI:</label><input type="number" id="add_hgi" step="0.01" required /><br />
       <label for="add_softening_temp">Softening Temperature (°C):</label><input type="number" id="add_softening_temp"
-        step="0.001"  /><br />
+        step="0.01" required /><br />
       <label for="add_resolidification_min">Resolidification Temp Range Min (°C):</label><input type="number"
-        id="add_resolidification_min" step="0.001"  /><br />
+        id="add_resolidification_min" step="0.01" required /><br />
       <label for="add_resolidification_max">Resolidification Temp Range Max (°C):</label><input type="number"
-        id="add_resolidification_max" step="0.001"  /><br />
-      <label for="add_plastic_range">Plastic Range (°C):</label><input type="number" id="add_plastic_range" step="0.001"
-         /><br />
-      <label for="add_sulphur">Sulphur (%):</label><input type="number" id="add_sulphur" step="0.001"  /><br />
-      <label for="add_phosphorous">Phosphorous (%):</label><input type="number" id="add_phosphorous" step="0.001"
-         /><br />
-      <label for="add_csn">CSN:</label><input type="number" id="add_csn" step="0.001"  /><br />
-      <label for="add_cost">Cost per Ton (Rs.):</label><input type="number" id="add_cost" step="0.001" /><br />
+        id="add_resolidification_max" step="0.01" required /><br />
+      <label for="add_plastic_range">Plastic Range (°C):</label><input type="number" id="add_plastic_range" step="0.01"
+        required /><br />
+      <label for="add_sulphur">Sulphur (%):</label><input type="number" id="add_sulphur" step="0.01" required /><br />
+      <label for="add_phosphorous">Phosphorous (%):</label><input type="number" id="add_phosphorous" step="0.01"
+        required /><br />
+      <label for="add_csn">CSN:</label><input type="number" id="add_csn" step="0.01" required /><br />
+      <label for="add_cost">Cost per Ton (Rs.):</label><input type="number" id="add_cost" step="0.01" required /><br />
       <button type="submit" id="submitnewCoalData">Submit</button>
     </form>
   </div>
@@ -403,7 +405,7 @@
           throw jsonErr;
         }
       } catch (error) {
-        
+
         return null;
       }
     }
@@ -447,7 +449,7 @@
     }
 
     document.getElementById("downloadcoalfile").addEventListener("click", function () {
-  fetch("http://3.111.89.109:3000/download-template-properties")
+  fetch("http://3.111.89.109:5000/download-template-properties")
     .then(response => response.blob())
     .then(blob => {
       const url = window.URL.createObjectURL(blob);
@@ -460,6 +462,43 @@
     });
 });
 
+    document.getElementById('upload-file-btn').addEventListener('click',()=>document.getElementById('file-upload').click());
+    document.getElementById('file-upload').addEventListener('change', async e => {
+      const file = e.target.files[0]; if(!file) return;
+      const buf = await file.arrayBuffer(); const wb = XLSX.read(buf, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      for(const row of rows) {
+        const newCoalData = {
+          p_CoalId: null,
+          p_CoalType: row['Coal'],
+          p_CoalName: row['Coal'],
+          p_Ash: parseFloat(row['Ash (%)']),
+          p_VolatileMatter: parseFloat(row['Volatile Matter (%)']),
+          p_Moisture: parseFloat(row['Moisture (%)']),
+          p_MaxContraction: parseFloat(row['Max. Contraction']),
+          p_MaxExpansion: parseFloat(row['Max. Expansion']),
+          p_Maxfluidityddpm: parseFloat(row['Max. fluidity (ddpm)']),
+          p_MMR: parseFloat(row['MMR']),
+          p_HGI: parseFloat(row['HGI']),
+          p_SofteningTemperaturec: parseFloat(row['Softening temperature (°C)']),
+          p_ResolidificationTempRangeMinc: parseFloat(row['Resolidification temp range Min (°C)']),
+          p_ResolidificationTempRangeMaxc: parseFloat(row['Resolidification temp range Max (°C)']),
+          p_PlasticRangec: parseFloat(row['Plastic range (°C)']),
+          p_Sulphur: parseFloat(row['Sulphur (%)']),
+          p_Phosphorous: parseFloat(row['Phosphorous (%)']),
+          p_CSN: parseFloat(row['CSN']),
+          p_CostPerTonRs: parseFloat(row['Cost per Ton (Rs.)']),
+          p_FileId:1, p_CompanyId:1, p_UserId:1,
+          p_FileName:file.name,
+          p_FileDate:new Date().toISOString().slice(0,19).replace('T',' ')
+        };
+
+        try{await postEncrypted('http://3.111.89.109:3000/api/insertCoalProperties',newCoalData);}catch(err){console.error('Row error',err);}      }
+      await fetchCoalData();
+      alert('Excel upload complete');
+      e.target.value='';
+    });
 
     let coalData = [];
     let coalTypes = [];
@@ -631,7 +670,7 @@
     parseFloat(document.getElementById("cost").value)
   ].join(",") // Converts array to "11.5,22.1,..."
 };
-        try { 
+        try {
           const response = await postEncrypted(
             "http://3.111.89.109:3000/api/updateCoalProperties",
             {"p_CoalId":coalId ,"p_CoalName":document.getElementById("coal").value ,"p_ColumnNames":modifiedCoalData.p_ColumnNames, "p_Values":modifiedCoalData.p_Values}
@@ -639,9 +678,9 @@
 
           fetchCoalData(); // Refresh table
 
-         
+
             alert("Data updated successfully!");
-            window.location.reload(); 
+
 
           document.getElementById("modifyCoalFormPopup").style.display = "none";
           resetForm();
@@ -704,11 +743,11 @@
     document.getElementById("coalForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const newCoalData = { 
+  const newCoalData = {
     p_CoalId: null, // Assuming 0 for new insert, or generate dynamically
     p_CoalType: (document.getElementById("add_coaltype").value).toString(),
     p_CoalName: (document.getElementById("add_coal").value).toString(),
-    
+
     p_Ash: parseFloat(document.getElementById("add_ash").value),
     p_VolatileMatter: parseFloat(document.getElementById("add_volatile_matter").value),
     p_Moisture: parseFloat(document.getElementById("add_moisture").value),
@@ -740,9 +779,9 @@
 
     fetchCoalData();
 
+
       alert("Data added successfully!");
-      window.location.reload(); 
-    
+
 
     document.getElementById("coalFormPopup").style.display = "none";
   } catch (err) {

@@ -8,3 +8,4 @@ google-cloud-translate
 beautifulsoup4
 tensorflow
 pycryptodome
+xlsxwriter
