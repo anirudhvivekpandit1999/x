@@ -1114,7 +1114,7 @@ def cost():
 
     b1 = b1.reshape(b1.shape[0], -1)
     b1_scaled = input_scaler.transform(b1)
-    b1 = b1.reshape(-1, 14, 15)
+    b1 = b1.reshape(-1, coal_count_number, 15)
     blend1 = modelq.predict(b1)
     blended_coal_properties = output_scaler.inverse_transform(blend1)
     blend1 = blend1 + proces_para
