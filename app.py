@@ -1107,7 +1107,7 @@ def cost():
         daily_vectors.append(tf.stack(row_vector))
 
     daily_vectors_tensor = tf.stack(daily_vectors)
-    input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
+    input_data = tf.reshape(daily_vectors_tensor, [-1, coal_count_number])
 
     daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(daily_vectors_tensor.shape[0], -1)
     b1 = daily_vectors_flattened
