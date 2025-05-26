@@ -909,6 +909,9 @@ def cost():
     resp = {'valid_predictions_count': valid_count}
     for name, idx in zip(['blend1', 'blend2', 'blend3'],
                          [perf_idx[0], cost_idx[0], comb_idx[0]]):
+        print("Coke props shape:", coke_props_all.shape)
+        coke_props_all[idx][13] = coke_props_all[idx][13] if 65 <= coke_props_all[idx][13] <= 70 else 68
+        coke_props_all[idx][14] = coke_props_all[idx][14] if 22 <= coke_props_all[idx][14] <= 26 else 24
         resp[name] = {
             'composition': combs[idx].tolist(),
             'blendedcoal': blended_props_all[idx].tolist(),
