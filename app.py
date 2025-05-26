@@ -166,6 +166,7 @@ def get_coal_properties_csv():
     csv_output = '\n'.join(csv_rows)
     print(csv_output)
     return csv_output
+
 def get_coal_percentages_csv():
     response = post_encrypted('http://3.111.89.109:3000/api/getCoalPercentagescsv',{"companyId":1})
 
@@ -726,59 +727,7 @@ def get_proposed_coal_types():
       
 
 
-def load_csv():
-    print("load_csvhit")
-    """Load the CSV file and return it as a DataFrame."""
-    if os.path.exists(MINMAX_FILE_PATH):
-        return pd.read_csv(MINMAX_FILE_PATH)
-    else:
-        raise FileNotFoundError(f"{CSV_FILE} not found!")
-
-def prepare_ranges():
-    """Prepare the range data from the CSV."""
-
-    df = load_csv()
-    if df.empty:
-        return {}
-
-    # Assuming only one row of data in the CSV
-    row = df.iloc[0]
-
-    def to_int(x):
-        # If it’s a NumPy scalar, .item() will give you a Python int/float
-        return x.item() if hasattr(x, 'item') else int(x)
-
-    def to_float(x):
-        return x.item() if hasattr(x, 'item') else float(x)
-
-
-    ranges = {
-        'ash': {'lower': to_int(row['ash_lower']), 'upper': to_int(row['ash_upper']), 'default': to_float((row['ash_lower'] + row['ash_upper']) / 2)},
-        'vm': {'lower': to_int(row['vm_lower']), 'upper': to_int(row['vm_upper']), 'default': to_float((row['vm_lower'] + row['vm_upper']) / 2)},
-        'm40': {'lower': to_int(row['m40_lower']), 'upper': to_int(row['m40_upper']), 'default': to_float((row['m40_lower'] + row['m40_upper']) / 2)},
-        'm10': {'lower': to_int(row['m10_lower']), 'upper': to_float(row['m10_upper']), 'default': to_float((row['m10_lower'] + row['m10_upper']) / 2)},
-        'csr': {'lower': to_int(row['csr_lower']), 'upper': to_int(row['csr_upper']), 'default': to_float((row['csr_lower'] + row['csr_upper']) / 2)},
-        'cri': {'lower': to_int(row['cri_lower']), 'upper': to_int(row['cri_upper']), 'default':to_float( (row['cri_lower'] + row['cri_upper']) / 2)},
-        'ams': {'lower': to_int(row['ams_lower']), 'upper': to_int(row['ams_upper']), 'default': to_float((row['ams_lower'] + row['ams_upper']) / 2)}
-    }
-    return ranges
-
-@app.route('/get_ranges', methods=['GET'])
-def get_ranges():
-
-    try:
-        ranges = prepare_ranges()
-        return jsonify(ranges)
-    except FileNotFoundError as e:
-        print(e)
-        return jsonify({'error': str(e)}), 404
-
-
 #model for cost ai page
-
-
-
-
 def read_min_max_values():
             mmv = get_min_max_values_csv()
             df = pd.read_csv(io.StringIO(mmv))
@@ -827,9 +776,7 @@ def read_min_max_values():
 
 min_max_values = read_min_max_values()
 
-print("Ash weight:", min_max_values['ash']['upper'])
-
-file_path = 'submitted_training_coal_data.csv'
+file_path = 'training_data_file.csv'
 
 coal_percentages = []
 coal_properties = []
@@ -1304,9 +1251,9 @@ def cost():
         print(reader)
 
         coal_cost_map = {
-    row[0]: float(row[-1])   # CoalName → CostPerTonRs
-    for row in reader
-}        
+            row[0]: float(row[-1])   # CoalName → CostPerTonRs
+            for row in reader
+        }        
         coal_costs = np.array([coal_cost_map.get(coal_type, 0.0) for coal_type in coal_types])
         
 
@@ -1392,21 +1339,16 @@ def cost():
             coke = rf_model.predict(blend1_scaled, batch_size=prediction_batch_size)
             predictions = output__scaler.inverse_transform(coke)
             
-            print("predictions at 0" , predictions[0])
-            print("predictions at fancy 0",predictions[:, 0])
-            print("1397",min_max_values['ash']['lower'] )
-            print("13972",min_max_values['ash']['upper'])
-            ash_mask = (min_max_values['ash']['lower'] -min_max_values['ash']['lower']  <= predictions[:,0]) & (predictions[:,0] <= min_max_values['ash']['upper'] +min_max_values['ash']['upper'])
-            vm_mask = (min_max_values['vm']['lower'] - min_max_values['vm']['lower'] <= predictions[:,1]) & (predictions[:,1] <= min_max_values['vm']['upper'] +min_max_values['vm']['upper'])
-            m40_mask = (min_max_values['m40']['lower'] - min_max_values['m40']['lower'] <= predictions[:,9]) & (predictions[:,9] <= min_max_values['m40']['upper'] + min_max_values['m40']['upper'])
-            m10_mask = (min_max_values['m10']['lower'] - min_max_values['m10']['lower'] <= predictions[:,10]) & (predictions[:,10] <= min_max_values['m10']['upper']  + min_max_values['m10']['upper'])
-            csr_mask = (min_max_values['csr']['lower'] - min_max_values['csr']['lower'] <= predictions[:,12]) & (predictions[:,12] <= min_max_values['csr']['upper'] + min_max_values['csr']['upper'] )
-            cri_mask = (min_max_values['cri']['lower'] - min_max_values['cri']['lower']<= predictions[:,13]) & (predictions[:,13] <= min_max_values['cri']['upper'] + min_max_values['cri']['upper'] )
-            ams_mask = (min_max_values['ams']['lower'] - min_max_values['ams']['lower'] <= predictions[:,14]) & (predictions[:,14] <= min_max_values['ams']['upper'] + min_max_values['ams']['upper'])
-            
-            
-            
 
+            ash_mask = (min_max_values['ash']['lower'] <= predictions[:, 0]) & (predictions[:, 0] <= min_max_values['ash']['upper'])
+            vm_mask = (min_max_values['vm']['lower'] <= predictions[:, 1]) & (predictions[:, 1] <= min_max_values['vm']['upper'])
+            m40_mask = (min_max_values['m40']['lower'] <= predictions[:, 9]) & (predictions[:, 9] <= min_max_values['m40']['upper'])
+            m10_mask = (min_max_values['m10']['lower'] <= predictions[:, 10]) & (predictions[:, 10] <= min_max_values['m10']['upper'])
+            csr_mask = (min_max_values['csr']['lower'] <= predictions[:, 12]) & (predictions[:, 12] <= min_max_values['csr']['upper'])
+            cri_mask = (min_max_values['cri']['lower'] <= predictions[:, 13]) & (predictions[:, 13] <= min_max_values['cri']['upper'])
+            ams_mask = (min_max_values['ams']['lower'] <= predictions[:, 14]) & (predictions[:, 14] <= min_max_values['ams']['upper'])
+            
+            
             valid_mask = ash_mask & vm_mask & m40_mask & m10_mask & csr_mask & cri_mask & ams_mask
             valid_indices = np.where(valid_mask)[0]
             
@@ -1417,79 +1359,58 @@ def cost():
             if len(valid_indices) == 0:
                 continue
             
-            print("blend1 value" ,blend1)
-            print(valid_indices , "valid indices")
-            # Fix: Use valid_indices to index blend1 and predictions, but ensure valid_indices is not empty
             if len(valid_indices) > 0:
                 valid_blend1 = blend1[valid_indices]
-                print(valid_blend1 , "validblend1")
                 valid_blended_coal_properties = output_scaler.inverse_transform(valid_blend1)
-                print("valided_blended_coal_properties" , valid_blended_coal_properties)
-                # 4. Get other valid data
-                valid_combinations, unique_indices = np.unique(all_combinations[valid_indices], axis=0, return_index=True)
+                valid_combinations = all_combinations[valid_indices]
+                valid_predictions = predictions[valid_indices]
+                
+                unique_combinations, unique_indices = np.unique(valid_combinations, axis=0, return_index=True)
+                valid_combinations = unique_combinations
                 valid_blended_coal_properties = valid_blended_coal_properties[unique_indices]
-                valid_predictions = predictions[valid_indices][unique_indices]
+                valid_predictions = valid_predictions[unique_indices]
             else:
                 continue
             
 
-            pred_cols = np.column_stack([
-                valid_predictions[:, 0],  
-                valid_predictions[:, 1],  
-                valid_predictions[:, 9],   
-                valid_predictions[:, 10],  
-                valid_predictions[:, 12], 
-                valid_predictions[:, 13],  
-                valid_predictions[:, 14]  
-            ])
-            
+            diff_matrix = np.zeros((len(valid_predictions), 7))
+            diff_matrix[:, 0] = ((target_values[0] - valid_predictions[:, 0]) / target_values[0]) * weights[0]
+            diff_matrix[:, 1] = ((target_values[1] - valid_predictions[:, 1]) / target_values[1]) * weights[1]
+            diff_matrix[:, 2] = ((valid_predictions[:, 9] - target_values[2]) / target_values[2]) * weights[2]
+            diff_matrix[:, 3] = ((target_values[3] - valid_predictions[:, 10]) / target_values[3]) * weights[3]
+            diff_matrix[:, 4] = ((valid_predictions[:, 12] - target_values[4]) / target_values[4]) * weights[4]
+            diff_matrix[:, 5] = ((target_values[5] - valid_predictions[:, 13]) / target_values[5]) * weights[5]
+            diff_matrix[:, 6] = ((valid_predictions[:, 14] - target_values[6]) / target_values[6]) * weights[6]
 
-            diff_matrix = np.zeros_like(pred_cols)
-            
-
-            diff_matrix[:, lower_better_indices] = (target_values[lower_better_indices] - pred_cols[:, lower_better_indices]) / target_values[lower_better_indices]
-            diff_matrix[:, higher_better_indices] = (pred_cols[:, higher_better_indices] - target_values[higher_better_indices]) / target_values[higher_better_indices]
-            
-
-            weighted_diffs = diff_matrix * weights
-            
-
-            performance_scores = np.sum(weighted_diffs, axis=1)
+            total_differences = np.sum(diff_matrix, axis=1)
             
 
             coal_percentages = valid_combinations[:, :coal_count]
             batch_costs = np.sum(coal_percentages * coal_costs / 100, axis=1)
             
 
-            batch_best_perf_idx = np.argmax(performance_scores)
-            print(batch_best_perf_idx)
-            batch_best_perf_score = performance_scores[batch_best_perf_idx]
+            batch_best_perf_idx = np.argest(total_differences)
+            batch_best_perf_score = total_differences[batch_best_perf_idx]
             batch_best_perf_cost = batch_costs[batch_best_perf_idx]
             
 
-            if batch_best_perf_score > best_performance_score:
+            if batch_best_perf_score < best_performance_score:
                 best_performance_score = batch_best_perf_score
                 best_performance_blend = valid_combinations[batch_best_perf_idx].copy()
-                best_performance_prediction = valid_predictions[0].copy()
-                best_performance_prediction[0] += 1
-
-
-                best_performance_blended_coal = valid_blended_coal_properties[0].copy() + 2
+                best_performance_prediction = valid_predictions[batch_best_perf_idx].copy()
+                best_performance_blended_coal = valid_blended_coal_properties[batch_best_perf_idx].copy()
                 best_performance_cost = batch_best_perf_cost
             
 
             batch_cheapest_idx = np.argmin(batch_costs)
-            print(batch_cheapest_idx,"cheapest_dix")
             batch_cheapest_cost = batch_costs[batch_cheapest_idx]
             
 
             if batch_cheapest_cost < cheapest_cost:
                 cheapest_cost = batch_cheapest_cost
                 cheapest_blend = valid_combinations[batch_cheapest_idx].copy()
-                cheapest_prediction = valid_predictions[0].copy()
-                cheapest_prediction[0] += 1
-
-                cheapest_blended_coal = np.abs(valid_blended_coal_properties[batch_cheapest_idx].copy() - 1)
+                cheapest_prediction = valid_predictions[batch_cheapest_idx].copy()
+                cheapest_blended_coal = valid_blended_coal_properties[batch_cheapest_idx].copy()
             
 
             if len(batch_costs) > 1 and np.max(batch_costs) > np.min(batch_costs):
@@ -1498,17 +1419,16 @@ def cost():
                 norm_costs = np.zeros_like(batch_costs)
                 
 
-            if len(performance_scores) > 1 and np.max(performance_scores) > np.min(performance_scores):
-                norm_performance = (performance_scores - np.min(performance_scores)) / (np.max(performance_scores) - np.min(performance_scores))
+            if len(total_differences) > 1 and np.max(total_differences) > np.min(total_differences):
+                norm_performance = (total_differences - np.min(total_differences)) / (np.max(total_differences) - np.min(total_differences))
             else:
-                norm_performance = np.zeros_like(performance_scores)
+                norm_performance = np.zeros_like(total_differences)
             
 
-            combined_scores = (cost_weight * norm_costs) + (performance_weight * norm_performance) +1 
+            combined_scores = (cost_weight * norm_costs) + (performance_weight * norm_performance)
             
 
             batch_best_combined_idx = np.argmin(combined_scores)
-            
             batch_best_combined_score = combined_scores[batch_best_combined_idx]
             batch_best_combined_cost = batch_costs[batch_best_combined_idx]
             
@@ -1516,9 +1436,7 @@ def cost():
             if best_combined_blend is None or batch_best_combined_score < best_combined_score:
                 best_combined_score = batch_best_combined_score
                 best_combined_blend = valid_combinations[batch_best_combined_idx].copy()
-                best_combined_prediction = valid_predictions[0].copy()
-                best_combined_prediction[0] += 1
-
+                best_combined_prediction = valid_predictions[batch_best_combined_idx].copy()
                 best_combined_blended_coal = valid_blended_coal_properties[batch_best_combined_idx].copy()
                 best_combined_cost = batch_best_combined_cost
         
@@ -1590,14 +1508,14 @@ def cost():
         error_details = traceback.format_exc()
         app.logger.error(f"Error in cost calculation: {error_details}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+    
+    
 
 @app.route('/download-template-properties')
-
-
 def download_template_properties():
     # Define the column headers for the template
     columns = [
-        "Coal", "Ash (%)", "Volatile Matter (%)", "Moisture (%)", "Max. Contraction",
+        "Coal","Type of Coal", "Ash (%)", "Volatile Matter (%)", "Moisture (%)", "Max. Contraction",
         "Max. Expansion", "Max. fluidity (ddpm)", "MMR", "HGI", "Softening temperature (°C)",
         "Resolidification temp range Min (°C)", "Resolidification temp range Max (°C)",
         "Plastic range (°C)", "Sulphur (%)", "Phosphorous (%)", "CSN", "Cost per Ton (Rs.)"
