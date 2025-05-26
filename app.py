@@ -21,7 +21,6 @@ from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 from werkzeug.utils import secure_filename
 from flask_bcrypt import Bcrypt
-import MySQLdb.cursors
 from google.cloud import translate_v2 as translate
 from bs4 import BeautifulSoup
 import tensorflow as tf
