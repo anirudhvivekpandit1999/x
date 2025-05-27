@@ -972,7 +972,7 @@ def cost():
     # Handle cost values more safely
     for t in coal_types_list:
         # Assuming 't' definitely exists in df_cost.columns and df_cost is not empty
-        cost_vals.append(float(df_cost[t].iloc[-1]))
+        cost_vals.append(float(df_cost[t].iloc[-2]))
 
     cost_array = np.pad(cost_vals, (0, coal_count - len(cost_vals)), 'constant')
 
