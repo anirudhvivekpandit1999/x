@@ -1073,11 +1073,11 @@ def cost():
     y_pred = output_scaler.inverse_transform(y_pred)
     mse = np.mean((y_test - y_pred) ** 2)
 
-    count = 0
-    MAX_COMBINATIONS = 10000
 
+    MAX_COMBINATIONS = 10000
+    global count
     def generate_combinations(index, current_combination, current_sum):
-        global count
+
         target_sum = 100
 
         if count >= MAX_COMBINATIONS:
