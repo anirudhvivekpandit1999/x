@@ -889,21 +889,7 @@ def cost():
     maxs = parse_blends(blends,'maxPercentage')
 
     coal_types_list = [b['coalType'] for b in blends]
-    print(coal_types_list)
-    dfc = df_cost.set_index(df_cost.columns[0])
-    print(dfc)
-    cost_vals = []
-    for t in coal_types_list:
-        # Find the row where the first column matches the coal type name
-        match_row = df_cost[df_cost[df_cost.columns[0]] == t]
-
-        if not match_row.empty:
-            val = float(match_row.iloc[0][df_cost.columns[-1]])
-            cost_vals.append(val)
-        else:
-            # Handle missing coal types gracefully
-            print(f"Coal type '{t}' not found in df_cost")
-            cost_vals.append(None)  # or raise an error / skip
+    cost_vals = [float(df_cost.columns[-2]) for t in coal_types_list]
     print("cost_vals",cost_vals)
     cost_array = np.pad(cost_vals, (0,coal_count-len(cost_vals)), 'constant')
 
