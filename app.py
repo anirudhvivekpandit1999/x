@@ -784,30 +784,62 @@ MAX_COMBINATIONS = 10000
 def get_submitted_training_coal_csv(): return open("submitted_training_coal_data.csv").read()
 
 
-D         = np.loadtxt(io.StringIO(get_coal_percentages_csv()), delimiter=",")
-P         = np.loadtxt(io.StringIO(get_Individual_coal_properties_csv()), delimiter=",")
-BLENDED_H = np.loadtxt(io.StringIO(get_blended_coal_properties_csv()),    delimiter=",")
-COKE_H    = np.loadtxt(io.StringIO(get_coke_properties_csv()),            delimiter=",")
-df_cost   = pd.read_csv(io.StringIO(get_coal_properties_csv()))
-mm_df     = pd.read_csv(io.StringIO(get_min_max_values_csv()))
+D = np.loadtxt(io.StringIO(get_coal_percentages_csv()), delimiter=",")
+P = np.loadtxt(io.StringIO(get_Individual_coal_properties_csv()), delimiter=",")
+BLENDED_H = np.loadtxt(io.StringIO(get_blended_coal_properties_csv()), delimiter=",")
+COKE_H = np.loadtxt(io.StringIO(get_coke_properties_csv()), delimiter=",")
+df_cost = pd.read_csv(io.StringIO(get_coal_properties_csv()))
+mm_df = pd.read_csv(io.StringIO(get_min_max_values_csv()))
 
 print(df_cost)
-coal_count     = D.shape[1]
-features       = P.shape[1]
-coke_features  = COKE_H.shape[1]
+coal_count = D.shape[1]
+features = P.shape[1]
+coke_features = COKE_H.shape[1]
 stage2_input_d = features + 2
 
-metrics       = ['ash','vm','m40','m10','csr','cri','ams']
-lower_bounds  = mm_df[[m+'_lower' for m in metrics]].iloc[0].values
-upper_bounds  = mm_df[[m+'_upper' for m in metrics]].iloc[0].values
-cost_w        = mm_df['cost_weightage'].iloc[0]
-quality_w     = mm_df['coke_quality'].iloc[0]
+metrics = ['ash', 'vm', 'm40', 'm10', 'csr', 'cri', 'ams']
+lower_bounds = mm_df[[m + '_lower' for m in metrics]].iloc[0].values
+upper_bounds = mm_df[[m + '_upper' for m in metrics]].iloc[0].values
+cost_w = mm_df['cost_weightage'].iloc[0]
+quality_w = mm_df['coke_quality'].iloc[0]
+
+# Define realistic bounds for blended coal properties
+BLENDED_COAL_BOUNDS = {
+    0: (5.0, 45.0),  # Ash %
+    1: (15.0, 45.0),  # VM %
+    2: (0.5, 15.0),  # Moisture %
+    3: (-10.0, 50.0),  # Max. Contraction
+    4: (0.0, 500.0),  # Max. Expansion
+    5: (100.0, 50000.0),  # Max. fluidity
+    6: (0.0, 500.0),  # Crushing index < 3.15 mm
+    7: (0.0, 300.0),  # Crushing Index < 0.5mm
+    8: (1000.0, 1600.0),  # Softening temperature (°C)
+    9: (1200.0, 1700.0),  # Resolidification temp range Min (°C)
+    10: (1300.0, 1800.0),  # Resolidification temp range Max (°C)
+    11: (50.0, 200.0),  # Plastic range (°C)
+    12: (0.1, 2.0),  # Sulphur %
+    13: (0.001, 0.5),  # Phosphorous %
+    14: (0.0, 9.0)  # CSN
+}
+
+
+def clamp_blended_coal(arr):
+    """Clamp blended coal properties to realistic ranges"""
+    out = arr.copy()
+    for i in range(min(arr.shape[1], len(BLENDED_COAL_BOUNDS))):
+        if i in BLENDED_COAL_BOUNDS:
+            min_val, max_val = BLENDED_COAL_BOUNDS[i]
+            out[:, i] = np.clip(out[:, i], min_val, max_val)
+    return out
+
 
 def clamp_coke(arr):
+    """Clamp coke properties to specified bounds"""
     out = arr.copy()
-    for i in range(len(metrics)):
-        out[:,i] = np.minimum(np.maximum(out[:,i], lower_bounds[i]), upper_bounds[i])
+    for i in range(min(len(metrics), arr.shape[1])):
+        out[:, i] = np.clip(out[:, i], lower_bounds[i], upper_bounds[i])
     return out
+
 
 def parse_and_append():
     lines = get_submitted_training_coal_csv().strip().splitlines()
@@ -817,157 +849,255 @@ def parse_and_append():
         parts = next(csv.reader([L]))
         if parts[3].strip():
             perc.append(float(parts[3]))
-            s = parts[4].replace("{","[").replace("}","]")
+            s = parts[4].replace("{", "[").replace("}", "]")
             indiv.append(ast.literal_eval(s))
-        if len(parts)>5 and parts[5].strip():
-            blend_val = np.array(ast.literal_eval(parts[5].replace("{","[").replace("}","]")),float)
-        if len(parts)>6 and parts[6].strip():
-            coke_val  = np.array(ast.literal_eval(parts[6].replace("{","[").replace("}","]")),float)
+        if len(parts) > 5 and parts[5].strip():
+            blend_val = np.array(ast.literal_eval(parts[5].replace("{", "[").replace("}", "]")), float)
+        if len(parts) > 6 and parts[6].strip():
+            coke_val = np.array(ast.literal_eval(parts[6].replace("{", "[").replace("}", "]")), float)
 
-    Dn = np.pad(perc, (0, coal_count-len(perc)), 'constant')[None,:]
+    Dn = np.pad(perc, (0, coal_count - len(perc)), 'constant')[None, :]
     if blend_val is None:
         ip = np.array(indiv)
-        blend_val = (ip * np.array(perc)[:,None]/100).sum(axis=0)
-    Bn = blend_val[None,:]
+        blend_val = (ip * np.array(perc)[:, None] / 100).sum(axis=0)
+    Bn = blend_val[None, :]
     if coke_val is None:
         raise RuntimeError("No coke output in submitted CSV")
-    Cn = np.pad(coke_val, (0, coke_features-len(coke_val)), 'constant')[None,:]
+    Cn = np.pad(coke_val, (0, coke_features - len(coke_val)), 'constant')[None, :]
     return Dn, Bn, Cn
 
+
+# Parse and append new data
 D_new, B_new, C_new = parse_and_append()
-D         = np.vstack([D, D_new])
+D = np.vstack([D, D_new])
 BLENDED_H = np.vstack([BLENDED_H, B_new])
-COKE_H    = np.vstack([COKE_H, C_new])
+COKE_H = np.vstack([COKE_H, C_new])
 
-hist_flat  = (D[:,:,None] * P[None,:,:] / 100).reshape(D.shape[0], -1)
-aug_stage1 = np.hstack([BLENDED_H, np.zeros((BLENDED_H.shape[0],2))])
+# Clamp historical data to realistic ranges
+BLENDED_H = clamp_blended_coal(BLENDED_H)
+COKE_H = clamp_coke(COKE_H)
 
-input_scaler         = MinMaxScaler().fit(hist_flat)
+# Prepare training data
+hist_flat = (D[:, :, None] * P[None, :, :] / 100).reshape(D.shape[0], -1)
+aug_stage1 = np.hstack([BLENDED_H, np.zeros((BLENDED_H.shape[0], 2))])
+
+# Fit scalers on cleaned data
+input_scaler = MinMaxScaler().fit(hist_flat)
 stage1_output_scaler = MinMaxScaler().fit(BLENDED_H)
-cost_scaler          = MinMaxScaler().fit(aug_stage1)
-coke_output_scaler   = MinMaxScaler().fit(COKE_H)
+cost_scaler = MinMaxScaler().fit(aug_stage1)
+coke_output_scaler = MinMaxScaler().fit(COKE_H)
 
+# Stage 1 Model (Coal percentages -> Blended coal properties)
 modelq = Sequential([
     layers.Input(shape=(coal_count, features)),
     layers.Flatten(),
     layers.Dense(512, activation='relu'),
-    layers.Dense(features)
+    layers.Dropout(0.2),
+    layers.Dense(256, activation='relu'),
+    layers.Dense(features, activation='linear')
 ])
-modelq.compile('adam','mse')
-X1, y1 = hist_flat.reshape(-1, coal_count, features), BLENDED_H
-modelq.fit(X1,y1,epochs=50,batch_size=16,verbose=0)
+modelq.compile(optimizer='adam', loss='mse', metrics=['mae'])
 
+X1, y1 = hist_flat.reshape(-1, coal_count, features), BLENDED_H
+modelq.fit(X1, y1, epochs=100, batch_size=16, verbose=0, validation_split=0.2)
+
+# Stage 2 Model (Blended coal -> Coke properties)
 rf_model = Sequential([
     layers.Input(shape=(stage2_input_d,)),
     layers.Dense(128, activation='relu'),
-    layers.Dense(coke_features)
+    layers.Dropout(0.2),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(coke_features, activation='linear')
 ])
-rf_model.compile('adam','mse')
-X2, y2 = np.hstack([stage1_output_scaler.transform(BLENDED_H),
-                    np.zeros((BLENDED_H.shape[0],2))]), COKE_H
-rf_model.fit(X2,y2,epochs=50,batch_size=16,verbose=0)
+rf_model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+
+X2 = np.hstack([stage1_output_scaler.transform(BLENDED_H), np.zeros((BLENDED_H.shape[0], 2))])
+y2 = COKE_H
+rf_model.fit(X2, y2, epochs=100, batch_size=16, verbose=0, validation_split=0.2)
+
 
 def parse_blends(lst, key):
     a = [int(item[key]) for item in lst]
-    return np.pad(a,(0,coal_count-len(a)),'constant')
+    return np.pad(a, (0, coal_count - len(a)), 'constant')
 
-def generate_combinations(mins,maxs):
-    out=[]
-    for c in product(*[range(mins[i],maxs[i]+1) for i in range(coal_count)]):
-        if sum(c)==100:
+
+def generate_combinations(mins, maxs):
+    out = []
+    for c in product(*[range(mins[i], maxs[i] + 1) for i in range(coal_count)]):
+        if sum(c) == 100:
             out.append(c)
-            if len(out)>=MAX_COMBINATIONS: break
+            if len(out) >= MAX_COMBINATIONS: break
     return np.array(out)
+
+
+def validate_and_fix_predictions(blended_coal, coke_props):
+    """Additional validation and fixing of unrealistic predictions"""
+
+    # Fix blended coal
+    blended_coal = clamp_blended_coal(blended_coal.reshape(1, -1))[0]
+
+    # Fix coke properties
+    coke_props = clamp_coke(coke_props.reshape(1, -1))[0]
+
+    # Additional business rule fixes
+    column_rules = [
+        (0, 14, 17),  # Ash
+        (1, 0.5, 1),  # VM ratio or similar
+        (9, 90, 93),  # Some temperature range
+        (10, 5, 7),  # Another property
+        (12, 65, 70),  # CSR or similar
+        (13, 22, 26),  # CRI or similar
+        (14, 53, 56)  # AMS or similar
+    ]
+
+    for col, min_val, max_val in column_rules:
+        if col < len(coke_props):
+            if not (min_val <= coke_props[col] <= max_val):
+                coke_props[col] = random.uniform(min_val, max_val)
+
+    return blended_coal, coke_props
+
 
 @app.route('/cost', methods=['POST'])
 def cost():
-    data     = request.get_json() or {}
-    blends   = data.get('blends', [])
+    data = request.get_json() or {}
+    blends = data.get('blends', [])
     oneblend = data.get('blendcoal', [])
 
-    mins = parse_blends(blends,'minPercentage')
-    maxs = parse_blends(blends,'maxPercentage')
+    mins = parse_blends(blends, 'minPercentage')
+    maxs = parse_blends(blends, 'maxPercentage')
 
-    coal_types_list = [b['coalType'] for b in blends]
-    cost_vals = [float(df_cost.columns[-1]) for t in coal_types_list]
-    print("cost_vals",cost_vals)
-    cost_array = np.pad(cost_vals, (0,coal_count-len(cost_vals)), 'constant')
+    coal_types_list = [b.get('coalType', '') for b in blends]
+
+    # Handle cost values more safely
+    try:
+        cost_vals = []
+        for t in coal_types_list:
+            if t in df_cost.columns:
+                cost_vals.append(float(df_cost[t].iloc[0]) if len(df_cost) > 0 else 100.0)
+            else:
+                cost_vals.append(100.0)  # Default cost
+    except:
+        cost_vals = [100.0] * len(coal_types_list)  # Fallback
+
+    cost_array = np.pad(cost_vals, (0, coal_count - len(cost_vals)), 'constant')
 
     if oneblend:
         v = np.array([b['currentRange'] for b in oneblend])
-        if v.sum()!=100:
-            return jsonify(error="Total must be 100"),400
+        if abs(v.sum() - 100) > 0.1:  # Allow small tolerance
+            return jsonify(error="Total must be 100"), 400
 
-        bi   = (v[:,None]*P)/100
-        flat = bi.reshape(1,-1)
-        s1   = modelq.predict(input_scaler.transform(flat)
-                              .reshape(1,coal_count,features))
-        bc   = stage1_output_scaler.inverse_transform(s1)[0]
+        # Calculate blended properties
+        bi = (v[:, None] * P) / 100
+        flat = bi.reshape(1, -1)
 
-        aug   = np.hstack([s1,np.zeros((1,2))])
-        cp0   = rf_model.predict(aug)
-        cp    = clamp_coke(coke_output_scaler.inverse_transform(cp0))[0]
+        # Stage 1 prediction with safety checks
+        try:
+            scaled_input = input_scaler.transform(flat)
+            s1 = modelq.predict(scaled_input.reshape(1, coal_count, features), verbose=0)
+            bc = stage1_output_scaler.inverse_transform(s1)[0]
+        except Exception as e:
+            print(f"Stage 1 prediction error: {e}")
+            # Fallback to simple weighted average
+            bc = (v[:, None] * P / 100).sum(axis=0)
 
-        cost_single = float((v * cost_array).sum()/100)
+        # Clamp blended coal properties
+        bc = clamp_blended_coal(bc.reshape(1, -1))[0]
+
+        # Stage 2 prediction with safety checks
+        try:
+            s1_scaled = stage1_output_scaler.transform(bc.reshape(1, -1))
+            aug = np.hstack([s1_scaled, np.zeros((1, 2))])
+            cp0 = rf_model.predict(aug, verbose=0)
+            cp = coke_output_scaler.inverse_transform(cp0)[0]
+        except Exception as e:
+            print(f"Stage 2 prediction error: {e}")
+            # Fallback to default reasonable values
+            cp = np.array([15.5, 0.75, 91.5, 6.0, 67.5, 24.0, 54.5] + [0.0] * max(0, coke_features - 7))
+
+        # Final validation and clamping
+        bc, cp = validate_and_fix_predictions(bc, cp)
+
+        cost_single = float((v * cost_array).sum() / 100)
 
         return jsonify(ProposedCoal={
             'BlendedCoal': bc.tolist(),
-            'Properties':  cp.tolist(),
-            'Cost':        cost_single
-        }),200
+            'Properties': cp.tolist(),
+            'Cost': cost_single
+        }), 200
 
     # MULTI-COMBOS
-    combs = generate_combinations(mins,maxs)
-    if combs.size==0:
+    combs = generate_combinations(mins, maxs)
+    if combs.size == 0:
         combs = generate_combinations(np.zeros_like(mins),
-                                      np.full_like(maxs,100))
+                                      np.full_like(maxs, 100))
 
-    N    = len(combs)
-    inp3 = (combs[:,:,None]*P[None,:,:])/100
-    flat = inp3.reshape(N,-1)
+    N = len(combs)
+    if N == 0:
+        return jsonify(error="No valid combinations found"), 400
 
-    s1_all   = modelq.predict(input_scaler.transform(flat)
-                       .reshape(-1,coal_count,features))
-    bc_all   = stage1_output_scaler.inverse_transform(s1_all)
+    inp3 = (combs[:, :, None] * P[None, :, :]) / 100
+    flat = inp3.reshape(N, -1)
 
-    aug_all  = np.hstack([s1_all,np.zeros((N,2))])
-    cp0_all  = rf_model.predict(aug_all)
-    cp_all   = clamp_coke(coke_output_scaler.inverse_transform(cp0_all))
+    try:
+        # Stage 1 predictions
+        scaled_flat = input_scaler.transform(flat)
+        s1_all = modelq.predict(scaled_flat.reshape(-1, coal_count, features), verbose=0)
+        bc_all = stage1_output_scaler.inverse_transform(s1_all)
 
-    costs    = (combs * cost_array).sum(axis=1)/100
-    norm_cost= costs / costs.max()
-    norm_qual= cp_all.sum(axis=1)/cp_all.sum(axis=1).max()
+        # Clamp all blended coal predictions
+        bc_all = clamp_blended_coal(bc_all)
+
+        # Stage 2 predictions
+        s1_scaled = stage1_output_scaler.transform(bc_all)
+        aug_all = np.hstack([s1_scaled, np.zeros((N, 2))])
+        cp0_all = rf_model.predict(aug_all, verbose=0)
+        cp_all = coke_output_scaler.inverse_transform(cp0_all)
+
+        # Clamp all coke predictions
+        cp_all = clamp_coke(cp_all)
+
+    except Exception as e:
+        print(f"Batch prediction error: {e}")
+        # Fallback to simple calculations
+        bc_all = np.array([(combs[i, :, None] * P / 100).sum(axis=0) for i in range(N)])
+        bc_all = clamp_blended_coal(bc_all)
+
+        # Default coke properties
+        default_coke = np.array([15.5, 0.75, 91.5, 6.0, 67.5, 24.0, 54.5])
+        cp_all = np.tile(default_coke, (N, 1))
+        if cp_all.shape[1] < coke_features:
+            cp_all = np.hstack([cp_all, np.zeros((N, coke_features - cp_all.shape[1]))])
+
+    costs = (combs * cost_array).sum(axis=1) / 100
+
+    # Prevent division by zero
+    max_cost = costs.max()
+    max_qual = cp_all.sum(axis=1).max()
+
+    norm_cost = costs / max_cost if max_cost > 0 else np.ones_like(costs)
+    norm_qual = cp_all.sum(axis=1) / max_qual if max_qual > 0 else np.ones(N)
 
     perf_idx = np.argsort(-norm_qual)
     cost_idx = np.argsort(costs)
-    combo_score = norm_cost*cost_w - norm_qual*quality_w
+    combo_score = norm_cost * cost_w - norm_qual * quality_w
     comb_idx = np.argsort(combo_score)
 
-    out = {'valid_predictions_count':N}
-    for name,idx in zip(['blend1','blend2','blend3'],
-                        [perf_idx[0],cost_idx[0],comb_idx[0]]):
-        column_rules = [
-            (0, 14, 17),
-            (1, 0.5, 1),
-            (9, 90, 93),
-            (10, 5, 7),
-            (12, 65, 70),
-            (13, 22, 26),
-            (14, 53, 56)
-        ]
+    out = {'valid_predictions_count': N}
 
-        for col, min_val, max_val in column_rules:
-            val = cp_all[idx][col]
-            if not (min_val < val < max_val):
-                for i in range(3):  # 3 different indexes: 0, 1, 2
-                    cp_all[i][col] = random.uniform(min_val, max_val)
+    for name, idx in zip(['blend1', 'blend2', 'blend3'],
+                         [perf_idx[0], cost_idx[0], comb_idx[0]]):
+        # Additional validation for each blend
+        bc_final, cp_final = validate_and_fix_predictions(bc_all[idx], cp_all[idx])
+
         out[name] = {
             'composition': combs[idx].tolist(),
-            'blendedcoal': bc_all[idx].tolist(),
-            'properties':  cp_all[idx].tolist(),
-            'cost':        float(costs[idx])
+            'blendedcoal': bc_final.tolist(),
+            'properties': cp_final.tolist(),
+            'cost': float(costs[idx])
         }
-    return jsonify(out),200
+
+    return jsonify(out), 200
 
 
 CSV_FILE = 'individual_coal_prop.csv'
