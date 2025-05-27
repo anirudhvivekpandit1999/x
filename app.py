@@ -889,6 +889,7 @@ def cost():
     maxs = parse_blends(blends,'maxPercentage')
 
     coal_types_list = [b['coalType'] for b in blends]
+    print(coal_types_list)
     dfc = df_cost.set_index(df_cost.columns[0])
     print(dfc)
     cost_vals = []
