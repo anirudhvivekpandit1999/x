@@ -899,7 +899,8 @@ def generate_combinations(mins, maxs):
     for c in product(*[range(mins[i], maxs[i] + 1) for i in range(coal_count)]):
         if sum(c) == 100:
             out.append(c)
-            if len(out) >= MAX_COMBINATIONS: break
+            if len(out) >= 2000:  # max combos limit
+                break
     return np.array(out)
 
 @app.route('/cost', methods=['POST'])
@@ -922,8 +923,7 @@ def cost():
 
         bi = (v[:, None] * P) / 100
         flat = bi.reshape(1, -1)
-        s1 = modelq.predict(input_scaler.transform(flat)
-                            .reshape(1, coal_count, features))
+        s1 = modelq.predict(input_scaler.transform(flat).reshape(1, coal_count, features))
         bc = stage1_output_scaler.inverse_transform(s1)[0]
 
         # Clamp blended coal properties
@@ -931,26 +931,25 @@ def cost():
 
         aug = np.hstack([s1, np.zeros((1, 2))])
         cp0 = rf_model.predict(aug)
-        cp = clamp_coke(coke_output_scaler.inverse_transform(cp0))[0]
+        cp = coke_output_scaler.inverse_transform(cp0)[0]
 
-        # Strict clamp for selected coke columns
+        # Strict clamp for coke properties
         column_rules = [
-            (0, 14, 17),   # ash
-            (1, 0.5, 1),   # vm
-            (9, 90, 93),   # m40mm
-            (10, 5, 7),    # m10mm
-            (12, 65, 70),  # csr
-            (13, 22, 26),  # cri
-            (14, 53, 56)   # ams
+            (0, 14, 17),
+            (1, 0.5, 1),
+            (9, 90, 93),
+            (10, 5, 7),
+            (12, 65, 70),
+            (13, 22, 26),
+            (14, 53, 56)
         ]
 
-        top_idxs = [0]  # Only one blend here
         for col, min_val, max_val in column_rules:
             val = cp[col]
             if not (min_val < val < max_val):
                 if val < min_val:
                     cp[col] = min_val
-                elif val > max_val:
+                else:
                     cp[col] = max_val
 
         cost_single = float((v * cost_array).sum() / 100)
@@ -959,48 +958,46 @@ def cost():
             'BlendedCoal': bc.tolist(),
             'Properties': cp.tolist(),
             'Cost': cost_single
-        }), 200
+        })
 
-    # MULTI-COMBOS
+    # MULTI COMBO CASE
     combs = generate_combinations(mins, maxs)
     if combs.size == 0:
-        combs = generate_combinations(np.zeros_like(mins),
-                                      np.full_like(maxs, 100))
+        combs = generate_combinations(np.zeros_like(mins), np.full_like(maxs, 100))
 
     N = len(combs)
     inp3 = (combs[:, :, None] * P[None, :, :]) / 100
     flat = inp3.reshape(N, -1)
 
-    s1_all = modelq.predict(input_scaler.transform(flat)
-                            .reshape(-1, coal_count, features))
+    s1_all = modelq.predict(input_scaler.transform(flat).reshape(-1, coal_count, features))
     bc_all = stage1_output_scaler.inverse_transform(s1_all)
 
-    # Clamp all blended coal predictions
+    # Clamp blended coal predictions
     bc_all = clamp_blended_coal_properties(bc_all)
 
     aug_all = np.hstack([s1_all, np.zeros((N, 2))])
     cp0_all = rf_model.predict(aug_all)
-    cp_all = clamp_coke(coke_output_scaler.inverse_transform(cp0_all))
+    cp_all = coke_output_scaler.inverse_transform(cp0_all)
 
-    # Strict clamp for coke properties in the top 3 combos
+    # Strict clamp for coke properties in top 3 combos
     column_rules = [
-        (0, 14, 17),   # ash
-        (1, 0.5, 1),   # vm
-        (9, 90, 93),   # m40mm
-        (10, 5, 7),    # m10mm
-        (12, 65, 70),  # csr
-        (13, 22, 26),  # cri
-        (14, 53, 56)   # ams
+        (0, 14, 17),
+        (1, 0.5, 1),
+        (9, 90, 93),
+        (10, 5, 7),
+        (12, 65, 70),
+        (13, 22, 26),
+        (14, 53, 56)
     ]
 
-    top_idxs = [0, 1, 2]  # blend1, blend2, blend3
+    top_idxs = [0, 1, 2]
     for col, min_val, max_val in column_rules:
         for i in top_idxs:
             val = cp_all[i][col]
             if not (min_val < val < max_val):
                 if val < min_val:
                     cp_all[i][col] = min_val
-                elif val > max_val:
+                else:
                     cp_all[i][col] = max_val
 
     costs = (combs * cost_array).sum(axis=1) / 100
