@@ -903,7 +903,7 @@ def cost():
     for i in range(len(coke_output)):
         coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
 
-    D = np.loadtxt(io.StringIO(get_coal_properties_csv()), delimiter=',')
+    D = np.loadtxt(io.StringIO(get_coal_percentages_csv()), delimiter=',')
 
     P = np.loadtxt(io.StringIO(get_Individual_coal_properties_csv()), delimiter=',')
     # coke_properties
