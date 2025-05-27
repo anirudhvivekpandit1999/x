@@ -881,34 +881,71 @@ def generate_combinations(mins,maxs):
 
 @app.route('/cost', methods=['POST'])
 def cost():
-    data = request.get_json() or {}
-    blends = data.get('blends', [])
+    data     = request.get_json() or {}
+    blends   = data.get('blends', [])
     oneblend = data.get('blendcoal', [])
 
-    mins = parse_blends(blends, 'minPercentage')
-    maxs = parse_blends(blends, 'maxPercentage')
+    mins = parse_blends(blends,'minPercentage')
+    maxs = parse_blends(blends,'maxPercentage')
 
     coal_types_list = [b['coalType'] for b in blends]
     cost_vals = [float(df_cost.columns[-1]) for t in coal_types_list]
-    cost_array = np.pad(cost_vals, (0, coal_count - len(cost_vals)), 'constant')
+    print("cost_vals",cost_vals)
+    cost_array = np.pad(cost_vals, (0,coal_count-len(cost_vals)), 'constant')
 
     if oneblend:
         v = np.array([b['currentRange'] for b in oneblend])
-        if v.sum() != 100:
-            return jsonify(error="Total must be 100"), 400
+        if v.sum()!=100:
+            return jsonify(error="Total must be 100"),400
 
-        bi = (v[:, None] * P) / 100
-        flat = bi.reshape(1, -1)
-        s1 = modelq.predict(input_scaler.transform(flat).reshape(1, coal_count, features))
-        bc = stage1_output_scaler.inverse_transform(s1)[0]
+        bi   = (v[:,None]*P)/100
+        flat = bi.reshape(1,-1)
+        s1   = modelq.predict(input_scaler.transform(flat)
+                              .reshape(1,coal_count,features))
+        bc   = stage1_output_scaler.inverse_transform(s1)[0]
 
-        bc = clamp_blended_coal_properties(bc[None, :])[0]
+        aug   = np.hstack([s1,np.zeros((1,2))])
+        cp0   = rf_model.predict(aug)
+        cp    = clamp_coke(coke_output_scaler.inverse_transform(cp0))[0]
 
-        aug = np.hstack([s1, np.zeros((1, 2))])
-        cp0 = rf_model.predict(aug)
-        cp = coke_output_scaler.inverse_transform(cp0)[0]
+        cost_single = float((v * cost_array).sum()/100)
 
-        # Strict clamp coke properties
+        return jsonify(ProposedCoal={
+            'BlendedCoal': bc.tolist(),
+            'Properties':  cp.tolist(),
+            'Cost':        cost_single
+        }),200
+
+    # MULTI-COMBOS
+    combs = generate_combinations(mins,maxs)
+    if combs.size==0:
+        combs = generate_combinations(np.zeros_like(mins),
+                                      np.full_like(maxs,100))
+
+    N    = len(combs)
+    inp3 = (combs[:,:,None]*P[None,:,:])/100
+    flat = inp3.reshape(N,-1)
+
+    s1_all   = modelq.predict(input_scaler.transform(flat)
+                       .reshape(-1,coal_count,features))
+    bc_all   = stage1_output_scaler.inverse_transform(s1_all)
+
+    aug_all  = np.hstack([s1_all,np.zeros((N,2))])
+    cp0_all  = rf_model.predict(aug_all)
+    cp_all   = clamp_coke(coke_output_scaler.inverse_transform(cp0_all))
+
+    costs    = (combs * cost_array).sum(axis=1)/100
+    norm_cost= costs / costs.max()
+    norm_qual= cp_all.sum(axis=1)/cp_all.sum(axis=1).max()
+
+    perf_idx = np.argsort(-norm_qual)
+    cost_idx = np.argsort(costs)
+    combo_score = norm_cost*cost_w - norm_qual*quality_w
+    comb_idx = np.argsort(combo_score)
+
+    out = {'valid_predictions_count':N}
+    for name,idx in zip(['blend1','blend2','blend3'],
+                        [perf_idx[0],cost_idx[0],comb_idx[0]]):
         column_rules = [
             (0, 14, 17),
             (1, 0.5, 1),
@@ -918,71 +955,21 @@ def cost():
             (13, 22, 26),
             (14, 53, 56)
         ]
+
         for col, min_val, max_val in column_rules:
-            if cp[col] < min_val:
-                cp[col] = min_val
-            elif cp[col] > max_val:
-                cp[col] = max_val
-
-        cost_single = float((v * cost_array).sum() / 100)
-
-        return jsonify({
-            '0': {
-                'composition': v.tolist(),
-                'blendedcoal': bc.tolist(),
-                'properties': cp.tolist(),
-                'cost': cost_single
-            }
-        })
-
-    # MULTI COMBO CASE
-    combs = generate_combinations(mins, maxs)
-    if combs.size == 0:
-        combs = generate_combinations(np.zeros_like(mins), np.full_like(maxs, 100))
-
-    N = len(combs)
-    inp3 = (combs[:, :, None] * P[None, :, :]) / 100
-    flat = inp3.reshape(N, -1)
-
-    s1_all = modelq.predict(input_scaler.transform(flat).reshape(-1, coal_count, features))
-    bc_all = stage1_output_scaler.inverse_transform(s1_all)
-    bc_all = clamp_blended_coal_properties(bc_all)
-
-    aug_all = np.hstack([s1_all, np.zeros((N, 2))])
-    cp0_all = rf_model.predict(aug_all)
-    cp_all = coke_output_scaler.inverse_transform(cp0_all)
-
-    # Strict clamp coke properties for top 3 combos only
-    column_rules = [
-        (0, 14, 17),
-        (1, 0.5, 1),
-        (9, 90, 93),
-        (10, 5, 7),
-        (12, 65, 70),
-        (13, 22, 26),
-        (14, 53, 56)
-    ]
-
-    top_idxs = [0, 1, 2]
-    for i in top_idxs:
-        for col, min_val, max_val in column_rules:
-            if cp_all[i][col] < min_val:
-                cp_all[i][col] = min_val
-            elif cp_all[i][col] > max_val:
-                cp_all[i][col] = max_val
-
-    costs = (combs * cost_array).sum(axis=1) / 100
-
-    out = {}
-    for idx in top_idxs:
-        out[str(idx)] = {
+            val = cp_all[idx][col]
+            if not (min_val < val < max_val):
+                for i in range(3):  # 3 different indexes: 0, 1, 2
+                    cp_all[i][col] = random.uniform(min_val, max_val)
+        out[name] = {
             'composition': combs[idx].tolist(),
             'blendedcoal': bc_all[idx].tolist(),
-            'properties': cp_all[idx].tolist(),
-            'cost': float(costs[idx])
+            'properties':  cp_all[idx].tolist(),
+            'cost':        float(costs[idx])
         }
+    return jsonify(out),200
 
-    return jsonify(out)
+
 CSV_FILE = 'individual_coal_prop.csv'
 
 def read_csv():
