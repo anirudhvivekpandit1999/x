@@ -903,24 +903,24 @@ def cost():
     for i in range(len(coke_output)):
         coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
 
-    D = np.loadtxt('./coal_percentages/coal_percentages.csv', delimiter=',')
+    D = np.loadtxt(io.StringIO(get_coal_properties_csv()), delimiter=',')
 
-    P = np.loadtxt('./Individual_coal_properties/Individual_coal_properties.csv', delimiter=',')
+    P = np.loadtxt(io.StringIO(get_Individual_coal_properties_csv()), delimiter=',')
     # coke_properties
-    Coke_properties = np.loadtxt('./Coke_properties/coke_properties.csv', delimiter=',')
+    Coke_properties = np.loadtxt(io.StringIO(get_coke_properties_csv()), delimiter=',')
 
-    data = pd.read_csv('./individual_coal_prop.csv', dtype=str, header=None, on_bad_lines='skip')
+    data = pd.read_csv(io.StringIO(get_coal_properties_csv()), dtype=str, header=None, on_bad_lines='skip')
 
-    I = np.loadtxt('./individual_coal_prop.csv', delimiter=',', usecols=range(1, data.shape[1] - 2))
+    I = np.loadtxt(io.StringIO(get_coal_properties_csv()), delimiter=',', usecols=range(1, data.shape[1] - 2))
 
     if Option == 1:
-        Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Rec_Top_Char.csv',
+        Process_parameters = np.loadtxt('Process_parameter_for_Rec_Top_Char.csv',
                                         delimiter=',')
     elif Option == 2:
-        Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Rec_Stam_Char.csv',
+        Process_parameters = np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv',
                                         delimiter=',')
     elif Option == 3:
-        Process_parameters = np.loadtxt('./Process_Parameter_data/Process_parameter_for_Non_Rec_Stam_Char.csv',
+        Process_parameters = np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv',
                                         delimiter=',')
         print("This was running")
     else:
@@ -941,7 +941,7 @@ def cost():
     input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
 
     daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(52, -1)
-    Blended_coal_parameters = np.loadtxt('./Blended_Coal_data/blended_coal_data.csv', delimiter=',')
+    Blended_coal_parameters = np.loadtxt(io.StringIO(get_blended_coal_properties_csv()), delimiter=',')
 
     input_train, input_test, target_train, target_test = train_test_split(
         daily_vectors_tensor.numpy(), Blended_coal_parameters, test_size=0.2, random_state=42
@@ -1133,7 +1133,7 @@ def cost():
     predictions = output__scaler.inverse_transform(coke)
 
     def read_min_max_values():
-        df = pd.read_csv('min-maxvalues.csv')
+        df = pd.read_csv(io.StringIO(get_min_max_values_csv()))
         return {
             'ash': {
                 'lower': df['ash_lower'].iloc[0],
