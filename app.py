@@ -946,58 +946,21 @@ def cost():
     out = {'valid_predictions_count':N}
     for name,idx in zip(['blend1','blend2','blend3'],
                         [perf_idx[0],cost_idx[0],comb_idx[0]]):
-        if 14 < cp_all[idx][0] < 17:
-            cp_all[idx][0] = cp_all[idx][0]
-        else:
-            cp_all[0][0] = random.uniform(14, 17)
-            cp_all[1][0] = random.uniform(14, 17)
-            cp_all[2][0] = random.uniform(14, 17)
+        column_rules = [
+            (0, 14, 17),
+            (1, 0.5, 1),
+            (9, 90, 93),
+            (10, 5, 7),
+            (12, 65, 70),
+            (13, 22, 26),
+            (14, 53, 56)
+        ]
 
-        if 0.5 < cp_all[idx][1] < 1:
-            cp_all[idx][1] = cp_all[idx][1]
-        else:
-            cp_all[0][1] = random.uniform(0.5, 1)
-            cp_all[1][1] = random.uniform(0.5, 1)
-            cp_all[2][1] = random.uniform(0.5, 1)
-
-
-        if 90 < cp_all[idx][9] < 93:
-            cp_all[idx][9] = cp_all[idx][9]
-        else:
-            cp_all[0][9] = random.uniform(90, 93)
-            cp_all[1][9] = random.uniform(90, 93)
-            cp_all[2][9] = random.uniform(90, 93)
-
-
-        if 5 < cp_all[idx][10] < 7:
-            cp_all[idx][10] = cp_all[idx][9]
-        else:
-            cp_all[0][10] = random.uniform(5, 7)
-            cp_all[1][10] = random.uniform(5, 7)
-            cp_all[2][10] = random.uniform(5, 7)
-
-
-        if 65 < cp_all[idx][12] < 70:
-            cp_all[idx][12] = cp_all[idx][12]
-        else:
-            cp_all[0][12] = random.uniform(65, 70)
-            cp_all[1][12] = random.uniform(65, 70)
-            cp_all[2][12] = random.uniform(65, 70)
-
-
-        if 22 < cp_all[idx][13] < 26:
-            cp_all[idx][13] = cp_all[idx][13]
-        else:
-            cp_all[0][13] = random.uniform(22, 26)
-            cp_all[1][13] = random.uniform(22, 26)
-            cp_all[2][13] = random.uniform(22, 26)
-
-        if 53 < cp_all[idx][14] < 56:
-            cp_all[idx][14] = cp_all[idx][14]
-        else:
-            cp_all[0][14] = random.uniform(53, 56)
-            cp_all[1][14] = random.uniform(53, 56)
-            cp_all[2][14] = random.uniform(53, 56)
+        for col, min_val, max_val in column_rules:
+            val = cp_all[idx][col]
+            if not (min_val < val < max_val):
+                for i in range(3):
+                    cp_all[i][col] = random.uniform(min_val, max_val)
         out[name] = {
             'composition': combs[idx].tolist(),
             'blendedcoal': bc_all[idx].tolist(),
