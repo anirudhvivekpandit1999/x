@@ -946,20 +946,6 @@ def cost():
     out = {'valid_predictions_count':N}
     for name,idx in zip(['blend1','blend2','blend3'],
                         [perf_idx[0],cost_idx[0],comb_idx[0]]):
-        def generate_unique_uniforms(count, min_val, max_val, tolerance=1e-6):
-            """Generate a list of `count` unique random floats between min_val and max_val."""
-            values = set()
-            attempts = 0
-            while len(values) < count:
-                val = round(random.uniform(min_val, max_val), 6)  # rounding to avoid floating point similarity
-                if all(abs(val - v) > tolerance for v in values):
-                    values.add(val)
-                attempts += 1
-                if attempts > 100:  # prevent infinite loop
-                    raise Exception("Unable to generate unique values")
-            return list(values)
-
-        # Rules: (column index, min, max)
         column_rules = [
             (0, 14, 17),
             (1, 0.5, 1),
@@ -973,9 +959,8 @@ def cost():
         for col, min_val, max_val in column_rules:
             val = cp_all[idx][col]
             if not (min_val < val < max_val):
-                unique_vals = generate_unique_uniforms(3, min_val, max_val)
-                for i in range(3):
-                    cp_all[i][col] = unique_vals[i]
+                for i in range(3):  # 3 different indexes: 0, 1, 2
+                    cp_all[i][col] = random.uniform(min_val, max_val)
         out[name] = {
             'composition': combs[idx].tolist(),
             'blendedcoal': bc_all[idx].tolist(),
