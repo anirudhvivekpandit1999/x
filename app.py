@@ -1126,7 +1126,7 @@ def read_min_max_values():
         'coke_quality': df['coke_quality'].iloc[0]
     }
 
-
+initialize_app_startup()
 @app.route('/cost', methods=['POST'])
 def cost():
     data = request.json
