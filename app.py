@@ -776,51 +776,51 @@ def get_ranges():
 
 #model for cost ai page
 
+GLOBAL_DATA = {}
 
-@app.route('/cost', methods=['POST'])
-def cost():
-    data = request.json
-    if not data:
-        raise ValueError("No data received in the request")
-    coal_blends = data.get("blends")
-    coal_types = [blk["coalType"] for blk in coal_blends]
-    min_percentages = [int(blk["minPercentage"]) for blk in coal_blends]
-    max_percentages = [int(blk["maxPercentage"]) for blk in coal_blends]
 
-    min_percentages_padded = np.pad(min_percentages, (0, 14 - len(min_percentages)), mode='constant')
-    max_percentages_padded = np.pad(max_percentages, (0, 14 - len(max_percentages)), mode='constant')
-    desired_coke_params = data.get("cokeParameters")
+def initialize_app_startup():
+    """Initialize all static data and train models at startup"""
+    print("Loading static data and training models at startup...")
 
-    print("desired coke Parameters:", desired_coke_params)
-    oneblends = data.get('blendcoal', [])
-    user_input_values_padded = np.zeros(14)
+    # 1. Load all CSV data (these don't change between requests)
+    GLOBAL_DATA['D'] = np.loadtxt(io.StringIO(get_coal_percentages_csv()), delimiter=',')
+    GLOBAL_DATA['P'] = np.loadtxt(io.StringIO(get_Individual_coal_properties_csv()), delimiter=',')
+    GLOBAL_DATA['Coke_properties'] = np.loadtxt(io.StringIO(get_coke_properties_csv()), delimiter=',')
 
-    if oneblends:
-        user_input_values = np.array([blend['currentRange'] for blend in oneblends])
-        if user_input_values.sum() != 100:
-            return jsonify({"error": "The total of current range must add up to 100."}), 400
-        user_input_values_padded = np.pad(user_input_values, (0, 14 - len(user_input_values)), mode='constant')
-        user_input_values_padded = np.array(user_input_values_padded)
-        user_input_values_padded = np.array(user_input_values_padded).reshape(1, -1)
-        print("D-tensor-1", user_input_values_padded)
+    # Load coal properties data
+    data = pd.read_csv(io.StringIO(get_coal_properties_csv()), dtype=str, header=None, on_bad_lines='skip')
+    GLOBAL_DATA['I'] = np.loadtxt(io.StringIO(get_coal_properties_csv()), delimiter=',',
+                                  usecols=range(1, data.shape[1] - 2))
+    GLOBAL_DATA['coal_data'] = data  # Store for cost calculations
 
-    else:
-        # If blendcoal data is missing, don't do anything (leave the padded zero array)
-        pass
+    # Load blended coal parameters
+    GLOBAL_DATA['Blended_coal_parameters'] = np.loadtxt(io.StringIO(get_blended_coal_properties_csv()), delimiter=',')
 
-    print("D-tensor", user_input_values_padded)
-    Option = data.get("processType")
-    print(f"Option (type: {type(Option)}):", Option)
+    # Load min/max values
+    GLOBAL_DATA['min_max_values'] = read_min_max_values()
 
-    try:
-        Option = int(Option)
-    except ValueError:
-        raise ValueError(f"Invalid option value: {Option} (could not convert to integer)")
+    # 2. Load process parameters for different options
+    GLOBAL_DATA['Process_parameters'] = {
+        1: np.loadtxt('Process_parameter_for_Rec_Top_Char.csv', delimiter=','),
+        2: np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv', delimiter=','),
+        3: np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
+    }
 
-    proces_para = data.get("processParameters", {})
+    # 3. Process training data from CSV (this is expensive and static)
+    GLOBAL_DATA['training_data'] = process_training_data()
 
-    print("model Process Parameters:", proces_para)
+    # 4. Pre-compute daily vectors tensor (expensive computation)
+    GLOBAL_DATA['daily_vectors_tensor'] = compute_daily_vectors_tensor(GLOBAL_DATA['D'], GLOBAL_DATA['P'])
 
+    # 5. Train and store both models with scalers
+    train_and_store_models()
+
+    print("Startup initialization complete!")
+
+
+def process_training_data():
+    """Process the training CSV data - this is expensive and static"""
     file_path = 'submitted_training_coal_data.csv'
 
     coal_percentages = []
@@ -829,6 +829,7 @@ def cost():
     process_parameters = []
     coke_outputs = []
     processed_serial_numbers = set()
+
     process_parameter_keys = [
         'charging_tonnage', 'moisture_content', 'bulk_density', 'charging_temperature',
         'battery_operating_temperature', 'cross_wall_temperature', 'push_force', 'pri',
@@ -843,7 +844,7 @@ def cost():
     with open(file_path, 'r') as file:
         reader = csv.reader(file)
         for row in reader:
-            if row[0] not in ('', 'NaT'):  # Check if the serial number is not empty or NaT
+            if row[0] not in ('', 'NaT'):
                 serial_number = row[0]
                 if serial_number not in processed_serial_numbers:
                     coal_percentage = float(row[3])
@@ -860,12 +861,11 @@ def cost():
                     coke_outputs.append(last_coke_output)
 
                     if row[7].strip('{}') != '{nan}':
-                        process_params_str = row[7].replace("'", '"')
-                        process_params_str = process_params_str.replace(': ', ':')
+                        process_params_str = row[7].replace("'", '"').replace(': ', ':')
                         try:
                             process_params = json.loads(process_params_str)
-                            ordered_values = [float(process_params[key]) if key in process_params else 0 for key in
-                                              process_parameter_keys]
+                            ordered_values = [float(process_params[key]) if key in process_params else 0
+                                              for key in process_parameter_keys]
                             last_process_params = ordered_values
                         except json.JSONDecodeError:
                             last_process_params = [0] * len(process_parameter_keys)
@@ -883,49 +883,17 @@ def cost():
                                             row[4].strip('{}').replace(', ', ',').split(',')]
                     coal_properties.append(coal_property_values[:15])
 
-    blend_arrays = []
-    for i, coal_percentage in enumerate(coal_percentages):
-        properties_subset = np.array(coal_properties[i])
-        blend = coal_percentage * properties_subset / 100
-        blend_arrays.append(blend)
+    return {
+        'coal_percentages': coal_percentages,
+        'coal_properties': coal_properties,
+        'blends': blends,
+        'process_parameters': process_parameters,
+        'coke_outputs': coke_outputs
+    }
 
-    blendY = np.array(blends)
-    blendX = np.array(blend_arrays)
 
-    pad_pro_par = [
-        np.pad(row, (0, max(0, blendY.shape[1] - len(row))), 'constant') if len(row) < 15 else row
-        for row in process_parameters
-    ]
-    process_par = np.array(pad_pro_par)
-    conv_matrix = blendY + process_par
-
-    coke_output = [np.array(row) for row in coke_outputs]
-    for i in range(len(coke_output)):
-        coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
-
-    D = np.loadtxt(io.StringIO(get_coal_percentages_csv()), delimiter=',')
-
-    P = np.loadtxt(io.StringIO(get_Individual_coal_properties_csv()), delimiter=',')
-    # coke_properties
-    Coke_properties = np.loadtxt(io.StringIO(get_coke_properties_csv()), delimiter=',')
-
-    data = pd.read_csv(io.StringIO(get_coal_properties_csv()), dtype=str, header=None, on_bad_lines='skip')
-
-    I = np.loadtxt(io.StringIO(get_coal_properties_csv()), delimiter=',', usecols=range(1, data.shape[1] - 2))
-
-    if Option == 1:
-        Process_parameters = np.loadtxt('Process_parameter_for_Rec_Top_Char.csv',
-                                        delimiter=',')
-    elif Option == 2:
-        Process_parameters = np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv',
-                                        delimiter=',')
-    elif Option == 3:
-        Process_parameters = np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv',
-                                        delimiter=',')
-        print("This was running")
-    else:
-        raise ValueError(f"Invalid option value: {Option}")
-
+def compute_daily_vectors_tensor(D, P):
+    """Pre-compute the expensive daily vectors tensor calculation"""
     D_tensor = tf.constant(D, dtype=tf.float32)
     P_tensor = tf.constant(P, dtype=tf.float32)
 
@@ -937,17 +905,46 @@ def cost():
             row_vector.append(product_vector)
         daily_vectors.append(tf.stack(row_vector))
 
-    daily_vectors_tensor = tf.stack(daily_vectors)
-    input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
+    return tf.stack(daily_vectors)
 
-    daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(52, -1)
-    Blended_coal_parameters = np.loadtxt(io.StringIO(get_blended_coal_properties_csv()), delimiter=',')
+
+def train_and_store_models():
+    """Train both models and store them with their scalers"""
+    # Process training data
+    training_data = GLOBAL_DATA['training_data']
+
+    # Build blend arrays
+    blend_arrays = []
+    for i, coal_percentage in enumerate(training_data['coal_percentages']):
+        properties_subset = np.array(training_data['coal_properties'][i])
+        blend = coal_percentage * properties_subset / 100
+        blend_arrays.append(blend)
+
+    blendY = np.array(training_data['blends'])
+    blendX = np.array(blend_arrays)
+
+    # Process parameters
+    pad_pro_par = [
+        np.pad(row, (0, max(0, blendY.shape[1] - len(row))), 'constant') if len(row) < 15 else row
+        for row in training_data['process_parameters']
+    ]
+    process_par = np.array(pad_pro_par)
+    conv_matrix = blendY + process_par
+
+    # Coke output processing
+    coke_output = [np.array(row) for row in training_data['coke_outputs']]
+    for i in range(len(coke_output)):
+        coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
+
+    # Train first model (coal blending model)
+    daily_vectors_flattened = GLOBAL_DATA['daily_vectors_tensor'].numpy().reshape(52, -1)
 
     input_train, input_test, target_train, target_test = train_test_split(
-        daily_vectors_tensor.numpy(), Blended_coal_parameters, test_size=0.2, random_state=42
+        GLOBAL_DATA['daily_vectors_tensor'].numpy(), GLOBAL_DATA['Blended_coal_parameters'],
+        test_size=0.2, random_state=42
     )
 
-    # Scaling
+    # Scaling for first model
     input_scaler = MinMaxScaler()
     output_scaler = MinMaxScaler()
 
@@ -962,12 +959,7 @@ def cost():
     target_train_scaled = output_scaler.fit_transform(target_train)
     target_test_scaled = output_scaler.transform(target_test)
 
-    input_train_scaled = input_train_scaled.reshape(input_train.shape)
-    input_test_scaled = input_test_scaled.reshape(input_test.shape)
-    input_train_scaled = input_train_scaled.reshape(-1, 14, 15)
-    input_test_scaled = input_test_scaled.reshape(-1, 14, 15)
-
-    # Define model
+    # Build and train first model
     modelq = keras.Sequential([
         layers.Input(shape=(14, 15)),
         layers.Flatten(),
@@ -975,53 +967,42 @@ def cost():
         layers.Dense(512, activation='relu'),
         layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
         layers.LayerNormalization(),
-
         layers.Dense(256, activation='tanh'),
         layers.Dropout(0.3),
         layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
         layers.Dropout(0.3),
-
         layers.Dense(128, activation='relu'),
         layers.BatchNormalization(),
         layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
         layers.LayerNormalization(),
-
         layers.Dense(64, activation='relu'),
         layers.Dropout(0.2),
-
         layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
         layers.Dropout(0.25),
-
         layers.Dense(32, activation='relu'),
         layers.BatchNormalization(),
-
         layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
         layers.LayerNormalization(),
         layers.Dense(15, activation='linear')
     ])
 
     modelq.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
-                   loss='mse',
-                   metrics=['mae'])
-    modelq.summary()
+                   loss='mse', metrics=['mae'])
 
     modelq.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8,
-               validation_data=(input_test_scaled, target_test_scaled))
-    y_pred = modelq.predict(input_test_scaled)
-    y_pred = output_scaler.inverse_transform(y_pred)
-    mse = np.mean((target_test - y_pred) ** 2)
+               validation_data=(input_test_scaled, target_test_scaled), verbose=0)
 
-    if Option == 3:
-        Process_parameters = np.pad(Process_parameters, ((0, 0), (0, 2)), mode='constant', constant_values=0)
+    # Train second model (coke properties model)
+    Conv_matrix = GLOBAL_DATA['Blended_coal_parameters'] + GLOBAL_DATA['Process_parameters'][1]  # Default to option 1
 
-    Conv_matrix = Blended_coal_parameters + Process_parameters
+    X_train, X_test, y_train, y_test = train_test_split(
+        Conv_matrix, GLOBAL_DATA['Coke_properties'], test_size=0.2, random_state=42
+    )
 
-    X_train, X_test, y_train, y_test = train_test_split(Conv_matrix, Coke_properties, test_size=0.2, random_state=42)
-
-    # Scaling second phase
-
+    # Scaling for second model
     input__scaler = MinMaxScaler()
     output__scaler = MinMaxScaler()
+
     input_train_reshaped = X_train.reshape(X_train.shape[0], -1)
     input_test_reshaped = X_test.reshape(X_test.shape[0], -1)
 
@@ -1030,7 +1011,8 @@ def cost():
 
     target_train_scaled = output__scaler.fit_transform(y_train)
     target_test_scaled = output__scaler.transform(y_test)
-    # # Define second model
+
+    # Build and train second model
     rf_model = keras.Sequential([
         layers.Input(shape=(15, 1)),
         layers.Flatten(),
@@ -1038,41 +1020,155 @@ def cost():
         layers.Dense(512, activation='relu'),
         layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
         layers.LayerNormalization(),
-
         layers.Dense(256, activation='tanh'),
         layers.Dropout(0.3),
         layers.Dense(256, activation='leaky_relu', kernel_initializer='he_normal'),
         layers.Dropout(0.3),
-
         layers.Dense(128, activation='relu'),
         layers.BatchNormalization(),
         layers.Dense(128, activation='swish', kernel_initializer='he_normal'),
         layers.LayerNormalization(),
-
         layers.Dense(64, activation='relu'),
         layers.Dropout(0.2),
-
         layers.Dense(64, activation='swish', kernel_initializer='he_normal'),
         layers.Dropout(0.25),
-
         layers.Dense(32, activation='relu'),
         layers.BatchNormalization(),
-
         layers.Dense(32, activation='swish', kernel_initializer='he_normal'),
         layers.LayerNormalization(),
         layers.Dense(15, activation='linear')
     ])
 
     rf_model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
-                     loss='mse',
-                     metrics=['mae'])
+                     loss='mse', metrics=['mae'])
+
     rf_model.fit(input_train_scaled, target_train_scaled, epochs=100, batch_size=8,
-                 validation_data=(input_test_scaled, target_test_scaled))
+                 validation_data=(input_test_scaled, target_test_scaled), verbose=0)
 
-    y_pred = rf_model.predict(input_test_scaled)
-    y_pred = output_scaler.inverse_transform(y_pred)
-    mse = np.mean((y_test - y_pred) ** 2)
+    # Store models and scalers
+    GLOBAL_DATA['models'] = {
+        'coal_model': modelq,
+        'coke_model': rf_model,
+        'input_scaler': input_scaler,
+        'output_scaler': output_scaler,
+        'input_scaler_2': input__scaler,
+        'output_scaler_2': output__scaler
+    }
 
+
+def read_min_max_values():
+    """Helper function to read min/max values"""
+    df = pd.read_csv(io.StringIO(get_min_max_values_csv()))
+    return {
+        'ash': {
+            'lower': df['ash_lower'].iloc[0],
+            'upper': df['ash_upper'].iloc[0],
+            'weight': df['ash_weight'].iloc[0]
+        },
+        'vm': {
+            'lower': df['vm_lower'].iloc[0],
+            'upper': df['vm_upper'].iloc[0],
+            'weight': df['vm_weight'].iloc[0]
+        },
+        'm40': {
+            'lower': df['m40_lower'].iloc[0],
+            'upper': df['m40_upper'].iloc[0],
+            'weight': df['m40_weight'].iloc[0]
+        },
+        'm10': {
+            'lower': df['m10_lower'].iloc[0],
+            'upper': df['m10_upper'].iloc[0],
+            'weight': df['m10_weight'].iloc[0]
+        },
+        'csr': {
+            'lower': df['csr_lower'].iloc[0],
+            'upper': df['csr_upper'].iloc[0],
+            'weight': df['csr_weight'].iloc[0]
+        },
+        'cri': {
+            'lower': df['cri_lower'].iloc[0],
+            'upper': df['cri_upper'].iloc[0],
+            'weight': df['cri_weight'].iloc[0]
+        },
+        'ams': {
+            'lower': df['ams_lower'].iloc[0],
+            'upper': df['ams_upper'].iloc[0],
+            'weight': df['ams_weight'].iloc[0]
+        },
+        'cost_weightage': df['cost_weightage'].iloc[0],
+        'coke_quality': df['coke_quality'].iloc[0]
+    }
+
+
+@app.route('/cost', methods=['POST'])
+def cost():
+    data = request.json
+    if not data:
+        raise ValueError("No data received in the request")
+
+    # Extract input data
+    coal_blends = data.get("blends")
+    coal_types = [blk["coalType"] for blk in coal_blends]
+    min_percentages = [int(blk["minPercentage"]) for blk in coal_blends]
+    max_percentages = [int(blk["maxPercentage"]) for blk in coal_blends]
+
+    # Pad percentages to 14 elements
+    min_percentages_padded = np.pad(min_percentages, (0, 14 - len(min_percentages)), mode='constant')
+    max_percentages_padded = np.pad(max_percentages, (0, 14 - len(max_percentages)), mode='constant')
+
+    desired_coke_params = data.get("cokeParameters")
+    print("desired coke Parameters:", desired_coke_params)
+
+    # Handle user input blend
+    oneblends = data.get('blendcoal', [])
+    user_input_values_padded = np.zeros(14)
+
+    if oneblends:
+        user_input_values = np.array([blend['currentRange'] for blend in oneblends])
+        if user_input_values.sum() != 100:
+            return jsonify({"error": "The total of current range must add up to 100."}), 400
+        user_input_values_padded = np.pad(user_input_values, (0, 14 - len(user_input_values)), mode='constant')
+        user_input_values_padded = np.array(user_input_values_padded).reshape(1, -1)
+        print("D-tensor-1", user_input_values_padded)
+
+    print("D-tensor", user_input_values_padded)
+
+    # Process type option
+    Option = data.get("processType")
+    print(f"Option (type: {type(Option)}):", Option)
+
+    try:
+        Option = int(Option)
+    except ValueError:
+        raise ValueError(f"Invalid option value: {Option} (could not convert to integer)")
+
+    proces_para = data.get("processParameters", {})
+    print("model Process Parameters:", proces_para)
+
+    # Get process parameters from global data
+    if Option not in GLOBAL_DATA['Process_parameters']:
+        raise ValueError(f"Invalid option value: {Option}")
+
+    Process_parameters = GLOBAL_DATA['Process_parameters'][Option]
+
+    # Pad process parameters if Option == 3
+    if Option == 3:
+        proces_para = np.pad(proces_para, (0, 2), mode='constant', constant_values=0)
+
+    # Get pre-trained models and scalers
+    models = GLOBAL_DATA['models']
+    modelq = models['coal_model']
+    rf_model = models['coke_model']
+    input_scaler = models['input_scaler']
+    output_scaler = models['output_scaler']
+    input__scaler = models['input_scaler_2']
+    output__scaler = models['output_scaler_2']
+
+    # Get other global data
+    P = GLOBAL_DATA['P']
+    min_max_values = GLOBAL_DATA['min_max_values']
+
+    # Generate all valid combinations
     def generate_combinations(index, current_combination, current_sum):
         target_sum = 100
         if index == len(min_percentages_padded) - 1:
@@ -1086,16 +1182,11 @@ def cost():
 
     all_combinations = np.array(list(itertools.islice(generate_combinations(0, [], 0), 10000)))
 
-    if (Option == 3):
-        proces_para = np.pad(proces_para, (0, 2), mode='constant', constant_values=0)
+    # Prepare tensors for new combinations
+    D_tensor = tf.constant(all_combinations, dtype=tf.float32)
+    P_tensor = tf.constant(P, dtype=tf.float32)
 
-    D_ = all_combinations
-    P_ = P
-
-    # Compute daily vectors
-    D_tensor = tf.constant(D_, dtype=tf.float32)
-    P_tensor = tf.constant(P_, dtype=tf.float32)
-
+    # Compute daily vectors for new combinations
     daily_vectors = []
     for i in range(D_tensor.shape[0]):
         row_vector = []
@@ -1105,66 +1196,21 @@ def cost():
         daily_vectors.append(tf.stack(row_vector))
 
     daily_vectors_tensor = tf.stack(daily_vectors)
-    input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
-
     daily_vectors_flattened = daily_vectors_tensor.numpy().reshape(daily_vectors_tensor.shape[0], -1)
-    b1 = daily_vectors_flattened
 
-    b1 = b1.reshape(b1.shape[0], -1)
-    b1_scaled = input_scaler.transform(b1)
-    b1 = b1.reshape(-1, 14, 15)
-    blend1 = modelq.predict(b1)
+    # Predict blended coal properties using pre-trained model
+    b1_scaled = input_scaler.transform(daily_vectors_flattened)
+    b1_scaled = b1_scaled.reshape(-1, 14, 15)
+    blend1 = modelq.predict(b1_scaled)
     blended_coal_properties = output_scaler.inverse_transform(blend1)
-    blend1 = blend1 + proces_para
-    blend1 = blend1.reshape(blend1.shape[0], -1)
-    blend1 = input__scaler.transform(blend1)
-    coke = rf_model.predict(blend1)
+
+    # Predict coke properties using second pre-trained model
+    blend1_with_process = blended_coal_properties + proces_para
+    blend1_scaled = input__scaler.transform(blend1_with_process)
+    coke = rf_model.predict(blend1_scaled)
     predictions = output__scaler.inverse_transform(coke)
 
-    def read_min_max_values():
-        df = pd.read_csv(io.StringIO(get_min_max_values_csv()))
-        return {
-            'ash': {
-                'lower': df['ash_lower'].iloc[0],
-                'upper': df['ash_upper'].iloc[0],
-                'weight': df['ash_weight'].iloc[0]
-            },
-            'vm': {
-                'lower': df['vm_lower'].iloc[0],
-                'upper': df['vm_upper'].iloc[0],
-                'weight': df['vm_weight'].iloc[0]
-            },
-            'm40': {
-                'lower': df['m40_lower'].iloc[0],
-                'upper': df['m40_upper'].iloc[0],
-                'weight': df['m40_weight'].iloc[0]
-            },
-            'm10': {
-                'lower': df['m10_lower'].iloc[0],
-                'upper': df['m10_upper'].iloc[0],
-                'weight': df['m10_weight'].iloc[0]
-            },
-            'csr': {
-                'lower': df['csr_lower'].iloc[0],
-                'upper': df['csr_upper'].iloc[0],
-                'weight': df['csr_weight'].iloc[0]
-            },
-            'cri': {
-                'lower': df['cri_lower'].iloc[0],
-                'upper': df['cri_upper'].iloc[0],
-                'weight': df['cri_weight'].iloc[0]
-            },
-            'ams': {
-                'lower': df['ams_lower'].iloc[0],
-                'upper': df['ams_upper'].iloc[0],
-                'weight': df['ams_weight'].iloc[0]
-            },
-            'cost_weightage': df['cost_weightage'].iloc[0],
-            'coke_quality': df['coke_quality'].iloc[0]
-        }
-
-    min_max_values = read_min_max_values()
-
+    # Extract desired values
     desired_ash = desired_coke_params["ASH"]
     desired_vm = desired_coke_params["VM"]
     desired_m40 = desired_coke_params["M_40MM"]
@@ -1173,6 +1219,7 @@ def cost():
     desired_cri = desired_coke_params["CRI"]
     desired_ams = desired_coke_params["AMS"]
 
+    # Filter valid predictions
     def filter_valid_and_invalid(predictions, combinations, blended_coal_properties, min_max_values):
         ash_min = min_max_values['ash']['lower']
         ash_max = min_max_values['ash']['upper']
@@ -1197,24 +1244,21 @@ def cost():
         print(f"CSR: {csr_min} to {csr_max}")
         print(f"CRI: {cri_min} to {cri_max}")
         print(f"AMS: {ams_min} to {ams_max}")
+
         valid_indices = []
         invalid_indices = []
         for i, prediction in enumerate(predictions):
-            # Check if all values are within the specified range
-            if (
-                    ash_min <= prediction[0] <= ash_max and  # ASH
-                    vm_min <= prediction[1] <= vm_max and  # VM
-                    m40_min <= prediction[9] <= m40_max and  # M_40
-                    m10_min <= prediction[10] <= m10_max and  # M_10
-                    csr_min <= prediction[12] <= csr_max and  # CSR
-                    cri_min <= prediction[13] <= cri_max and  # CRI
-                    ams_min <= prediction[14] <= ams_max  # AMS
-
-            ):
+            if (ash_min <= prediction[0] <= ash_max and
+                    vm_min <= prediction[1] <= vm_max and
+                    m40_min <= prediction[9] <= m40_max and
+                    m10_min <= prediction[10] <= m10_max and
+                    csr_min <= prediction[12] <= csr_max and
+                    cri_min <= prediction[13] <= cri_max and
+                    ams_min <= prediction[14] <= ams_max):
                 valid_indices.append(i)
             else:
                 invalid_indices.append(i)
-        # Separate valid and invalid predictions, combinations, and blended coal properties
+
         valid_predictions = predictions[valid_indices]
         valid_combinations = combinations[valid_indices]
         valid_blended_coal_properties = [blended_coal_properties[i] for i in valid_indices]
@@ -1225,29 +1269,19 @@ def cost():
         print(f"Number of valid predictions: {len(valid_predictions)}")
         print(f"Number of invalid predictions: {len(invalid_predictions)}")
 
-        return (
-            valid_predictions,
-            valid_combinations,
-            valid_blended_coal_properties,
-            invalid_predictions,
-            invalid_combinations,
-            invalid_blended_coal_properties,
-        )
+        return (valid_predictions, valid_combinations, valid_blended_coal_properties,
+                invalid_predictions, invalid_combinations, invalid_blended_coal_properties)
 
-    # Filtering valid and invalid predictions, combinations, and blended coal properties
-    (
-        valid_predictions,
-        valid_combinations,
-        valid_blended_coal_properties,
-        invalid_predictions,
-        invalid_combinations,
-        invalid_blended_coal_properties,
-    ) = filter_valid_and_invalid(predictions, all_combinations, blended_coal_properties, min_max_values)
+    # Filter valid and invalid predictions
+    (valid_predictions, valid_combinations, valid_blended_coal_properties,
+     invalid_predictions, invalid_combinations, invalid_blended_coal_properties) = \
+        filter_valid_and_invalid(predictions, all_combinations, blended_coal_properties, min_max_values)
 
     predictions = valid_predictions
     all_combinations = valid_combinations
     blended_coal_properties = valid_blended_coal_properties
 
+    # Calculate performance differences
     differences = []
     for prediction in predictions:
         diff = []
@@ -1258,7 +1292,6 @@ def cost():
         diff.append(((prediction[12] - desired_csr) / desired_csr) * min_max_values['csr']['weight'])
         diff.append(((desired_cri - prediction[13]) / desired_cri) * min_max_values['cri']['weight'])
         diff.append(((prediction[14] - desired_ams) / desired_ams) * min_max_values['ams']['weight'])
-
         differences.append(diff)
 
     total_differences = [sum(diff) for diff in differences]
@@ -1269,70 +1302,60 @@ def cost():
     sorted_diff = [differences[i] for i in sorted_indices]
     sorted_blended_coal_properties = [blended_coal_properties[i] for i in sorted_indices]
 
+    # Calculate costs
     coal_costs = []
     for i, blend in enumerate(sorted_blends):
         coal_type_costs = []
         for j, coal_type in enumerate(coal_types):
             if j < len(blend):
-                # Map the coal type to the CSV file and retrieve the cost
-                coal_type_cost = float(data.loc[data[0] == coal_type, data.columns[-2]].values[0])
+                coal_type_cost = float(GLOBAL_DATA['coal_data'].loc[GLOBAL_DATA['coal_data'][0] == coal_type,
+                GLOBAL_DATA['coal_data'].columns[-2]].values[0])
                 coal_type_costs.append(coal_type_cost)
         coal_costs.append(coal_type_costs)
 
-    total_costs = [sum(float(blend[i]) * coal_costs[j][i] / 100 for i in range(min(len(blend), len(coal_costs[j])))) for
-                   j, blend in enumerate(sorted_blends)]
+    total_costs = [sum(float(blend[i]) * coal_costs[j][i] / 100
+                       for i in range(min(len(blend), len(coal_costs[j]))))
+                   for j, blend in enumerate(sorted_blends)]
 
     print(f"coal_costs: {coal_costs}")
 
+    # Sort by cost
     sorted_indices_by_cost = np.argsort(total_costs)
     sorted_blend_cost = sorted_blends[sorted_indices_by_cost]
     sorted_prediction_cost = sorted_predictions[sorted_indices_by_cost]
     sorted_total_cost = np.array(total_costs)[sorted_indices_by_cost]
-
     sorted_blended_coal_properties_cost = [sorted_blended_coal_properties[i] for i in sorted_indices_by_cost]
     sorted_diff_cost = [sorted_diff[i] for i in sorted_indices_by_cost]
 
-    # -----------------------------------------------------------------------------
     # Combine Cost and Performance
-    # -----------------------------------------------------------------------------
     normalized_costs = (total_costs - np.min(total_costs)) / (np.max(total_costs) - np.min(total_costs))
-    normalized_differences = (
-            (total_differences - np.min(total_differences))
-            / (np.max(total_differences) - np.min(total_differences))
-    )
+    normalized_differences = ((total_differences - np.min(total_differences)) /
+                              (np.max(total_differences) - np.min(total_differences)))
 
     cost_weight = min_max_values['cost_weightage']
     performance_weight = min_max_values['coke_quality']
 
     combined_scores = (cost_weight * normalized_costs) + (performance_weight * normalized_differences)
-
-    # best_combined_index refers to the ORIGINAL arrays (not sorted)
     best_combined_index = np.argmin(combined_scores)
 
-    # -----------------------------------------------------------------------------
     # Helper for Cost Calculation
-    # -----------------------------------------------------------------------------
     def calculate_cost(blend, coal_costs):
         return sum(blend[i] * coal_costs[0][i] / 100 for i in range(min(len(blend), len(coal_costs[0]))))
 
-    # =============================================================================
-    # 3. Pick Three Representative Blends
-    # =============================================================================
-
-    # 3.1. Best by performance (first in performance-sorted list)
+    # Pick Three Representative Blends
+    # 1. Best by performance (first in performance-sorted list)
     blend_1 = sorted_blends[0]
     blended_coal_1 = sorted_blended_coal_properties[0]
     blend_1_properties = sorted_predictions[0]
     blend_1_cost = calculate_cost(blend_1, coal_costs)
 
-    # 3.2. Cheapest (first in cost-sorted list)
+    # 2. Cheapest (first in cost-sorted list)
     blend_2 = sorted_blend_cost[0]
     blended_coal_2 = sorted_blended_coal_properties_cost[0]
     blend_2_properties = sorted_prediction_cost[0]
-    blend_2_cost = sorted_total_cost[0]  # Already computed above
+    blend_2_cost = sorted_total_cost[0]
 
-    # 3.3. Best combined (from original arrays, using best_combined_index)
-    # Fix 2: Use original arrays so the index lines up.
+    # 3. Best combined (from original arrays, using best_combined_index)
     blend_3 = all_combinations[best_combined_index]
     blended_coal_3 = valid_blended_coal_properties[best_combined_index]
     blend_3_properties = valid_predictions[best_combined_index]
@@ -1342,6 +1365,7 @@ def cost():
     print(f"Blend 2 Cost: {blend_2_cost}")
     print(f"Blend 3 Cost: {blend_3_cost}")
 
+    # Prepare response
     response = {
         "blend1": {
             "composition": blend_1.tolist(),
@@ -1361,18 +1385,15 @@ def cost():
             "properties": blend_3_properties.tolist(),
             "cost": blend_3_cost
         },
-
         "valid_predictions_count": len(valid_predictions)
-
     }
 
+    # Handle user input prediction if provided
     if np.any(user_input_values_padded != 0):
         D_tensor = tf.constant(user_input_values_padded, dtype=tf.float32)
         print(D_tensor)
-        daily_vector_test = []
-        D_test = tf.constant(D_tensor)
-        P_test = tf.constant(P_tensor)
 
+        # Compute daily vectors for user input
         daily_vectors = []
         for i in range(D_tensor.shape[0]):
             row_vector = []
@@ -1380,42 +1401,34 @@ def cost():
                 product_vector = tf.multiply(tf.cast(D_tensor[i], tf.float32), tf.cast(P_tensor[:, j], tf.float32))
                 row_vector.append(product_vector)
             daily_vectors.append(tf.stack(row_vector))
+
         daily_vectors_tensor = tf.stack(daily_vectors)
-        input_data = tf.reshape(daily_vectors_tensor, [-1, 14])
-
-        daily_vectors_tensor.shape
-        daily_vectors_tensor_test = daily_vectors_tensor
-        daily_vectors_tensor_test_reshaped = daily_vectors_tensor_test.numpy().reshape(1, -1)
-
+        daily_vectors_tensor_test_reshaped = daily_vectors_tensor.numpy().reshape(1, -1)
         daily_vectors_tensor_test_scaled = input_scaler.transform(daily_vectors_tensor_test_reshaped)
-        print("Shape before reshaping:", daily_vectors_tensor_test_scaled.shape)
         daily_vectors_tensor_test_scaled = daily_vectors_tensor_test_scaled.reshape(-1, 14, 15)
+
         prediction_scaled = modelq.predict(daily_vectors_tensor_test_scaled)
         prediction = output_scaler.inverse_transform(prediction_scaled)
 
         print("Predicted values:", prediction)
 
         Conv = proces_para + prediction
-        # blend1 = blend1.reshape(blend1.shape[0], -1)
-        blend1 = input__scaler.transform(Conv)
-        coke = rf_model.predict(Conv)
-        predictions = output__scaler.inverse_transform(coke)
+        blend1_scaled = input__scaler.transform(Conv)
+        coke = rf_model.predict(blend1_scaled)
+        predictions_user = output__scaler.inverse_transform(coke)
 
-        print(predictions)
+        print(predictions_user)
 
-        # Add the predicted proposed coal and coke values to the response
         response["ProposedCoal"] = {
             "Blend2": prediction.tolist(),
-            "Coke2": predictions.tolist()
+            "Coke2": predictions_user.tolist()
         }
     else:
-        # If no valid blendcoal data is provided, indicate that no prediction is made
         response["ProposedCoal"] = {
             "error": "No valid blendcoal data provided, unable to make predictions."
         }
+
     return jsonify(response), 200
-
-
 CSV_FILE = 'individual_coal_prop.csv'
 
 def read_csv():
