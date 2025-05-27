@@ -784,55 +784,59 @@ MAX_COMBINATIONS = 10000
 def get_submitted_training_coal_csv(): return open("submitted_training_coal_data.csv").read()
 
 
-D         = np.loadtxt(io.StringIO(get_coal_percentages_csv()), delimiter=",")
-P         = np.loadtxt(io.StringIO(get_Individual_coal_properties_csv()), delimiter=",")
+D = np.loadtxt(io.StringIO(get_coal_percentages_csv()), delimiter=",")
+P = np.loadtxt(io.StringIO(get_Individual_coal_properties_csv()), delimiter=",")
 BLENDED_H = np.loadtxt(io.StringIO(get_blended_coal_properties_csv()), delimiter=",")
-COKE_H    = np.loadtxt(io.StringIO(get_coke_properties_csv()), delimiter=",")
-df_cost   = pd.read_csv(io.StringIO(get_coal_properties_csv()))
-mm_df     = pd.read_csv(io.StringIO(get_min_max_values_csv()))
+COKE_H = np.loadtxt(io.StringIO(get_coke_properties_csv()), delimiter=",")
+df_cost = pd.read_csv(io.StringIO(get_coal_properties_csv()))
+mm_df = pd.read_csv(io.StringIO(get_min_max_values_csv()))
 
-print(df_cost)
-coal_count     = D.shape[1]
-features       = P.shape[1]
-coke_features  = COKE_H.shape[1]
+coal_count = D.shape[1]
+features = P.shape[1]
+coke_features = COKE_H.shape[1]
 stage2_input_d = features + 2
 
-metrics       = ['ash','vm','m40','m10','csr','cri','ams']
-lower_bounds  = mm_df[[m+'_lower' for m in metrics]].iloc[0].values
-upper_bounds  = mm_df[[m+'_upper' for m in metrics]].iloc[0].values
-cost_w        = mm_df['cost_weightage'].iloc[0]
-quality_w     = mm_df['coke_quality'].iloc[0]
+metrics = ['ash', 'vm', 'm40', 'm10', 'csr', 'cri', 'ams']
+lower_bounds = mm_df[[m + '_lower' for m in metrics]].iloc[0].values
+upper_bounds = mm_df[[m + '_upper' for m in metrics]].iloc[0].values
+cost_w = mm_df['cost_weightage'].iloc[0]
+quality_w = mm_df['coke_quality'].iloc[0]
 
-# Manually add realistic bounds for coke properties, including temperatures
-# (example indices—adjust according to your data columns)
-# Let's assume the coke properties columns correspond to this order:
-# [ash, vm, m40, m10, csr, cri, ams, softening_temp, resolid_min, resolid_max, plastic_range, sulphur, phosphorous, csn]
-# You might need to adjust indices if your order is different
-
-# Define realistic bounds (adjust as needed for your domain)
-coke_bounds = {
-    'ash': (10, 30),              # %
-    'vm': (10, 40),               # volatile matter %
-    'm40': (0, 5000),             # example plausible range
-    'm10': (0, 3000),
-    'csr': (50, 120),
-    'cri': (5, 50),
-    'ams': (0, 20),
-    'softening_temp': (200, 1500),       # °C realistic temperature bounds
-    'resolid_min': (200, 1500),          # °C
-    'resolid_max': (200, 1500),          # °C
-    'plastic_range': (0, 2000),           # °C
-    'sulphur': (0, 5),             # %
-    'phosphorous': (0, 5),         # %
-    'csn': (0, 20)                 # some index
-}
 
 def clamp_coke(arr):
     out = arr.copy()
-    for i, key in enumerate(coke_bounds.keys()):
-        low, high = coke_bounds[key]
-        out[:, i] = np.clip(out[:, i], low, high)
+    for i in range(len(metrics)):
+        out[:, i] = np.minimum(np.maximum(out[:, i], lower_bounds[i]), upper_bounds[i])
     return out
+
+
+# --- NEW: Clamp blended coal properties (including temps, contraction, expansion etc.) ---
+def clamp_blended_coal_properties(arr):
+    # Define min and max bounds for each property (index matches the properties order)
+    # These are example reasonable bounds; adjust as necessary:
+    bounds = [
+        (0.0, 50.0),  # Ash (%)
+        (0.0, 100.0),  # VM (%)
+        (0.0, 40.0),  # Moisture (%)
+        (0, 100),  # Max. Contraction (%), contraction is negative
+        (0.0, 100.0),  # Max. Expansion (%)
+        (0.0, 200.0),  # Max. fluidity (unitless, large but capped)
+        (0.0, 100.0),  # Crushing index < 3.15 mm (%)
+        (0.0, 100.0),  # Crushing index < 0.5 mm (%)
+        (0.0, 500.0),  # Softening temperature (°C)
+        (0.0, 500.0),  # Resolidification temp range Min (°C)
+        (0.0, 500.0),  # Resolidification temp range Max (°C)
+        (0.0, 500.0),  # Plastic range (°C)
+        (0.0, 10.0),  # Sulphur (%)
+        (0.0, 10.0),  # Phosphorous (%)
+        (0.0, 100.0)  # CSN (unitless)
+    ]
+
+    out = arr.copy()
+    for i, (min_val, max_val) in enumerate(bounds):
+        out[:, i] = np.clip(out[:, i], min_val, max_val)
+    return out
+
 
 def parse_and_append():
     lines = get_submitted_training_coal_csv().strip().splitlines()
@@ -842,12 +846,12 @@ def parse_and_append():
         parts = next(csv.reader([L]))
         if parts[3].strip():
             perc.append(float(parts[3]))
-            s = parts[4].replace("{","[").replace("}","]")
+            s = parts[4].replace("{", "[").replace("}", "]")
             indiv.append(ast.literal_eval(s))
         if len(parts) > 5 and parts[5].strip():
-            blend_val = np.array(ast.literal_eval(parts[5].replace("{","[").replace("}","]")), float)
+            blend_val = np.array(ast.literal_eval(parts[5].replace("{", "[").replace("}", "]")), float)
         if len(parts) > 6 and parts[6].strip():
-            coke_val = np.array(ast.literal_eval(parts[6].replace("{","[").replace("}","]")), float)
+            coke_val = np.array(ast.literal_eval(parts[6].replace("{", "[").replace("}", "]")), float)
 
     Dn = np.pad(perc, (0, coal_count - len(perc)), 'constant')[None, :]
     if blend_val is None:
@@ -858,6 +862,7 @@ def parse_and_append():
         raise RuntimeError("No coke output in submitted CSV")
     Cn = np.pad(coke_val, (0, coke_features - len(coke_val)), 'constant')[None, :]
     return Dn, Bn, Cn
+
 
 D_new, B_new, C_new = parse_and_append()
 D = np.vstack([D, D_new])
@@ -898,13 +903,12 @@ def parse_blends(lst, key):
     return np.pad(a, (0, coal_count - len(a)), 'constant')
 
 
-def generate_combinations(mins, maxs, MAX_COMBINATIONS=1000):
+def generate_combinations(mins, maxs):
     out = []
     for c in product(*[range(mins[i], maxs[i] + 1) for i in range(coal_count)]):
         if sum(c) == 100:
             out.append(c)
-            if len(out) >= MAX_COMBINATIONS:
-                break
+            if len(out) >= MAX_COMBINATIONS: break
     return np.array(out)
 
 
@@ -919,7 +923,6 @@ def cost():
 
     coal_types_list = [b['coalType'] for b in blends]
     cost_vals = [float(df_cost.columns[-1]) for t in coal_types_list]
-    print("cost_vals", cost_vals)
     cost_array = np.pad(cost_vals, (0, coal_count - len(cost_vals)), 'constant')
 
     if oneblend:
@@ -929,8 +932,12 @@ def cost():
 
         bi = (v[:, None] * P) / 100
         flat = bi.reshape(1, -1)
-        s1 = modelq.predict(input_scaler.transform(flat).reshape(1, coal_count, features))
+        s1 = modelq.predict(input_scaler.transform(flat)
+                            .reshape(1, coal_count, features))
         bc = stage1_output_scaler.inverse_transform(s1)[0]
+
+        # Clamp blended coal properties to realistic bounds before continuing
+        bc = clamp_blended_coal_properties(bc[None, :])[0]
 
         aug = np.hstack([s1, np.zeros((1, 2))])
         cp0 = rf_model.predict(aug)
@@ -954,8 +961,12 @@ def cost():
     inp3 = (combs[:, :, None] * P[None, :, :]) / 100
     flat = inp3.reshape(N, -1)
 
-    s1_all = modelq.predict(input_scaler.transform(flat).reshape(-1, coal_count, features))
+    s1_all = modelq.predict(input_scaler.transform(flat)
+                            .reshape(-1, coal_count, features))
     bc_all = stage1_output_scaler.inverse_transform(s1_all)
+
+    # Clamp all blended coal predictions
+    bc_all = clamp_blended_coal_properties(bc_all)
 
     aug_all = np.hstack([s1_all, np.zeros((N, 2))])
     cp0_all = rf_model.predict(aug_all)
