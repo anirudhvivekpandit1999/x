@@ -808,14 +808,14 @@ BLENDED_COAL_BOUNDS = {
     0: (5.0, 45.0),  # Ash %
     1: (15.0, 45.0),  # VM %
     2: (0.5, 15.0),  # Moisture %
-    3: (-10.0, 50.0),  # Max. Contraction
+    3: (0.0, 50.0),  # Max. Contraction
     4: (0.0, 500.0),  # Max. Expansion
-    5: (100.0, 50000.0),  # Max. fluidity
+    5: (100.0, 500.0),  # Max. fluidity
     6: (0.0, 500.0),  # Crushing index < 3.15 mm
     7: (0.0, 300.0),  # Crushing Index < 0.5mm
-    8: (1000.0, 1600.0),  # Softening temperature (°C)
-    9: (1200.0, 1700.0),  # Resolidification temp range Min (°C)
-    10: (1300.0, 1800.0),  # Resolidification temp range Max (°C)
+    8: (0, 600.0),  # Softening temperature (°C)
+    9: (200.0, 700.0),  # Resolidification temp range Min (°C)
+    10: (300.0, 800.0),  # Resolidification temp range Max (°C)
     11: (50.0, 200.0),  # Plastic range (°C)
     12: (0.1, 2.0),  # Sulphur %
     13: (0.001, 0.5),  # Phosphorous %
