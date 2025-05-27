@@ -306,32 +306,29 @@
       <h2>Enter Coal Data</h2>
       <label for="add_coal">Coal:</label><input type="text" id="add_coal" required /><br />
       <label for="add_coaltype">Type of Coal:</label><input type="text" id="add_coaltype" required /><br />
-      <label for="add_ash">Ash (%):</label><input type="number" id="add_ash" step="0.01" required /><br />
+      <label for="add_ash">Ash (%):</label><input type="number" id="add_ash" step="0.001" required /><br />
       <label for="add_volatile_matter">Volatile Matter (%):</label><input type="number" id="add_volatile_matter"
-        step="0.01" required /><br />
+        step="0.001" /><br />
       <label for="add_moisture">Moisture (%):</label><input type="number" id="add_moisture" step="0.01"
-        required /><br />
+         /><br />
       <label for="add_max_contraction">Max. Contraction:</label><input type="number" id="add_max_contraction"
-        step="0.01" required /><br />
-      <label for="add_max_expansion">Max. Expansion:</label><input type="number" id="add_max_expansion" step="0.01"
-        required /><br />
-      <label for="add_max_fluidity">Max. Fluidity (ddpm):</label><input type="number" id="add_max_fluidity" step="0.01"
-        required /><br />
-      <label for="add_mmr">MMR:</label><input type="number" id="add_mmr" step="0.01" required /><br />
-      <label for="add_hgi">HGI:</label><input type="number" id="add_hgi" step="0.01" required /><br />
+        step="0.001" /><br />
+      <label for="add_max_expansion">Max. Expansion:</label><input type="number" id="add_max_expansion" step="0.001"
+        /><br />
+      <label for="add_max_fluidity">Max. Fluidity (ddpm):</label><input type="number" id="add_max_fluidity" step="0.001" /><br />
+      <label for="add_mmr">MMR:</label><input type="number" id="add_mmr" step="0.001"  /><br />
+      <label for="add_hgi">HGI:</label><input type="number" id="add_hgi" step="0.001" /><br />
       <label for="add_softening_temp">Softening Temperature (°C):</label><input type="number" id="add_softening_temp"
-        step="0.01" required /><br />
+        step="0.001"/><br />
       <label for="add_resolidification_min">Resolidification Temp Range Min (°C):</label><input type="number"
-        id="add_resolidification_min" step="0.01" required /><br />
+        id="add_resolidification_min" step="0.001" /><br />
       <label for="add_resolidification_max">Resolidification Temp Range Max (°C):</label><input type="number"
-        id="add_resolidification_max" step="0.01" required /><br />
-      <label for="add_plastic_range">Plastic Range (°C):</label><input type="number" id="add_plastic_range" step="0.01"
-        required /><br />
-      <label for="add_sulphur">Sulphur (%):</label><input type="number" id="add_sulphur" step="0.01" required /><br />
-      <label for="add_phosphorous">Phosphorous (%):</label><input type="number" id="add_phosphorous" step="0.01"
-        required /><br />
-      <label for="add_csn">CSN:</label><input type="number" id="add_csn" step="0.01" required /><br />
-      <label for="add_cost">Cost per Ton (Rs.):</label><input type="number" id="add_cost" step="0.01" required /><br />
+        id="add_resolidification_max" step="0.001"  /><br />
+      <label for="add_plastic_range">Plastic Range (°C):</label><input type="number" id="add_plastic_range" step="0.001"/><br />
+      <label for="add_sulphur">Sulphur (%):</label><input type="number" id="add_sulphur" step="0.001"/><br />
+      <label for="add_phosphorous">Phosphorous (%):</label><input type="number" id="add_phosphorous" step="0.001"/><br />
+      <label for="add_csn">CSN:</label><input type="number" id="add_csn" step="0.001" /><br />
+      <label for="add_cost">Cost per Ton (Rs.):</label><input type="number" id="add_cost" step="0.01" /><br />
       <button type="submit" id="submitnewCoalData">Submit</button>
     </form>
   </div>
@@ -781,6 +778,7 @@
 
 
       alert("Data added successfully!");
+      resetForm();
 
 
     document.getElementById("coalFormPopup").style.display = "none";
