@@ -958,9 +958,24 @@ def cost():
 
         for col, min_val, max_val in column_rules:
             val = cp_all[idx][col]
+
+            # Validate the min and max bounds are reasonable
+            if min_val >= max_val:
+                raise ValueError(f"Invalid range for column {col}: min_val {min_val} >= max_val {max_val}")
+
             if not (min_val < val < max_val):
-                for i in range(3):  # 3 different indexes: 0, 1, 2
-                    cp_all[i][col] = random.uniform(min_val, max_val)
+                for i in range(3):
+                    # Generate a random float safely within range
+                    new_val = random.uniform(min_val, max_val)
+
+                    # Optional: Clamp the value if needed (usually unnecessary)
+                    new_val = max(min_val, min(new_val, max_val))
+
+                    # Assign the new value
+                    cp_all[i][col] = new_val
+
+                    # Debug print (remove after confirming)
+                    print(f"cp_all[{i}][{col}] set to {new_val}")
         out[name] = {
             'composition': combs[idx].tolist(),
             'blendedcoal': bc_all[idx].tolist(),
