@@ -828,7 +828,7 @@ def initialize_app_startup():
     GLOBAL_DATA['min_max_values'] = read_min_max_values()
 
     # 2. Load process parameters for different options
-    GLOBAL_DATA['process_parameters'] = {
+    GLOBAL_DATA['Process_parameters'] = {
         1: np.loadtxt('Process_parameter_for_Rec_Top_Char.csv', delimiter=','),
         2: np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv', delimiter=','),
         3: np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
@@ -914,7 +914,7 @@ def process_training_data():
         'coal_percentages': coal_percentages,
         'coal_properties': coal_properties,
         'blends': blends,
-        'process_parameters': process_parameters,
+        'Process_parameters': process_parameters,
         'coke_outputs': coke_outputs
     }
 
@@ -953,7 +953,7 @@ def train_and_store_models():
     # Process parameters
     pad_pro_par = [
         np.pad(row, (0, max(0, blendY.shape[1] - len(row))), 'constant') if len(row) < 15 else row
-        for row in training_data['process_parameters']
+        for row in training_data['Process_parameters']
     ]
     process_par = np.array(pad_pro_par)
     conv_matrix = blendY + process_par
@@ -1020,7 +1020,7 @@ def train_and_store_models():
                validation_data=(input_test_scaled, target_test_scaled), verbose=0)
 
     # Train second model (coke properties model)
-    Conv_matrix = GLOBAL_DATA['Blended_coal_parameters'] + GLOBAL_DATA['process_parameters'][1]  # Default to option 1
+    Conv_matrix = GLOBAL_DATA['Blended_coal_parameters'] + GLOBAL_DATA['Process_parameters'][1]  # Default to option 1
 
     X_train, X_test, y_train, y_test = train_test_split(
         Conv_matrix, GLOBAL_DATA['Coke_properties'], test_size=0.2, random_state=42
@@ -1173,11 +1173,11 @@ def cost():
     print("model Process Parameters:", proces_para)
 
     # Get process parameters from global data
-    print(GLOBAL_DATA['process_parameters'])
-    if Option not in GLOBAL_DATA['process_parameters']:
+
+    if Option not in GLOBAL_DATA['Process_parameters']:
         raise ValueError(f"Invalid option value: {Option}")
 
-    Process_parameters = GLOBAL_DATA['process_parameters'][Option]
+    Process_parameters = GLOBAL_DATA['Process_parameters'][Option]
 
     # Pad process parameters if Option == 3
     if Option == 3:
