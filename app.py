@@ -1173,7 +1173,7 @@ def cost():
     print("model Process Parameters:", proces_para)
 
     # Get process parameters from global data
-
+    print("Global data",GLOBAL_DATA)
     if Option not in GLOBAL_DATA['Process_parameters']:
         raise ValueError(f"Invalid option value: {Option}")
 
