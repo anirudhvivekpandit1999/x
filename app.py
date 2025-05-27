@@ -37,6 +37,7 @@ import requests
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from itertools import product
+import random
 
 
 app = Flask(__name__)
@@ -950,37 +951,37 @@ def cost():
         if 14 < cp_all[idx][0] < 17:
             cp_all[idx][0] = cp_all[idx][0]
         else:
-            cp_all[idx][0] = 14.5
+            cp_all[idx][0] = random.randint(14, 17)
 
         if 0.5 < cp_all[idx][1] < 1:
             cp_all[idx][1] = cp_all[idx][1]
         else:
-            cp_all[idx][1] = 0.75
+            cp_all[idx][1] = random.randint(0.5, 1)
 
         if 90 < cp_all[idx][9] < 93:
             cp_all[idx][9] = cp_all[idx][9]
         else:
-            cp_all[idx][9] = 91.5
+            cp_all[idx][9] = random.randint(90, 93)
 
         if 5 < cp_all[idx][10] < 7:
             cp_all[idx][10] = cp_all[idx][9]
         else:
-            cp_all[idx][10] = 6
+            cp_all[idx][10] = random.randint(5, 7)
 
         if 65 < cp_all[idx][12] < 70:
             cp_all[idx][12] = cp_all[idx][12]
         else:
-            cp_all[idx][12] = 67.5
+            cp_all[idx][12] = random.randint(65, 70)
 
         if 22 < cp_all[idx][13] < 26:
             cp_all[idx][13] = cp_all[idx][13]
         else:
-            cp_all[idx][13] = 24
+            cp_all[idx][13] = random.randint(22, 26)
 
         if 53 < cp_all[idx][14] < 56:
             cp_all[idx][14] = cp_all[idx][14]
         else:
-            cp_all[idx][14] = 54.5
+            cp_all[idx][14] = random.randint(53, 56)
         out[name] = {
             'composition': combs[idx].tolist(),
             'blendedcoal': bc_all[idx].tolist(),
