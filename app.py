@@ -11,8 +11,8 @@ import time
 import io, json
 from io import BytesIO
 from datetime import datetime
-from flask import Flask, abort, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
-from flask import Flask, request, jsonify, render_template, send_file, session,url_for, redirect, make_response
+from flask import Flask, abort, request, jsonify, render_template, send_file, session, url_for, redirect, make_response
+from flask import Flask, request, jsonify, render_template, send_file, session, url_for, redirect, make_response
 from flask_cors import CORS
 from keras import Sequential
 from sklearn.preprocessing import StandardScaler
@@ -39,54 +39,58 @@ from itertools import product
 import itertools
 
 app = Flask(__name__)
-CORS(app,resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 WEBHOOK_SECRET = 'qwertyuiopasdfghjklzxcvbnm123456'
 DEPLOY_SCRIPT = '/home/ec2-user/x/deploy.sh'
+
+
 def verify_signature(req):
-        signature = req.headers.get('X-Hub-Signature-256')
-        if not signature:
-            abort(400)
-        sha_name, sig = signature.split('=',1)
-        mac = hmac.new(WEBHOOK_SECRET.encode(), req.data, hashlib.sha256)
-        if not hmac.compare_digest(mac.hexdigest(), sig):
-            abort(400)
+    signature = req.headers.get('X-Hub-Signature-256')
+    if not signature:
+        abort(400)
+    sha_name, sig = signature.split('=', 1)
+    mac = hmac.new(WEBHOOK_SECRET.encode(), req.data, hashlib.sha256)
+    if not hmac.compare_digest(mac.hexdigest(), sig):
+        abort(400)
+
 
 def encrypt_data(data):
     """
     Encrypt data using AES-CBC with PKCS7 padding.
-    
+
     Args:
         data: Any JSON-serializable object
-        
+
     Returns:
         Hex string of encrypted data
     """
     # Secret key and IV - same as in JavaScript version
     secret_key = b'qwertyuiopasdfghjklzxcvbnm123456'
     iv = b'1234567890123456'
-    
+
     # Convert data to JSON string and encode as bytes
     json_str = json.dumps(data)
     json_bytes = json_str.encode('utf-8')
-    
+
     # Create cipher object and encrypt
     cipher = AES.new(secret_key, AES.MODE_CBC, iv)
     padded = pad(json_bytes, AES.block_size)
     encrypted_bytes = cipher.encrypt(padded)
-    
+
     # Convert to hex string (equivalent to Base64→Hex in JS version)
     hex_str = binascii.hexlify(encrypted_bytes).decode('utf-8')
-    
+
     return hex_str
+
 
 def decrypt_data(encrypted_hex_data):
     """
     Decrypt AES-CBC encrypted hex data.
-    
+
     Args:
         encrypted_hex_data: Hex string of encrypted data
-        
+
     Returns:
         Decrypted object or None if decryption fails
     """
@@ -94,80 +98,85 @@ def decrypt_data(encrypted_hex_data):
         # Secret key and IV - same as in JavaScript version
         secret_key = b'qwertyuiopasdfghjklzxcvbnm123456'
         iv = b'1234567890123456'
-        
+
         # Input validation
         if not encrypted_hex_data or len(encrypted_hex_data) < 16:
             print("⚠️ Encrypted data is missing or too short:", encrypted_hex_data)
             return None
-        
+
         # Convert hex to bytes
         encrypted_bytes = binascii.unhexlify(encrypted_hex_data)
-        
+
         # Create cipher object and decrypt
         cipher = AES.new(secret_key, AES.MODE_CBC, iv)
         decrypted_bytes = unpad(cipher.decrypt(encrypted_bytes), AES.block_size)
-        
+
         # Convert bytes to string and parse JSON
         decrypted_str = decrypted_bytes.decode('utf-8')
-        
+
         try:
             return json.loads(decrypted_str)
         except json.JSONDecodeError as json_err:
             print(f"❌ JSON parse failed. Decrypted string: {decrypted_str}")
             raise json_err
-            
+
     except Exception as error:
         print(f"❌ Decryption error: {str(error)}")
         return None
 
+
 def post_encrypted(endpoint, data):
     """
     Post encrypted data to an endpoint and return decrypted response.
-    
+
     Args:
         endpoint: URL endpoint to post to
         data: Data to encrypt and send
-        
+
     Returns:
         Decrypted response data
     """
     try:
         # Encrypt the payload
         encrypted_payload = encrypt_data(data)
-        
+
         # Send request
         response = requests.post(endpoint, json={"encryptedData": encrypted_payload})
         response_data = response.json()
-        
+
         # Extract encrypted response
         encrypted_response = response_data.get('response')
-        
+
         # Decrypt the response
         decrypted_response = decrypt_data(encrypted_response)
-        
+
         # Process the result similar to JS version
-        if decrypted_response and isinstance(decrypted_response, list) and len(decrypted_response) > 0 and isinstance(decrypted_response[0], dict):
+        if decrypted_response and isinstance(decrypted_response, list) and len(decrypted_response) > 0 and isinstance(
+                decrypted_response[0], dict):
             result_row = decrypted_response[0]
         else:
             result_row = decrypted_response
-            
+
         return result_row or {}
-        
+
     except Exception as error:
         print(f"🚨 Secure POST Error: {str(error)}")
         raise error
-    
+
+
 def get_coal_properties_csv():
-    response = post_encrypted('http://3.111.89.109:3000/api/getCoalPropertiescsv',{"companyId":1})
-    
+    response = post_encrypted('http://3.111.89.109:3000/api/getCoalPropertiescsv', {"companyId": 1})
+
     x = response
     y = x[0][0]['csv_output']
     csv_rows = y.split('\n')
     csv_output = '\n'.join(csv_rows)
     print(csv_output)
     return csv_output
+
+
 def get_coal_percentages_csv():
-    response = post_encrypted('http://3.111.89.109:3000/api/getCoalPercentagescsv',{"companyId":1})
+    response = post_encrypted('http://3.111.89.109:3000/api/getCoalPercentagescsv', {"companyId": 1})
 
     x = response
     y = x[0][0]['csv_output']
@@ -176,9 +185,10 @@ def get_coal_percentages_csv():
     print(csv_output)
 
     return csv_output
+
 
 def get_Individual_coal_properties_csv():
-    response = post_encrypted('http://3.111.89.109:3000/api/getIndividualCoalPropertiescsv',{"companyId":1})
+    response = post_encrypted('http://3.111.89.109:3000/api/getIndividualCoalPropertiescsv', {"companyId": 1})
 
     x = response
     y = x[0][0]['csv_output']
@@ -188,8 +198,9 @@ def get_Individual_coal_properties_csv():
 
     return csv_output
 
+
 def get_coke_properties_csv():
-    response = post_encrypted('http://3.111.89.109:3000/api/getCokePropertiescsv',{"companyId":1})
+    response = post_encrypted('http://3.111.89.109:3000/api/getCokePropertiescsv', {"companyId": 1})
 
     x = response
     y = x[0][0]['csv_output']
@@ -201,7 +212,7 @@ def get_coke_properties_csv():
 
 
 def get_blended_coal_properties_csv():
-    response = post_encrypted('http://3.111.89.109:3000/api/getBlendedCoalPropertiescsv',{"companyId":1})
+    response = post_encrypted('http://3.111.89.109:3000/api/getBlendedCoalPropertiescsv', {"companyId": 1})
 
     x = response
     y = x[0][0]['csv_output']
@@ -213,7 +224,7 @@ def get_blended_coal_properties_csv():
 
 
 def get_non_recovery_stamp_charge_csv():
-    response = post_encrypted('http://3.111.89.109:3000/api/getNonRecoveryStampChargecsv',{"companyId":1})
+    response = post_encrypted('http://3.111.89.109:3000/api/getNonRecoveryStampChargecsv', {"companyId": 1})
 
     x = response
     y = x[0][0]['csv_output']
@@ -222,72 +233,87 @@ def get_non_recovery_stamp_charge_csv():
     print(csv_output)
 
     return csv_output
+
+
 def get_coal_count():
-    response = post_encrypted('http://3.111.89.109:3000/api/getCoalCount',{"companyId":1})
+    response = post_encrypted('http://3.111.89.109:3000/api/getCoalCount', {"companyId": 1})
 
     x = response
     y = x[0][0]['csv_output']
-    print("y",y)
+    print("y", y)
     return y
+
 
 def get_min_max_values_csv():
-    response = post_encrypted('http://3.111.89.109:3000/api/getMinMaxValuescsv',{"companyId":1})
-    print("minmaxvaluesresponse",response)
+    response = post_encrypted('http://3.111.89.109:3000/api/getMinMaxValuescsv', {"companyId": 1})
+    print("minmaxvaluesresponse", response)
     x = response
     y = x[0][0]['csv_output']
-    print("minmaxvaluescsv",y)
+    print("minmaxvaluescsv", y)
     return y
 
+
 coal_count_number = get_coal_count()
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
 @app.route('/github-deploy', methods=['POST'])
 def github_deploy():
-        verify_signature(request)
-        payload = request.get_json() or {}
-        if payload.get('ref') != 'refs/heads/main':
-            return jsonify({'status':'ignored'}), 200
+    verify_signature(request)
+    payload = request.get_json() or {}
+    if payload.get('ref') != 'refs/heads/main':
+        return jsonify({'status': 'ignored'}), 200
 
-        # Run deploy.sh in the background
-        threading.Thread(target=lambda: subprocess.run([DEPLOY_SCRIPT], check=True)).start()
-        return jsonify({'status':'triggered'}), 202
+    # Run deploy.sh in the background
+    threading.Thread(target=lambda: subprocess.run([DEPLOY_SCRIPT], check=True)).start()
+    return jsonify({'status': 'triggered'}), 202
+
 
 @app.route('/index.html')
 def index_html():
     return render_template('index.html')
 
+
 @app.route('/hi.html')
 def index_html2():
     return render_template('hi.html')
+
 
 @app.route('/coal-properties.html')
 def properties():
     return render_template('coal-properties.html')
 
+
 @app.route('/min-max.html')
 def minmax():
     return render_template('min-max.html')
+
 
 @app.route('/cost-ai.html')
 def costai():
     return render_template('cost-ai.html')
 
+
 @app.route('/training.html')
 def trainig_html():
-    return render_template('training.html') 
+    return render_template('training.html')
+
 
 @app.route('/TrainData-storage.html')
 def traindata_html():
-    return render_template('TrainData-storage.html') 
+    return render_template('TrainData-storage.html')
+
 
 @app.route('/login.html')
 def login():
     return render_template('login.html')
 
 
-#training page 
+# training page
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'xls', 'xlsx'}
 
@@ -299,8 +325,10 @@ INDIVIDUAL_UPLOADS_FOLDER = os.path.join(UPLOAD_FOLDER, 'individual_uploads')
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 if not os.path.exists(INDIVIDUAL_UPLOADS_FOLDER):
     os.makedirs(INDIVIDUAL_UPLOADS_FOLDER)
+
 
 def get_next_index():
     # Check if the CSV file exists and is not empty
@@ -312,21 +340,19 @@ def get_next_index():
                 last_index = 0
                 for row in rows:
                     try:
-                        
 
-                        if row[0].strip():  
+                        if row[0].strip():
                             last_index = max(last_index, int(row[0]))
                     except ValueError:
                         continue
-                return last_index + 1 
+                return last_index + 1
             else:
                 return 1  # If the CSV is empty, start with 1
     else:
         return 1  # If the CSV doesn't exist, start with 1
-    
 
 
-# UPLOAD EXCEL FILE IN TRAINING PAGE 
+# UPLOAD EXCEL FILE IN TRAINING PAGE
 
 
 @app.route('/download-template', methods=['GET'])
@@ -382,7 +408,8 @@ def download_template():
             worksheet = writer.sheets['Template']
 
             # Formats
-            header_format = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1, 'bg_color': '#DDEBF7'})
+            header_format = workbook.add_format(
+                {'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1, 'bg_color': '#DDEBF7'})
             subheader_format = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1})
 
             # Merge main headers
@@ -415,12 +442,11 @@ def download_template():
     except Exception as e:
         print("Error in /download-template:", e)
         return jsonify({'error': str(e)}), 500
-    
+
 
 def format_list_to_string(data_list):
     if not data_list or all(pd.isna(x) for x in data_list):
         return None
-    
 
     formatted_list = []
     for item in data_list:
@@ -435,7 +461,6 @@ def format_list_to_string(data_list):
                 formatted_list.append(float(item))
             except ValueError:
                 formatted_list.append(item)
-    
 
     if not formatted_list:
         return None
@@ -444,6 +469,7 @@ def format_list_to_string(data_list):
         return str(formatted_list).replace("'", "")
     else:
         return str([formatted_list]).replace("'", "")
+
 
 @app.route('/upload_excel_training', methods=['POST'])
 def upload_excel_training():
@@ -471,10 +497,10 @@ def upload_excel_training():
         current_index = get_next_index()
         new_rows = []
         process_keys = [
-            'charging_tonnage','moisture_content','bulk_density','charging_temperature',
-            'battery_operating_temperature','cross_wall_temperature','push_force',
-            'pri','coke_per_push','gross_coke_yield','gcm_pressure','gcm_temperature',
-            'coking_time','coke_end_temperature','quenching_time'
+            'charging_tonnage', 'moisture_content', 'bulk_density', 'charging_temperature',
+            'battery_operating_temperature', 'cross_wall_temperature', 'push_force',
+            'pri', 'coke_per_push', 'gross_coke_yield', 'gcm_pressure', 'gcm_temperature',
+            'coking_time', 'coke_end_temperature', 'quenching_time'
         ]
 
         for i, row in df.iterrows():
@@ -486,12 +512,12 @@ def upload_excel_training():
                     base_date = str(row.iloc[0])
             # Only process rows with coal type & current value
             if pd.notna(row.iloc[1]) and pd.notna(row.iloc[2]):
-                coal_type   = row.iloc[1]
+                coal_type = row.iloc[1]
                 current_val = row.iloc[2]
-                individual  = row.iloc[3:19].tolist()
-                blended     = row.iloc[19:34].tolist()
-                coke_vals   = row.iloc[34:41].tolist()
-                proc_vals   = row.iloc[41:41+len(process_keys)].tolist()
+                individual = row.iloc[3:19].tolist()
+                blended = row.iloc[19:34].tolist()
+                coke_vals = row.iloc[34:41].tolist()
+                proc_vals = row.iloc[41:41 + len(process_keys)].tolist()
 
                 # Helper to stringify numeric lists
                 def list_to_str(vals):
@@ -500,8 +526,8 @@ def upload_excel_training():
                     return ''
 
                 individual_str = list_to_str(individual)
-                blended_str    = list_to_str(blended)
-                coke_str       = list_to_str(coke_vals)
+                blended_str = list_to_str(blended)
+                coke_str = list_to_str(coke_vals)
 
                 # Build process dict & stringify if any
                 proc_dict = {
@@ -526,9 +552,9 @@ def upload_excel_training():
 
         # 5. Append to CSV
         header = [
-            'ID','Date','Coal Type','Current Value',
-            'Individual Properties','Blended Properties',
-            'Coke Properties','Process Parameters','File Name'
+            'ID', 'Date', 'Coal Type', 'Current Value',
+            'Individual Properties', 'Blended Properties',
+            'Coke Properties', 'Process Parameters', 'File Name'
         ]
         file_exists = os.path.exists(TRAINING_DATA)
         with open(TRAINING_DATA, 'a', newline='') as f:
@@ -543,36 +569,35 @@ def upload_excel_training():
         # full traceback to console
         app.logger.exception("Error in /upload_excel_training")
         return jsonify({'error': str(e)}), 500
-#FUNCTION TO SAVE THE TRAINING FORM IN CSV 
+
+
+# FUNCTION TO SAVE THE TRAINING FORM IN CSV
 
 def load_coal_data():
-    
-
     df = pd.read_csv('individual_coal_prop.csv', header=None)
     coal_data = {}
-    
 
     for _, row in df.iterrows():
-        coal_type = row[0] 
-        properties = row[1:-1].tolist()  
+        coal_type = row[0]
+        properties = row[1:-1].tolist()
         coal_data[coal_type] = {
             'properties': properties
         }
-    
 
     return coal_data
 
 
 coal_data = load_coal_data()
-       
+
 
 # Route to fetch coal data for the dropdown (via AJAX)
 
 
 @app.route('/training_coal_data', methods=['GET'])
 def training_coal_data():
-    coal_data = load_coal_data()  
+    coal_data = load_coal_data()
     return jsonify(coal_data)
+
 
 def save_to_csv(data, coal_data, filename):
     index = get_next_index()
@@ -642,9 +667,8 @@ def save_to_csv(data, coal_data, filename):
 
     # Write rows
     with open(filename, 'a', newline='') as csvfile:
-        writer = csv.writer(csvfile,quoting=csv.QUOTE_MINIMAL)
+        writer = csv.writer(csvfile, quoting=csv.QUOTE_MINIMAL)
         writer.writerows(rows)
- 
 
 
 @app.route('/submit_training_data', methods=['POST'])
@@ -652,7 +676,7 @@ def submit_form():
     data = request.get_json()
 
     # Save to training data CSV
-    save_to_csv(data, coal_data, TRAINING_DATA,)
+    save_to_csv(data, coal_data, TRAINING_DATA, )
 
     # Save to individual uploads folder
     individual_filename = os.path.join(INDIVIDUAL_UPLOADS_FOLDER, f"{data['date']}.csv")
@@ -661,8 +685,7 @@ def submit_form():
     return jsonify({'message': 'Form submitted successfully'}), 200
 
 
-
-# TRAINDATA-STORAGE PAGE 
+# TRAINDATA-STORAGE PAGE
 @app.route('/get_uploaded_files', methods=['GET'])
 def get_uploaded_files():
     files = os.listdir(app.config['UPLOAD_FOLDER'])
@@ -671,11 +694,12 @@ def get_uploaded_files():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], file)
         timestamp = datetime.fromtimestamp(os.path.getctime(file_path))
         file_data.append({
-            'sr_no': i+1,
+            'sr_no': i + 1,
             'filename': file,
             'upload_date': timestamp.strftime('%d-%m-%Y %H:%M:%S')
         })
     return jsonify(file_data)
+
 
 @app.route('/delete_uploaded_file', methods=['POST'])
 def delete_uploaded_file():
@@ -684,10 +708,9 @@ def delete_uploaded_file():
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if os.path.exists(file_path):
         os.remove(file_path)
-        
 
         # Remove data from training data CSV
-            
+
         df = pd.read_csv(TRAINING_DATA)
         df = df[df['File Name'] != filename]
         df.to_csv(TRAINING_DATA, index=False)
@@ -696,23 +719,21 @@ def delete_uploaded_file():
     return jsonify({'error': 'File not found'}), 404
 
 
-# cost AI page 
+# cost AI page
 @app.route('/get_coal_types_cost', methods=['GET'])
 def get_coal_types():
     # Read the CSV file
-    file_path = 'individual_coal_prop.csv' 
+    file_path = 'individual_coal_prop.csv'
     coal_data = pd.read_csv(file_path, header=None)
-    
 
-    coal_types = coal_data.iloc[:, 0].tolist() 
-    coal_properties = coal_data.iloc[:, :-1].values.tolist() 
-    
+    coal_types = coal_data.iloc[:, 0].tolist()
+    coal_properties = coal_data.iloc[:, :-1].values.tolist()
 
     return jsonify({
         "coal_types": coal_types,
         "coal_properties": coal_properties
     })
-    
+
 
 @app.route('/get_proposed_coal_types', methods=['GET'])
 def get_proposed_coal_types():
@@ -723,7 +744,6 @@ def get_proposed_coal_types():
     coal_info = [{"type": coal_types[i], "cost": coal_costs[i]} for i in range(len(coal_types))]
 
     return jsonify({'coal_info': coal_info})
-      
 
 
 def load_csv():
@@ -733,6 +753,7 @@ def load_csv():
         return pd.read_csv(MINMAX_FILE_PATH)
     else:
         raise FileNotFoundError(f"{CSV_FILE} not found!")
+
 
 def prepare_ranges():
     """Prepare the range data from the CSV."""
@@ -751,21 +772,27 @@ def prepare_ranges():
     def to_float(x):
         return x.item() if hasattr(x, 'item') else float(x)
 
-
     ranges = {
-        'ash': {'lower': to_int(row['ash_lower']), 'upper': to_int(row['ash_upper']), 'default': to_float((row['ash_lower'] + row['ash_upper']) / 2)},
-        'vm': {'lower': to_int(row['vm_lower']), 'upper': to_int(row['vm_upper']), 'default': to_float((row['vm_lower'] + row['vm_upper']) / 2)},
-        'm40': {'lower': to_int(row['m40_lower']), 'upper': to_int(row['m40_upper']), 'default': to_float((row['m40_lower'] + row['m40_upper']) / 2)},
-        'm10': {'lower': to_int(row['m10_lower']), 'upper': to_float(row['m10_upper']), 'default': to_float((row['m10_lower'] + row['m10_upper']) / 2)},
-        'csr': {'lower': to_int(row['csr_lower']), 'upper': to_int(row['csr_upper']), 'default': to_float((row['csr_lower'] + row['csr_upper']) / 2)},
-        'cri': {'lower': to_int(row['cri_lower']), 'upper': to_int(row['cri_upper']), 'default':to_float( (row['cri_lower'] + row['cri_upper']) / 2)},
-        'ams': {'lower': to_int(row['ams_lower']), 'upper': to_int(row['ams_upper']), 'default': to_float((row['ams_lower'] + row['ams_upper']) / 2)}
+        'ash': {'lower': to_int(row['ash_lower']), 'upper': to_int(row['ash_upper']),
+                'default': to_float((row['ash_lower'] + row['ash_upper']) / 2)},
+        'vm': {'lower': to_int(row['vm_lower']), 'upper': to_int(row['vm_upper']),
+               'default': to_float((row['vm_lower'] + row['vm_upper']) / 2)},
+        'm40': {'lower': to_int(row['m40_lower']), 'upper': to_int(row['m40_upper']),
+                'default': to_float((row['m40_lower'] + row['m40_upper']) / 2)},
+        'm10': {'lower': to_int(row['m10_lower']), 'upper': to_float(row['m10_upper']),
+                'default': to_float((row['m10_lower'] + row['m10_upper']) / 2)},
+        'csr': {'lower': to_int(row['csr_lower']), 'upper': to_int(row['csr_upper']),
+                'default': to_float((row['csr_lower'] + row['csr_upper']) / 2)},
+        'cri': {'lower': to_int(row['cri_lower']), 'upper': to_int(row['cri_upper']),
+                'default': to_float((row['cri_lower'] + row['cri_upper']) / 2)},
+        'ams': {'lower': to_int(row['ams_lower']), 'upper': to_int(row['ams_upper']),
+                'default': to_float((row['ams_lower'] + row['ams_upper']) / 2)}
     }
     return ranges
 
+
 @app.route('/get_ranges', methods=['GET'])
 def get_ranges():
-
     try:
         ranges = prepare_ranges()
         return jsonify(ranges)
@@ -774,7 +801,7 @@ def get_ranges():
         return jsonify({'error': str(e)}), 404
 
 
-#model for cost ai page
+# model for cost ai page
 
 GLOBAL_DATA = {}
 
@@ -801,7 +828,7 @@ def initialize_app_startup():
     GLOBAL_DATA['min_max_values'] = read_min_max_values()
 
     # 2. Load process parameters for different options
-    GLOBAL_DATA['Process_parameters'] = {
+    GLOBAL_DATA['process_parameters'] = {
         1: np.loadtxt('Process_parameter_for_Rec_Top_Char.csv', delimiter=','),
         2: np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv', delimiter=','),
         3: np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
@@ -993,7 +1020,7 @@ def train_and_store_models():
                validation_data=(input_test_scaled, target_test_scaled), verbose=0)
 
     # Train second model (coke properties model)
-    Conv_matrix = GLOBAL_DATA['Blended_coal_parameters'] + GLOBAL_DATA['Process_parameters'][1]  # Default to option 1
+    Conv_matrix = GLOBAL_DATA['Blended_coal_parameters'] + GLOBAL_DATA['process_parameters'][1]  # Default to option 1
 
     X_train, X_test, y_train, y_test = train_test_split(
         Conv_matrix, GLOBAL_DATA['Coke_properties'], test_size=0.2, random_state=42
@@ -1146,10 +1173,10 @@ def cost():
     print("model Process Parameters:", proces_para)
 
     # Get process parameters from global data
-    if Option not in GLOBAL_DATA['Process_parameters']:
+    if Option not in GLOBAL_DATA['process_parameters']:
         raise ValueError(f"Invalid option value: {Option}")
 
-    Process_parameters = GLOBAL_DATA['Process_parameters'][Option]
+    Process_parameters = GLOBAL_DATA['process_parameters'][Option]
 
     # Pad process parameters if Option == 3
     if Option == 3:
@@ -1429,7 +1456,10 @@ def cost():
         }
 
     return jsonify(response), 200
+
+
 CSV_FILE = 'individual_coal_prop.csv'
+
 
 def read_csv():
     with open(CSV_FILE, mode='r') as file:
@@ -1437,12 +1467,13 @@ def read_csv():
         data = list(reader)
     return data
 
+
 # Helper function to write to CSV (overwrites the file)
 def write_csv(data):
     with open(CSV_FILE, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(data)
-        
+
 
 def write1_csv(new_data):
     # Validate that new_data is not None or empty
@@ -1463,14 +1494,14 @@ def write1_csv(new_data):
         writer = csv.writer(file)
         writer.writerow(new_data)
 
+
 @app.route('/get_coal_properties_data', methods=['GET'])
 def get_coal_data():
-    data = read_csv()   
-    if not data:  
+    data = read_csv()
+    if not data:
         return jsonify({"error": "CSV file is empty or malformed"}), 400
-    
 
-    coal_types = [row[0] for row in data if len(row) > 0] 
+    coal_types = [row[0] for row in data if len(row) > 0]
     if not coal_types:
         return jsonify({"error": "No valid coal types found in the CSV"}), 400
 
@@ -1479,18 +1510,15 @@ def get_coal_data():
         'coal_data': data
     })
 
+
 @app.route('/add_coal_properties', methods=['POST'])
 def add_coal():
     try:
         new_data = request.json.get('data')
         if not new_data:
             return jsonify({'error': 'No data provided'}), 400
-        
-    
-
 
         new_data.append(datetime.now().strftime('%d %B %Y'))
-        
 
         write1_csv(new_data)
         return jsonify({'message': 'Data added successfully'}), 200
@@ -1521,12 +1549,12 @@ def modify_coal():
     else:
         return jsonify({'message': 'Invalid coal index'}), 400
 
-    
 
-#min-max page
-    
+# min-max page
+
 
 MINMAX_FILE_PATH = 'min-maxvalues.csv'
+
 
 @app.route('/minmax_get_data', methods=['GET'])
 def get_data():
@@ -1536,6 +1564,7 @@ def get_data():
         data = df.iloc[0].to_dict() if not df.empty else {}
         return jsonify(data)
     return jsonify({})  # Return empty data if file doesn't exist
+
 
 @app.route('/minmax', methods=['POST'])
 def min_max():
@@ -1552,9 +1581,6 @@ def min_max():
         return jsonify({"message": "Data saved successfully!"}), 200
     except Exception as e:
         return jsonify({"message": f"Error saving data: {str(e)}"}), 500
-
-
-
 
 
 if __name__ == '__main__':
