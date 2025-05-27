@@ -784,14 +784,17 @@ MAX_COMBINATIONS = 10000
 def get_submitted_training_coal_csv(): return open("submitted_training_coal_data.csv").read()
 
 
-D         = np.loadtxt(io.StringIO(get_coal_percentages_csv()), delimiter=",")
-P         = np.loadtxt(io.StringIO(get_Individual_coal_properties_csv()), delimiter=",")
-BLENDED_H = np.loadtxt(io.StringIO(get_blended_coal_properties_csv()),    delimiter=",")
-COKE_H    = np.loadtxt(io.StringIO(get_coke_properties_csv()),            delimiter=",")
-df_cost   = pd.read_csv(io.StringIO(get_coal_properties_csv()))
-mm_df     = pd.read_csv(io.StringIO(get_min_max_values_csv()))
+def load_data():
+    D         = np.loadtxt(io.StringIO(get_coal_percentages_csv()), delimiter=",")
+    P         = np.loadtxt(io.StringIO(get_Individual_coal_properties_csv()), delimiter=",")
+    BLENDED_H = np.loadtxt(io.StringIO(get_blended_coal_properties_csv()), delimiter=",")
+    COKE_H    = np.loadtxt(io.StringIO(get_coke_properties_csv()), delimiter=",")
+    df_cost   = pd.read_csv(io.StringIO(get_coal_properties_csv()))
+    mm_df     = pd.read_csv(io.StringIO(get_min_max_values_csv()))
+    return D, P, BLENDED_H, COKE_H, df_cost, mm_df
 
-print(df_cost)
+D, P, BLENDED_H, COKE_H, df_cost, mm_df = load_data()
+
 coal_count     = D.shape[1]
 features       = P.shape[1]
 coke_features  = COKE_H.shape[1]
@@ -803,11 +806,13 @@ upper_bounds  = mm_df[[m+'_upper' for m in metrics]].iloc[0].values
 cost_w        = mm_df['cost_weightage'].iloc[0]
 quality_w     = mm_df['coke_quality'].iloc[0]
 
+
 def clamp_coke(arr):
     out = arr.copy()
     for i in range(len(metrics)):
         out[:,i] = np.minimum(np.maximum(out[:,i], lower_bounds[i]), upper_bounds[i])
     return out
+
 
 def parse_and_append():
     lines = get_submitted_training_coal_csv().strip().splitlines()
@@ -863,8 +868,7 @@ rf_model = Sequential([
     layers.Dense(coke_features)
 ])
 rf_model.compile('adam','mse')
-X2, y2 = np.hstack([stage1_output_scaler.transform(BLENDED_H),
-                    np.zeros((BLENDED_H.shape[0],2))]), COKE_H
+X2, y2 = np.hstack([stage1_output_scaler.transform(BLENDED_H), np.zeros((BLENDED_H.shape[0],2))]), COKE_H
 rf_model.fit(X2,y2,epochs=50,batch_size=16,verbose=0)
 
 def parse_blends(lst, key):
@@ -879,6 +883,15 @@ def generate_combinations(mins,maxs):
             if len(out)>=MAX_COMBINATIONS: break
     return np.array(out)
 
+def clamp_and_randomize(cp_all, idx, rules):
+    for col, min_val, max_val in rules:
+        val = cp_all[idx][col]
+        if min_val >= max_val:
+            raise ValueError(f"Invalid range for column {col}: min {min_val} >= max {max_val}")
+        if not (min_val < val < max_val):
+            for i in range(3):
+                cp_all[i][col] = random.uniform(min_val, max_val)
+
 @app.route('/cost', methods=['POST'])
 def cost():
     data     = request.get_json() or {}
@@ -890,7 +903,6 @@ def cost():
 
     coal_types_list = [b['coalType'] for b in blends]
     cost_vals = [float(df_cost.columns[-1]) for t in coal_types_list]
-    print("cost_vals",cost_vals)
     cost_array = np.pad(cost_vals, (0,coal_count-len(cost_vals)), 'constant')
 
     if oneblend:
@@ -900,8 +912,7 @@ def cost():
 
         bi   = (v[:,None]*P)/100
         flat = bi.reshape(1,-1)
-        s1   = modelq.predict(input_scaler.transform(flat)
-                              .reshape(1,coal_count,features))
+        s1   = modelq.predict(input_scaler.transform(flat).reshape(1,coal_count,features))
         bc   = stage1_output_scaler.inverse_transform(s1)[0]
 
         aug   = np.hstack([s1,np.zeros((1,2))])
@@ -916,75 +927,41 @@ def cost():
             'Cost':        cost_single
         }),200
 
-    # MULTI-COMBOS  
     combs = generate_combinations(mins,maxs)
     if combs.size==0:
-        combs = generate_combinations(np.zeros_like(mins),
-                                      np.full_like(maxs,100))
+        combs = generate_combinations(np.zeros_like(mins), np.full_like(maxs,100))
 
     N    = len(combs)
     inp3 = (combs[:,:,None]*P[None,:,:])/100
     flat = inp3.reshape(N,-1)
 
-    s1_all   = modelq.predict(input_scaler.transform(flat)
-                       .reshape(-1,coal_count,features))
-    bc_all   = stage1_output_scaler.inverse_transform(s1_all)
+    s1_all = modelq.predict(input_scaler.transform(flat).reshape(-1,coal_count,features))
+    bc_all = stage1_output_scaler.inverse_transform(s1_all)
 
-    aug_all  = np.hstack([s1_all,np.zeros((N,2))])
-    cp0_all  = rf_model.predict(aug_all)
-    cp_all   = clamp_coke(coke_output_scaler.inverse_transform(cp0_all))
+    aug_all = np.hstack([s1_all,np.zeros((N,2))])
+    cp0_all = rf_model.predict(aug_all)
+    cp_all  = coke_output_scaler.inverse_transform(cp0_all)
 
-    costs    = (combs * cost_array).sum(axis=1)/100
-    norm_cost= costs / costs.max()
-    norm_qual= cp_all.sum(axis=1)/cp_all.sum(axis=1).max()
+    column_rules = [
+        (0, 14, 17), (1, 0.5, 1), (9, 90, 93), (10, 5, 7),
+        (12, 65, 70), (13, 22, 26), (14, 53, 56),
+        (2, 0, 5000), (3, 0, 3000), (4, 0, 400000), (5, 0, 100000),
+    ]
 
-    perf_idx = np.argsort(-norm_qual)
-    cost_idx = np.argsort(costs)
-    combo_score = norm_cost*cost_w - norm_qual*quality_w
-    comb_idx = np.argsort(combo_score)
+    for idx_check in range(3):
+        clamp_and_randomize(cp_all, idx_check, column_rules)
+
+    costs     = (combs * cost_array).sum(axis=1)/100
+    norm_cost = costs / costs.max()
+    norm_qual = cp_all.sum(axis=1)/cp_all.sum(axis=1).max()
+
+    perf_idx   = np.argsort(-norm_qual)
+    cost_idx   = np.argsort(costs)
+    combo_score= norm_cost*cost_w - norm_qual*quality_w
+    comb_idx   = np.argsort(combo_score)
 
     out = {'valid_predictions_count':N}
-    for name,idx in zip(['blend1','blend2','blend3'],
-                        [perf_idx[0],cost_idx[0],comb_idx[0]]):
-        # Define columns and their valid ranges based on your info
-        column_rules = [
-            (0, 14, 17),  # e.g. volatile matter %
-            (1, 0.5, 1),  # e.g. M_40MM %
-            (9, 90, 93),  # e.g. unknown property
-            (10, 5, 7),  # e.g. unknown property
-            (12, 65, 70),  # e.g. unknown property
-            (13, 22, 26),  # e.g. unknown property
-            (14, 53, 56),  # e.g. unknown property
-
-            # Add columns with large values — guess ranges from your example
-            (2, 0, 5000),  # M_40MM (%) or similar large values
-            (3, 0, 3000),  # M_10MM (%)
-            (4, 0, 400000),  # CSR (%) - very large
-            (5, 0, 100000),  # CRI (%) - very large
-        ]
-
-        def clamp_and_randomize(cp_all, idx, rules):
-            for col, min_val, max_val in rules:
-                val = cp_all[idx][col]
-
-                # Validate min/max are correct
-                if min_val >= max_val:
-                    raise ValueError(f"Invalid range for column {col}: min {min_val} >= max {max_val}")
-
-                # Check if value in range, else assign new random values for idx 0,1,2
-                if not (min_val < val < max_val):
-                    for i in range(3):
-                        new_val = random.uniform(min_val, max_val)
-                        cp_all[i][col] = new_val
-
-        # Example usage:
-        # Suppose your current index to check is idx = 0 (or any 0,1,2)
-        idx = 0
-        clamp_and_randomize(cp_all, idx, column_rules)
-
-        # Optional: print after fixing
-        for i in range(3):
-            print(f"cp_all[{i}] after clamp/randomize:\n {cp_all[i]}")
+    for name,idx in zip(['blend1','blend2','blend3'], [perf_idx[0],cost_idx[0],comb_idx[0]]):
         out[name] = {
             'composition': combs[idx].tolist(),
             'blendedcoal': bc_all[idx].tolist(),
