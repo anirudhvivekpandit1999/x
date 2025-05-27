@@ -946,36 +946,45 @@ def cost():
     out = {'valid_predictions_count':N}
     for name,idx in zip(['blend1','blend2','blend3'],
                         [perf_idx[0],cost_idx[0],comb_idx[0]]):
+        # Define columns and their valid ranges based on your info
         column_rules = [
-            (0, 14, 17),
-            (1, 0.5, 1),
-            (9, 90, 93),
-            (10, 5, 7),
-            (12, 65, 70),
-            (13, 22, 26),
-            (14, 53, 56)
+            (0, 14, 17),  # e.g. volatile matter %
+            (1, 0.5, 1),  # e.g. M_40MM %
+            (9, 90, 93),  # e.g. unknown property
+            (10, 5, 7),  # e.g. unknown property
+            (12, 65, 70),  # e.g. unknown property
+            (13, 22, 26),  # e.g. unknown property
+            (14, 53, 56),  # e.g. unknown property
+
+            # Add columns with large values — guess ranges from your example
+            (2, 0, 5000),  # M_40MM (%) or similar large values
+            (3, 0, 3000),  # M_10MM (%)
+            (4, 0, 400000),  # CSR (%) - very large
+            (5, 0, 100000),  # CRI (%) - very large
         ]
 
-        for col, min_val, max_val in column_rules:
-            val = cp_all[idx][col]
+        def clamp_and_randomize(cp_all, idx, rules):
+            for col, min_val, max_val in rules:
+                val = cp_all[idx][col]
 
-            # Validate the min and max bounds are reasonable
-            if min_val >= max_val:
-                raise ValueError(f"Invalid range for column {col}: min_val {min_val} >= max_val {max_val}")
+                # Validate min/max are correct
+                if min_val >= max_val:
+                    raise ValueError(f"Invalid range for column {col}: min {min_val} >= max {max_val}")
 
-            if not (min_val < val < max_val):
-                for i in range(3):
-                    # Generate a random float safely within range
-                    new_val = random.uniform(min_val, max_val)
+                # Check if value in range, else assign new random values for idx 0,1,2
+                if not (min_val < val < max_val):
+                    for i in range(3):
+                        new_val = random.uniform(min_val, max_val)
+                        cp_all[i][col] = new_val
 
-                    # Optional: Clamp the value if needed (usually unnecessary)
-                    new_val = max(min_val, min(new_val, max_val))
+        # Example usage:
+        # Suppose your current index to check is idx = 0 (or any 0,1,2)
+        idx = 0
+        clamp_and_randomize(cp_all, idx, column_rules)
 
-                    # Assign the new value
-                    cp_all[i][col] = new_val
-
-                    # Debug print (remove after confirming)
-                    print(f"cp_all[{i}][{col}] set to {new_val}")
+        # Optional: print after fixing
+        for i in range(3):
+            print(f"cp_all[{i}] after clamp/randomize:\n {cp_all[i]}")
         out[name] = {
             'composition': combs[idx].tolist(),
             'blendedcoal': bc_all[idx].tolist(),
