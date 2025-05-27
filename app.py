@@ -970,16 +970,9 @@ def cost():
     coal_types_list = [b.get('coalType', '') for b in blends]
 
     # Handle cost values more safely
-    try:
-        cost_vals = []
-        for t in coal_types_list:
-            print(coal_types_list,"coal_types_list=",coal_types_list)
-            if t in df_cost.columns:
-                cost_vals.append(float(df_cost[t].iloc[-1]) if len(df_cost) > 0 else 100.0)
-            else:
-                cost_vals.append(100.0)  # Default cost
-    except:
-        cost_vals = [100.0] * len(coal_types_list)  # Fallback
+    for t in coal_types_list:
+        # Assuming 't' definitely exists in df_cost.columns and df_cost is not empty
+        cost_vals.append(float(df_cost[t].iloc[-1]))
 
     cost_array = np.pad(cost_vals, (0, coal_count - len(cost_vals)), 'constant')
 
