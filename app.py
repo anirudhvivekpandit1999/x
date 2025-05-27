@@ -959,7 +959,7 @@ def cost():
         for col, min_val, max_val in column_rules:
             val = cp_all[idx][col]
             if not (min_val < val < max_val):
-                for i in range(3):
+                for i in range(3):  # 3 different indexes: 0, 1, 2
                     cp_all[i][col] = random.uniform(min_val, max_val)
         out[name] = {
             'composition': combs[idx].tolist(),
