@@ -968,7 +968,7 @@ def cost():
     maxs = parse_blends(blends, 'maxPercentage')
 
     coal_types_list = [b.get('coalType', '') for b in blends]
-
+    cost_vals = []
     # Handle cost values more safely
     for t in coal_types_list:
         # Assuming 't' definitely exists in df_cost.columns and df_cost is not empty
