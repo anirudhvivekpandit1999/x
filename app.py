@@ -973,8 +973,9 @@ def cost():
     try:
         cost_vals = []
         for t in coal_types_list:
+            print(coal_types_list,"coal_types_list=",coal_types_list)
             if t in df_cost.columns:
-                cost_vals.append(float(df_cost[t].iloc[0]) if len(df_cost) > 0 else 100.0)
+                cost_vals.append(float(df_cost[t].iloc[-1]) if len(df_cost) > 0 else 100.0)
             else:
                 cost_vals.append(100.0)  # Default cost
     except:
