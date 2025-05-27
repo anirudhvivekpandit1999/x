@@ -445,9 +445,14 @@
       }
     }
 
-    document.getElementById("downloadcoalfile").addEventListener("click", function () {
-  fetch("http://3.111.89.109:5000/download-template-properties")
-    .then(response => response.blob())
+  document.getElementById("downloadcoalfile").addEventListener("click", function () {
+    fetch("http://3.111.89.109:5000/download-template-properties")
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Failed to download template");
+      }
+      return response.blob();
+    })
     .then(blob => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -456,6 +461,9 @@
       document.body.appendChild(a);
       a.click();
       a.remove();
+    })
+    .catch(error => {
+      alert("Error downloading file: " + error.message);
     });
 });
 
