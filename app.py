@@ -889,7 +889,7 @@ def cost():
     maxs = parse_blends(blends,'maxPercentage')
 
     coal_types_list = [b['coalType'] for b in blends]
-    cost_vals = [float(df_cost.columns[-2]) for t in coal_types_list]
+    cost_vals = [float(df_cost.columns[-1]) for t in coal_types_list]
     print("cost_vals",cost_vals)
     cost_array = np.pad(cost_vals, (0,coal_count-len(cost_vals)), 'constant')
 
