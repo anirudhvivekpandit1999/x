@@ -968,11 +968,16 @@ def cost():
     maxs = parse_blends(blends, 'maxPercentage')
 
     coal_types_list = [b.get('coalType', '') for b in blends]
-    cost_vals = []
+
     # Handle cost values more safely
+    cost_vals = []
     for t in coal_types_list:
-        # Assuming 't' definitely exists in df_cost.columns and df_cost is not empty
-        cost_vals.append(float(df_cost[t].iloc[-2]))
+        cost = df_cost.loc[df_cost[0] == t, 'Cost']
+        if not cost.empty:
+            cost_vals.append(float(cost.iloc[-1]))
+        else:
+            # fallback or error
+            cost_vals.append(100.0)
 
     cost_array = np.pad(cost_vals, (0, coal_count - len(cost_vals)), 'constant')
 
