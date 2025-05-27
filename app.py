@@ -1075,9 +1075,9 @@ def cost():
 
 
     MAX_COMBINATIONS = 10000
-    global count
+    count = 0
     def generate_combinations(index, current_combination, current_sum):
-
+        global count
         target_sum = 100
 
         if count >= MAX_COMBINATIONS:
