@@ -36,7 +36,7 @@ import requests
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from itertools import product
-
+import itertools
 
 app = Flask(__name__)
 CORS(app,resources={r"/*": {"origins": "*"}})
