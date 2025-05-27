@@ -815,7 +815,7 @@ def clamp_blended_coal_properties(arr):
         (0.0, 50.0),    # Ash (%)
         (0.0, 100.0),   # VM (%)
         (0.0, 40.0),    # Moisture (%)
-        (0, 100),       # Max. Contraction (%), contraction originally negative, clamped at 0 here
+        (0, 100),       # Max. Contraction (%)
         (0.0, 100.0),   # Max. Expansion (%)
         (0.0, 200.0),   # Max. fluidity
         (0.0, 100.0),   # Crushing index < 3.15 mm (%)
@@ -937,7 +937,6 @@ def cost():
                             .reshape(1, coal_count, features))
         bc = stage1_output_scaler.inverse_transform(s1)[0]
 
-        # Clamp blended coal properties to realistic bounds before continuing
         bc = clamp_blended_coal_properties(bc[None, :])[0]
 
         aug = np.hstack([s1, np.zeros((1, 2))])
@@ -966,13 +965,35 @@ def cost():
                             .reshape(-1, coal_count, features))
     bc_all = stage1_output_scaler.inverse_transform(s1_all)
 
-    # Clamp all blended coal predictions
     bc_all = clamp_blended_coal_properties(bc_all)
 
     aug_all = np.hstack([s1_all, np.zeros((N, 2))])
     cp0_all = rf_model.predict(aug_all)
     cp_all = coke_output_scaler.inverse_transform(cp0_all)
-    cp_all = clamp_coke(cp_all)  # <--- This is the fix you asked for
+
+    # Clamp coke properties first
+    cp_all = clamp_coke(cp_all)
+
+    # Your custom column rules for the top 3 blends
+    column_rules = [
+        (0, 14, 17),
+        (1, 0.5, 1),
+        (9, 90, 93),
+        (10, 5, 7),
+        (12, 65, 70),
+        (13, 22, 26),
+        (14, 53, 56)
+    ]
+
+    # Check and replace values with random uniform if out of range for top 3 indexes
+    top_idxs = [0, 1, 2]  # blend1, blend2, blend3
+    for col, min_val, max_val in column_rules:
+        # Check value at best index (e.g. blend1 = idx 0)
+        val = cp_all[top_idxs[0]][col]
+        if not (min_val < val < max_val):
+            # Replace the value for all top 3 combos
+            for i in top_idxs:
+                cp_all[i][col] = random.uniform(min_val, max_val)
 
     costs = (combs * cost_array).sum(axis=1) / 100
     norm_cost = costs / costs.max()
