@@ -810,26 +810,23 @@ def clamp_coke(arr):
     return out
 
 
-# --- NEW: Clamp blended coal properties (including temps, contraction, expansion etc.) ---
 def clamp_blended_coal_properties(arr):
-    # Define min and max bounds for each property (index matches the properties order)
-    # These are example reasonable bounds; adjust as necessary:
     bounds = [
-        (0.0, 50.0),  # Ash (%)
-        (0.0, 100.0),  # VM (%)
-        (0.0, 40.0),  # Moisture (%)
-        (0, 100),  # Max. Contraction (%), contraction is negative
-        (0.0, 100.0),  # Max. Expansion (%)
-        (0.0, 200.0),  # Max. fluidity (unitless, large but capped)
-        (0.0, 100.0),  # Crushing index < 3.15 mm (%)
-        (0.0, 100.0),  # Crushing index < 0.5 mm (%)
-        (0.0, 500.0),  # Softening temperature (°C)
-        (0.0, 500.0),  # Resolidification temp range Min (°C)
-        (0.0, 500.0),  # Resolidification temp range Max (°C)
-        (0.0, 500.0),  # Plastic range (°C)
-        (0.0, 10.0),  # Sulphur (%)
-        (0.0, 10.0),  # Phosphorous (%)
-        (0.0, 100.0)  # CSN (unitless)
+        (0.0, 50.0),    # Ash (%)
+        (0.0, 100.0),   # VM (%)
+        (0.0, 40.0),    # Moisture (%)
+        (0, 100),       # Max. Contraction (%), contraction originally negative, clamped at 0 here
+        (0.0, 100.0),   # Max. Expansion (%)
+        (0.0, 200.0),   # Max. fluidity
+        (0.0, 100.0),   # Crushing index < 3.15 mm (%)
+        (0.0, 100.0),   # Crushing index < 0.5 mm (%)
+        (0.0, 500.0),   # Softening temperature (°C)
+        (0.0, 500.0),   # Resolidification temp range Min (°C)
+        (0.0, 500.0),   # Resolidification temp range Max (°C)
+        (0.0, 500.0),   # Plastic range (°C)
+        (0.0, 10.0),    # Sulphur (%)
+        (0.0, 10.0),    # Phosphorous (%)
+        (0.0, 100.0)    # CSN
     ]
 
     out = arr.copy()
@@ -903,12 +900,16 @@ def parse_blends(lst, key):
     return np.pad(a, (0, coal_count - len(a)), 'constant')
 
 
+MAX_COMBINATIONS = 10000  # or as you define
+
+
 def generate_combinations(mins, maxs):
     out = []
     for c in product(*[range(mins[i], maxs[i] + 1) for i in range(coal_count)]):
         if sum(c) == 100:
             out.append(c)
-            if len(out) >= MAX_COMBINATIONS: break
+            if len(out) >= MAX_COMBINATIONS:
+                break
     return np.array(out)
 
 
@@ -970,7 +971,8 @@ def cost():
 
     aug_all = np.hstack([s1_all, np.zeros((N, 2))])
     cp0_all = rf_model.predict(aug_all)
-    cp_all = clamp_coke(coke_output_scaler.inverse_transform(cp0_all))
+    cp_all = coke_output_scaler.inverse_transform(cp0_all)
+    cp_all = clamp_coke(cp_all)  # <--- This is the fix you asked for
 
     costs = (combs * cost_array).sum(axis=1) / 100
     norm_cost = costs / costs.max()
