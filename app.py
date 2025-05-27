@@ -1073,29 +1073,18 @@ def cost():
     y_pred = output_scaler.inverse_transform(y_pred)
     mse = np.mean((y_test - y_pred) ** 2)
 
-
-    MAX_COMBINATIONS = 10000
-    count = 0
     def generate_combinations(index, current_combination, current_sum):
-        global count
         target_sum = 100
-
-        if count >= MAX_COMBINATIONS:
-            return
-
         if index == len(min_percentages_padded) - 1:
             remaining = target_sum - current_sum
             if min_percentages_padded[index] <= remaining <= max_percentages_padded[index]:
-                if count < MAX_COMBINATIONS:
-                    count += 1
-                    yield current_combination + [remaining]
+                yield current_combination + [remaining]
             return
-
         for value in range(min_percentages_padded[index], max_percentages_padded[index] + 1):
-            if current_sum + value <= target_sum and count < MAX_COMBINATIONS:
+            if current_sum + value <= target_sum:
                 yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
 
-    all_combinations = np.array(list(generate_combinations(0, [], 0)))
+    all_combinations = np.array(list(itertools.islice(generate_combinations(0, [], 0), 10000)))
 
     if (Option == 3):
         proces_para = np.pad(proces_para, (0, 2), mode='constant', constant_values=0)
