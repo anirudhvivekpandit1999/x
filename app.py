@@ -957,15 +957,15 @@ def cost():
         else:
             cp_all[idx][1] = 0.75
 
-        if 90 < cp_all[idx][8] < 93:
-            cp_all[idx][8] = cp_all[idx][8]
-        else:
-            cp_all[idx][8] = 91.5
-
-        if 5 < cp_all[idx][9] < 7:
+        if 90 < cp_all[idx][9] < 93:
             cp_all[idx][9] = cp_all[idx][9]
         else:
-            cp_all[idx][9] = 6
+            cp_all[idx][9] = 91.5
+
+        if 5 < cp_all[idx][10] < 7:
+            cp_all[idx][10] = cp_all[idx][9]
+        else:
+            cp_all[idx][10] = 6
 
         if 65 < cp_all[idx][12] < 70:
             cp_all[idx][12] = cp_all[idx][12]
