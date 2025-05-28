@@ -874,7 +874,14 @@ def process_training_data():
 
     with open(file_path, 'r') as file:
         reader = csv.reader(file)
+        headers = next(reader)  # Read the header row
+        try:
+            file_name_index = headers.index('File Name')  # Find the index of 'File Name'
+        except ValueError:
+            file_name_index = None  # 'File Name' column not found
         for row in reader:
+            if file_name_index is not None and file_name_index < len(row):
+                row.pop(file_name_index)
             if row[0] not in ('', 'NaT'):
                 serial_number = row[0]
                 if serial_number not in processed_serial_numbers:
