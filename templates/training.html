@@ -531,7 +531,7 @@
                     });
                 });
                 // 4️⃣ Return something if you want
-                return { success: true, count: Object.keys(coalData).length };
+                return { success: true };
             } catch (error) {
                 console.error("Error loading coal data:", error);
                 return { success: false, error };
