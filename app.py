@@ -1553,6 +1553,26 @@ def modify_coal():
         return jsonify({'message': 'Invalid coal index'}), 400
 
 
+
+@app.route('/download-template-properties', methods=['GET'])
+def download_template_prop():
+    columns = [
+        "Coal", "Type of Coal", "Ash (%)", "Volatile Matter (%)", "Moisture (%)",
+        "Max. Contraction", "Max. Expansion", "Max. fluidity (ddpm)", "MMR", "HGI",
+        "Softening temperature (°C)", "Resolidification temp range Min (°C)",
+        "Resolidification temp range Max (°C)", "Plastic range (°C)",
+        "Sulphur (%)", "Phosphorous (%)", "CSN", "Cost per Ton (Rs.)"
+    ]
+
+    df = pd.DataFrame(columns=columns)
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+
+    return send_file(output, as_attachment=True,
+                     download_name="coal-properties-template.xlsx",
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
 # min-max page
 
 
