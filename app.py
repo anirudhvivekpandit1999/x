@@ -848,7 +848,7 @@ def initialize_app_startup():
 
 def process_training_data():
     """Process the training CSV data - this is expensive and static"""
-    file_path = 'submitted_training_coal_data.csv'
+    file_path = 'training_data_file.csv'
 
     coal_percentages = []
     coal_properties = []
