@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <style>
@@ -1882,20 +1883,40 @@ const rows = response;
                     }
                 }
 
+                const cokeDisplayNames = ['ASH (%)', 'VOLATILE MATTER (%)', 'M_40MM (%)', 'M_10MM (%)', 'CSR (%)', 'CRI (%)', 'AMS'];
+
+                const cokePropertyNames = [
+                    'ASH (%)', 'VOLATILE MATTER (%)', 'MOISTURE', 'S_100MM', 'S_80MM (%)', 'S_50MM', 'S_40MM',
+                    'S_30MM', 'S_MINUS_30MM', 'M_40MM (%)', 'M_10MM (%)', 'M_MINUS_10MM (%)',
+                    'CSR (%)', 'CRI (%)', 'AMS'
+                ];
+
+
+                const blendValues = result.ProposedCoal?.Blend2?.[0] ? Object.values(result.ProposedCoal.Blend2[0]) : Array(coalblendPropertyNames.length).fill('N/A');
+                
+                const cokeValues = result.ProposedCoal?.Coke2?.[0] ? Object.values(result.ProposedCoal.Coke2[0]) : Array(cokePropertyNames.length).fill('N/A');
+
+                const cokeDisplayNameMap = {};
+                cokeDisplayNames.forEach((displayName) => {
+                    const index = cokePropertyNames.indexOf(displayName);
+                    cokeDisplayNameMap[displayName] = index;
+                });
+
 
                 const proposedParameters = [
                     ['Proposed Blended Coal Parameters', 'Value'],
                     ...coalblendNames.map((param, index) => {
-                        const value = result.ProposedCoal?.Blend2?.[0]?.[param] || 'N/A';
+                        const value = blendValues[index];
                         return [param, value.toFixed ? value.toFixed(2) : value];
                     }),
                     ['', ''],
                     ['Proposed Coke Parameters', 'Value'],
-                    ...parameterNames.map((param, index) => {
-                        const value = result.ProposedCoal?.Coke2?.[0]?.[param] || 'N/A';
-                        return [param, value.toFixed ? value.toFixed(2) : value];
-                    })
-                ];
+                    ...cokeDisplayNames.map((param) => {
+                    const index = cokeDisplayNameMap[param];
+                    const value = cokeValues[index];
+                    return [param, value.toFixed ? value.toFixed(2) : value];
+                })
+            ];
 
                 // Validate proposedParameters before passing it to aoa_to_sheet
                 if (Array.isArray(proposedParameters) && Array.isArray(proposedParameters[0])) {
@@ -1996,7 +2017,9 @@ const rows = response;
 
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(combinedCokeAndProcessData), "Coke and Process Parameters");
 
-                XLSX.writeFile(wb, 'results.xlsx');
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });;
+                saveAs(blob, 'results.xlsx');
             }
 
 
