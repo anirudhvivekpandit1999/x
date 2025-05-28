@@ -461,7 +461,7 @@
                 });
 
                 const encryptedResponse = result?.data?.coalProperties ?? result?.data?.encryptedData;
-
+                console.log(encryptedResponse);
                 const decryptedResponse = decryptData(encryptedResponse);
                 const resultRow = (
                     decryptedResponse &&
