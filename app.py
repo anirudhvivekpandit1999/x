@@ -318,7 +318,7 @@ UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'xls', 'xlsx'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-TRAINING_DATA = 'training_data_file.csv'
+TRAINING_DATA = 'submitter_training_data.csv'
 INDIVIDUAL_UPLOADS_FOLDER = os.path.join(UPLOAD_FOLDER, 'individual_uploads')
 
 
