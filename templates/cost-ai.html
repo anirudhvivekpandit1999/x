@@ -1883,6 +1883,13 @@ const rows = response;
                     }
                 }
 
+                const coalblendPropertyNames = [
+                    'Blended Coal Ash (%)', 'Blended Coal VM (%)', 'Blended Coal Moisture (%)', 'Max. Contraction',
+                    'Max. Expansion', 'Max. fluidity', 'Crushing index < 3.15mm', 'Crushing Index < 0.5mm',
+                    'Softening temperature (°C)', 'Resolidification temp range Min (°C)',
+                    'Resolidification temp range Max (°C)', 'Plastic range (°C)', 'Sulphur (%)', 'Phosphorous (%)', 'CSN'
+                ];
+
                 const cokeDisplayNames = ['ASH (%)', 'VOLATILE MATTER (%)', 'M_40MM (%)', 'M_10MM (%)', 'CSR (%)', 'CRI (%)', 'AMS'];
 
                 const cokePropertyNames = [
@@ -1905,7 +1912,7 @@ const rows = response;
 
                 const proposedParameters = [
                     ['Proposed Blended Coal Parameters', 'Value'],
-                    ...coalblendNames.map((param, index) => {
+                    ...coalblendPropertyNames.map((param, index) => {
                         const value = blendValues[index];
                         return [param, value.toFixed ? value.toFixed(2) : value];
                     }),
