@@ -1444,7 +1444,7 @@ def cost():
         daily_vectors_tensor = tf.stack(daily_vectors)
         daily_vectors_tensor_test_reshaped = daily_vectors_tensor.numpy().reshape(1, -1)
         daily_vectors_tensor_test_scaled = input_scaler.transform(daily_vectors_tensor_test_reshaped)
-        daily_vectors_tensor_test_scaled = daily_vectors_tensor_test_scaled.reshape(-1, 14, 15)
+        daily_vectors_tensor_test_scaled = daily_vectors_tensor_test_scaled.reshape(-1, coal_count_number, 15)
 
         prediction_scaled = modelq.predict(daily_vectors_tensor_test_scaled)
         prediction = output_scaler.inverse_transform(prediction_scaled)
