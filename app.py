@@ -1145,6 +1145,7 @@ def restart():
     print("Restarting the application...")
     initialize_app_startup()
     return jsonify({"message": "Application restarted successfully"}), 200
+
 @app.route('/cost', methods=['POST'])
 def cost():
     data = request.json
