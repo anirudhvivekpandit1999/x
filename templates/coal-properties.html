@@ -803,7 +803,7 @@
 
     const result = Array.isArray(response) && response[0] ? response[0] : response;
 
-    restartServer(); // Ensure server restart after adding coal
+   await restartServer(); // Ensure server restart after adding coal
     fetchCoalData();
 
     alert("Data added successfully!");
