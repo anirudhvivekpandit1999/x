@@ -340,13 +340,8 @@
   try {
     console.log("Sending request...");
     const response = await fetch("http://3.111.89.109:5000/restart");
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log("Restart response:", data);
+    
+    
   } catch (error) {
     console.error("Error restarting server:", error);
   }
@@ -800,10 +795,10 @@
 
   try {
     const response = await postEncrypted("http://3.111.89.109:3000/api/insertCoalProperties", newCoalData);
-
+ await restartServer();
     const result = Array.isArray(response) && response[0] ? response[0] : response;
 
-   await restartServer(); // Ensure server restart after adding coal
+   // Ensure server restart after adding coal
     fetchCoalData();
 
     alert("Data added successfully!");
@@ -815,7 +810,7 @@
     alert("Error adding data");
   }
   // Restart server after successful coal addition
-  restartServer();
+  
 });
 
     document
