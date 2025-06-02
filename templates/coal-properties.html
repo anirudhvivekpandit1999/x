@@ -336,6 +336,24 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script>
+    async function restartServer() {
+  try {
+    console.log("Sending request...");
+    const response = await fetch("http://3.111.89.109:5000/restart");
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Restart response:", data);
+  } catch (error) {
+    console.error("Error restarting server:", error);
+  }
+}
+
+restartServer();
+
     function encryptData(data) {
       const secretKey = CryptoJS.enc.Utf8.parse(
         "qwertyuiopasdfghjklzxcvbnm123456"
@@ -569,14 +587,7 @@
     "CostPerTonRs",
     "LastModifiedDate"
   ];
-async function restartServer() {
-  try {
-    const restart = await axios.get("http://3.111.89.109:5000/restart");
-    console.log("Restart response:", restart.data);
-  } catch (error) {
-    console.error("Error restarting server:", error);
-  }
-}
+
   coalData.forEach((row, index) => {
     const tr = document.createElement("tr");
 
