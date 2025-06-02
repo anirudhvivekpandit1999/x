@@ -803,12 +803,11 @@
 
     const result = Array.isArray(response) && response[0] ? response[0] : response;
 
+    restartServer(); // Ensure server restart after adding coal
     fetchCoalData();
 
-
-      alert("Data added successfully!");
-      resetForm();
-
+    alert("Data added successfully!");
+    resetForm();
 
     document.getElementById("coalFormPopup").style.display = "none";
   } catch (err) {
