@@ -518,8 +518,8 @@
         };
 
         try{await postEncrypted('http://3.111.89.109:3000/api/insertCoalProperties',newCoalData);}catch(err){console.error('Row error',err);}      }
-        await restartServer();
-      await fetchCoalData();
+         restartServer();
+       fetchCoalData();
       alert('Excel upload complete');
       
       e.target.value='';
@@ -700,7 +700,7 @@
             "http://3.111.89.109:3000/api/updateCoalProperties",
             {"p_CoalId":coalId ,"p_CoalName":document.getElementById("coal").value ,"p_ColumnNames":modifiedCoalData.p_ColumnNames, "p_Values":modifiedCoalData.p_Values}
           );
-          await restartServer(); // Restart server after modification
+           restartServer(); // Restart server after modification
           fetchCoalData(); // Refresh table
 
 
