@@ -513,7 +513,7 @@
         };
 
         try{await postEncrypted('http://3.111.89.109:3000/api/insertCoalProperties',newCoalData);}catch(err){console.error('Row error',err);}      }
-        await restartServer();
+        // await restartServer();
        fetchCoalData();
       alert('Excel upload complete');
       
@@ -797,7 +797,7 @@
     const response = await postEncrypted("http://3.111.89.109:3000/api/insertCoalProperties", newCoalData);
  
     const result = Array.isArray(response) && response[0] ? response[0] : response;
-    await restartServer();
+    // await restartServer();
    // Ensure server restart after adding coal
     fetchCoalData();
 
