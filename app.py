@@ -991,15 +991,15 @@ def train_and_store_models():
 
     input_train_scaled = input_scaler.fit_transform(input_train_reshaped)
     input_test_scaled = input_scaler.transform(input_test_reshaped)
-    input_train_scaled = input_train_scaled.reshape(-1, coal_count_number, 15)
-    input_test_scaled = input_test_scaled.reshape(-1, coal_count_number, 15)
+    input_train_scaled = input_train_scaled.reshape(-1, get_coal_count(), 15)
+    input_test_scaled = input_test_scaled.reshape(-1, get_coal_count(), 15)
 
     target_train_scaled = output_scaler.fit_transform(target_train)
     target_test_scaled = output_scaler.transform(target_test)
 
     # Build and train first model
     modelq = keras.Sequential([
-        layers.Input(shape=(coal_count_number, 15)),
+        layers.Input(shape=(get_coal_count(), 15)),
         layers.Flatten(),
         layers.BatchNormalization(),
         layers.Dense(512, activation='relu'),
@@ -1139,18 +1139,14 @@ def read_min_max_values():
 
 initialize_app_startup()
 
-@app.route('/restart', methods=['GET'])
+@app.route('/restart',methods=['GET'])
 def restart():
-    """Endpoint to simulate an application restart"""
-    print("Restart endpoint hit.")
-    try:
-        initialize_app_startup()
-        print("Initialization complete.")
-        return jsonify({"message": "Application restarted successfully"}), 200
-    except Exception as e:
-        print(f"Error during restart: {e}")
-        return jsonify({"error": str(e)}), 500
-
+    """Endpoint to restart the application"""
+    print("Restarting the application...")
+    
+    GLOBAL_DATA = {}
+    initialize_app_startup()
+    return jsonify({"message": "Application restarted successfully"}), 200
 
 @app.route('/cost', methods=['POST'])
 def cost():
@@ -1165,21 +1161,21 @@ def cost():
     max_percentages = [int(blk["maxPercentage"]) for blk in coal_blends]
 
     # Pad percentages to 14 elements
-    min_percentages_padded = np.pad(min_percentages, (0, coal_count_number - len(min_percentages)), mode='constant')
-    max_percentages_padded = np.pad(max_percentages, (0, coal_count_number - len(max_percentages)), mode='constant')
+    min_percentages_padded = np.pad(min_percentages, (0, get_coal_count() - len(min_percentages)), mode='constant')
+    max_percentages_padded = np.pad(max_percentages, (0, get_coal_count() - len(max_percentages)), mode='constant')
 
     desired_coke_params = data.get("cokeParameters")
     print("desired coke Parameters:", desired_coke_params)
 
     # Handle user input blend
     oneblends = data.get('blendcoal', [])
-    user_input_values_padded = np.zeros(coal_count_number)
+    user_input_values_padded = np.zeros(get_coal_count())
 
     if oneblends:
         user_input_values = np.array([blend['currentRange'] for blend in oneblends])
         if user_input_values.sum() != 100:
             return jsonify({"error": "The total of current range must add up to 100."}), 400
-        user_input_values_padded = np.pad(user_input_values, (0, coal_count_number - len(user_input_values)), mode='constant')
+        user_input_values_padded = np.pad(user_input_values, (0, get_coal_count() - len(user_input_values)), mode='constant')
         user_input_values_padded = np.array(user_input_values_padded).reshape(1, -1)
         print("D-tensor-1", user_input_values_padded)
 
@@ -1253,7 +1249,7 @@ def cost():
 
     # Predict blended coal properties using pre-trained model
     b1_scaled = input_scaler.transform(daily_vectors_flattened)
-    b1_scaled = b1_scaled.reshape(-1, coal_count_number, 15)
+    b1_scaled = b1_scaled.reshape(-1, get_coal_count(), 15)
     blend1 = modelq.predict(b1_scaled)
     blended_coal_properties = output_scaler.inverse_transform(blend1)
 
@@ -1458,7 +1454,7 @@ def cost():
         daily_vectors_tensor = tf.stack(daily_vectors)
         daily_vectors_tensor_test_reshaped = daily_vectors_tensor.numpy().reshape(1, -1)
         daily_vectors_tensor_test_scaled = input_scaler.transform(daily_vectors_tensor_test_reshaped)
-        daily_vectors_tensor_test_scaled = daily_vectors_tensor_test_scaled.reshape(-1, coal_count_number, 15)
+        daily_vectors_tensor_test_scaled = daily_vectors_tensor_test_scaled.reshape(-1, get_coal_count(), 15)
 
         prediction_scaled = modelq.predict(daily_vectors_tensor_test_scaled)
         prediction = output_scaler.inverse_transform(prediction_scaled)
