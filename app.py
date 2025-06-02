@@ -1138,6 +1138,13 @@ def read_min_max_values():
     }
 
 initialize_app_startup()
+
+@app.route('/restart',methods=['GET'])
+def restart():
+    """Endpoint to restart the application"""
+    print("Restarting the application...")
+    initialize_app_startup()
+    return jsonify({"message": "Application restarted successfully"}), 200
 @app.route('/cost', methods=['POST'])
 def cost():
     data = request.json
