@@ -502,7 +502,7 @@
         try{await postEncrypted('http://3.111.89.109:3000/api/insertCoalProperties',newCoalData);}catch(err){console.error('Row error',err);}      }
       await fetchCoalData();
       alert('Excel upload complete');
-      const restart = await axios.post("http://3.111.89.109:5000/restart");
+      const restart = await axios.get("http://3.111.89.109:5000/restart");
       e.target.value='';
     });
 
@@ -686,7 +686,7 @@
 
 
             alert("Data updated successfully!");
-          const restart = await axios.post("http://3.111.89.109:5000/restart");
+          const restart = await axios.get("http://3.111.89.109:5000/restart");
 
           document.getElementById("modifyCoalFormPopup").style.display = "none";
           resetForm();
