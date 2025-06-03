@@ -1151,7 +1151,7 @@ def restart():
 @app.route('/cost', methods=['POST'])
 def cost():
     
-    initialize_app_startup()
+    # initialize_app_startup()
     data = request.json
     if not data:
         raise ValueError("No data received in the request")

@@ -196,10 +196,56 @@
     .delete-button:active {
       transform: scale(0.95); /* Scale down on click */
     }
+
+    /* Fullscreen Loader */
+    .fullscreen-loader-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(80, 80, 80, 0.45);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s;
+    }
+
+    .fullscreen-loader-bg.hidden {
+      display: none;
+    }
+
+    .circle-loader {
+      width: 80px;
+      height: 80px;
+      border: 10px solid #bbb;
+      border-top: 10px solid #444;
+      border-radius: 50%;
+      background: rgba(200, 200, 200, 0.7);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 </head>
 
 <body>
+  <!-- Fullscreen Loader -->
+  <div id="fullscreenLoader" class="fullscreen-loader-bg hidden">
+    <div class="circle-loader"></div>
+  </div>
+
   <header>
     <nav class="navbar">
       <div class="logo-left">
@@ -483,6 +529,7 @@
     document.getElementById('upload-file-btn').addEventListener('click',()=>document.getElementById('file-upload').click());
     document.getElementById('file-upload').addEventListener('change', async e => {
       const file = e.target.files[0]; if(!file) return;
+      document.getElementById("fullscreenLoader").classList.remove("hidden");
       const buf = await file.arrayBuffer(); const wb = XLSX.read(buf, {type:'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
@@ -513,10 +560,10 @@
         };
 
         try{await postEncrypted('http://3.111.89.109:3000/api/insertCoalProperties',newCoalData);}catch(err){console.error('Row error',err);}      }
-        // await restartServer();
-       fetchCoalData();
+      await restartServer();
+      fetchCoalData();
       alert('Excel upload complete');
-      
+      document.getElementById("fullscreenLoader").classList.add("hidden");
       e.target.value='';
     });
 
@@ -707,7 +754,6 @@
         } catch (err) {
           console.error("Error modifying coal data:", err);
         }
-       
       });
 
     fetchCoalData();
@@ -762,57 +808,50 @@
     });
 
     document.getElementById("coalForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+      e.preventDefault();
+      document.getElementById("fullscreenLoader").classList.remove("hidden");
+      const newCoalData = {
+        p_CoalId: null, // Assuming 0 for new insert, or generate dynamically
+        p_CoalType: (document.getElementById("add_coaltype").value).toString(),
+        p_CoalName: (document.getElementById("add_coal").value).toString(),
 
-  const newCoalData = {
-    p_CoalId: null, // Assuming 0 for new insert, or generate dynamically
-    p_CoalType: (document.getElementById("add_coaltype").value).toString(),
-    p_CoalName: (document.getElementById("add_coal").value).toString(),
+        p_Ash: parseFloat(document.getElementById("add_ash").value),
+        p_VolatileMatter: parseFloat(document.getElementById("add_volatile_matter").value),
+        p_Moisture: parseFloat(document.getElementById("add_moisture").value),
+        p_MaxContraction: parseFloat(document.getElementById("add_max_contraction").value),
+        p_MaxExpansion: parseFloat(document.getElementById("add_max_expansion").value),
+        p_Maxfluidityddpm: parseFloat(document.getElementById("add_max_fluidity").value),
+        p_MMR: parseFloat(document.getElementById("add_mmr").value),
+        p_HGI: parseFloat(document.getElementById("add_hgi").value),
+        p_SofteningTemperaturec: parseFloat(document.getElementById("add_softening_temp").value),
+        p_ResolidificationTempRangeMinc: parseFloat(document.getElementById("add_resolidification_min").value),
+        p_ResolidificationTempRangeMaxc: parseFloat(document.getElementById("add_resolidification_max").value),
+        p_PlasticRangec: parseFloat(document.getElementById("add_plastic_range").value),
+        p_Sulphur: parseFloat(document.getElementById("add_sulphur").value),
+        p_Phosphorous: parseFloat(document.getElementById("add_phosphorous").value),
+        p_CSN: parseFloat(document.getElementById("add_csn").value),
+        p_CostPerTonRs: parseFloat(document.getElementById("add_cost").value),
+        p_FileId: 1, // Replace with actual FileId if needed
+        p_CompanyId: 1, // Replace with actual CompanyId if needed
+        p_UserId: 1, // Replace with actual UserId if needed
+        p_FileName: "coal_import.xlsx", // Or dynamic name if uploading file
+        p_FileDate: new Date().toISOString().slice(0, 19).replace("T", " ")
+      };
 
-    p_Ash: parseFloat(document.getElementById("add_ash").value),
-    p_VolatileMatter: parseFloat(document.getElementById("add_volatile_matter").value),
-    p_Moisture: parseFloat(document.getElementById("add_moisture").value),
-    p_MaxContraction: parseFloat(document.getElementById("add_max_contraction").value),
-    p_MaxExpansion: parseFloat(document.getElementById("add_max_expansion").value),
-    p_Maxfluidityddpm: parseFloat(document.getElementById("add_max_fluidity").value),
-    p_MMR: parseFloat(document.getElementById("add_mmr").value),
-    p_HGI: parseFloat(document.getElementById("add_hgi").value),
-    p_SofteningTemperaturec: parseFloat(document.getElementById("add_softening_temp").value),
-    p_ResolidificationTempRangeMinc: parseFloat(document.getElementById("add_resolidification_min").value),
-    p_ResolidificationTempRangeMaxc: parseFloat(document.getElementById("add_resolidification_max").value),
-    p_PlasticRangec: parseFloat(document.getElementById("add_plastic_range").value),
-    p_Sulphur: parseFloat(document.getElementById("add_sulphur").value),
-    p_Phosphorous: parseFloat(document.getElementById("add_phosphorous").value),
-    p_CSN: parseFloat(document.getElementById("add_csn").value),
-    p_CostPerTonRs: parseFloat(document.getElementById("add_cost").value),
-    p_FileId: 1, // Replace with actual FileId if needed
-    p_CompanyId: 1, // Replace with actual CompanyId if needed
-    p_UserId: 1, // Replace with actual UserId if needed
-    p_FileName: "coal_import.xlsx", // Or dynamic name if uploading file
-    p_FileDate: new Date().toISOString().slice(0, 19).replace("T", " ")
-    // Current timestamp in ISO format
-  };
-
-  try {
-    const response = await postEncrypted("http://3.111.89.109:3000/api/insertCoalProperties", newCoalData);
- 
-    const result = Array.isArray(response) && response[0] ? response[0] : response;
-    // await restartServer();
-   // Ensure server restart after adding coal
-    fetchCoalData();
-
-    alert("Data added successfully!");
-    resetForm();
-
-    document.getElementById("coalFormPopup").style.display = "none";
-    
-  } catch (err) {
-    console.error("Error adding coal data:", err);
-    alert("Error adding data");
-  }
-  // Restart server after successful coal addition
-  
-});
+      try {
+        const response = await postEncrypted("http://3.111.89.109:3000/api/insertCoalProperties", newCoalData);
+        const result = Array.isArray(response) && response[0] ? response[0] : response;
+        await restartServer();
+        fetchCoalData();
+        alert("Data added successfully!");
+        resetForm();
+        document.getElementById("coalFormPopup").style.display = "none";
+      } catch (err) {
+        console.error("Error adding coal data:", err);
+        alert("Error adding data");
+      }
+      document.getElementById("fullscreenLoader").classList.add("hidden");
+    });
 
     document
       .getElementById("addCoalDataButton")

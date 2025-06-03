@@ -624,11 +624,57 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        /* Fullscreen Loader */
+        .fullscreen-loader-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(80, 80, 80, 0.45);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s;
+        }
+
+        .fullscreen-loader-bg.hidden {
+            display: none;
+        }
+
+        .circle-loader {
+            width: 80px;
+            height: 80px;
+            border: 10px solid #bbb;
+            border-top: 10px solid #444;
+            border-radius: 50%;
+            background: rgba(200, 200, 200, 0.7);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 
 </head>
 
 <body>
+    <!-- Fullscreen Loader -->
+    <div id="fullscreenLoader" class="fullscreen-loader-bg hidden">
+        <div class="circle-loader"></div>
+    </div>
+
     <header>
         <nav class="navbar">
             <div class="logo-left">
@@ -1285,6 +1331,9 @@ const rows = response;
         document.getElementById("coalForm").addEventListener("submit", async function (event) {
             event.preventDefault();
 
+            // Show fullscreen loader
+            document.getElementById('fullscreenLoader').classList.remove('hidden');
+
             const blends = [];
             let totalMinPercentage = 0;
             let totalMaxPercentage = 0;
@@ -1304,11 +1353,13 @@ const rows = response;
 
             if (totalMinPercentage > 100) {
                 alert("The total of all Min Percentages should be less than or equal to 100.");
+                document.getElementById('fullscreenLoader').classList.add('hidden');
                 return;
             }
 
             if (totalMaxPercentage < 100) {
                 alert("The total of all Max Percentages should be greater than or equal to 100.");
+                document.getElementById('fullscreenLoader').classList.add('hidden');
                 return;
             }
 
@@ -1329,9 +1380,9 @@ const rows = response;
                 }
             }
 
-
             if (blendcoal.length > 0 && totalCurrentRange !== 100) {
                 alert("The current range of Proposed Coal blend must add up to 100.");
+                document.getElementById('fullscreenLoader').classList.add('hidden');
                 return;
             }
 
@@ -1352,25 +1403,23 @@ const rows = response;
                 processParameters.push(value);
             });
 
-
             const formData = {
                 blends,
                 cokeParameters,
                 processType,
                 blendcoal: blendcoal.length > 0 ? blendcoal : [],
                 processParameters
-
             };
 
-            const response = await fetch("http://3.111.89.109:5000/cost", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(formData)
-            });
-
             try {
+                const response = await fetch("http://3.111.89.109:5000/cost", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(formData)
+                });
+
                 const [percentPredictResponse] = await Promise.all([
                     response
                 ]);
@@ -1378,11 +1427,11 @@ const rows = response;
                 const result = await response.json();
 
                 displayResults(result, cokeParameters, processParameters, processType);
-
-
             } catch (error) {
                 console.error('Error:', error);
-
+            } finally {
+                // Always hide loader when done
+                document.getElementById('fullscreenLoader').classList.add('hidden');
             }
         });
 
