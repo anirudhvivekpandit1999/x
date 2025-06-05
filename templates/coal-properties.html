@@ -258,7 +258,7 @@
         <li><a href="coal-properties.html">COAL PROPERTIES</a></li>
         <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
         <li><a href="cost-ai.html">COST AI</a></li>
-        <li><a href="training.html">TRAINING</a></li>
+        <!-- <li><a href="training.html">TRAINING</a></li> -->
         <li><a href="index.html">HOME</a></li>
       </ul>
 
@@ -267,11 +267,11 @@
 
   <h2>Coal Properties</h2>
 
-  <button id="addCoalDataButton">Add Coal Data</button>
+  <!-- <button id="addCoalDataButton">Add Coal Data</button> -->
   <button id="modifyCoalDataButton">Modify Coal Data</button>
   <button id="downloadcoalfile">Download Template</button>
-  <button id="upload-file-btn">Upload Excel File</button>
-  <input type="file" id="file-upload" accept=".xls,.xlsx" />
+  <!-- <button id="upload-file-btn">Upload Excel File</button>
+  <input type="file" id="file-upload" accept=".xls,.xlsx" /> -->
 
   <table id="coalTable">
     <thead>
@@ -526,46 +526,46 @@
     });
 });
 
-    document.getElementById('upload-file-btn').addEventListener('click',()=>document.getElementById('file-upload').click());
-    document.getElementById('file-upload').addEventListener('change', async e => {
-      const file = e.target.files[0]; if(!file) return;
-      document.getElementById("fullscreenLoader").classList.remove("hidden");
-      const buf = await file.arrayBuffer(); const wb = XLSX.read(buf, {type:'array'});
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
-      for(const row of rows) {
-        const newCoalData = {
-          p_CoalId: null,
-          p_CoalType: row['Type of Coal'],
-          p_CoalName: row['Coal'],
-          p_Ash: parseFloat(row['Ash (%)']),
-          p_VolatileMatter: parseFloat(row['Volatile Matter (%)']),
-          p_Moisture: parseFloat(row['Moisture (%)']),
-          p_MaxContraction: parseFloat(row['Max. Contraction']),
-          p_MaxExpansion: parseFloat(row['Max. Expansion']),
-          p_Maxfluidityddpm: parseFloat(row['Max. fluidity (ddpm)']),
-          p_MMR: parseFloat(row['MMR']),
-          p_HGI: parseFloat(row['HGI']),
-          p_SofteningTemperaturec: parseFloat(row['Softening temperature (°C)']),
-          p_ResolidificationTempRangeMinc: parseFloat(row['Resolidification temp range Min (°C)']),
-          p_ResolidificationTempRangeMaxc: parseFloat(row['Resolidification temp range Max (°C)']),
-          p_PlasticRangec: parseFloat(row['Plastic range (°C)']),
-          p_Sulphur: parseFloat(row['Sulphur (%)']),
-          p_Phosphorous: parseFloat(row['Phosphorous (%)']),
-          p_CSN: parseFloat(row['CSN']),
-          p_CostPerTonRs: parseFloat(row['Cost per Ton (Rs.)']),
-          p_FileId:1, p_CompanyId:1, p_UserId:1,
-          p_FileName:file.name,
-          p_FileDate:new Date().toISOString().slice(0,19).replace('T',' ')
-        };
+    // document.getElementById('upload-file-btn').addEventListener('click',()=>document.getElementById('file-upload').click());
+    // document.getElementById('file-upload').addEventListener('change', async e => {
+    //   const file = e.target.files[0]; if(!file) return;
+    //   document.getElementById("fullscreenLoader").classList.remove("hidden");
+    //   const buf = await file.arrayBuffer(); const wb = XLSX.read(buf, {type:'array'});
+    //   const ws = wb.Sheets[wb.SheetNames[0]];
+    //   const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    //   for(const row of rows) {
+    //     const newCoalData = {
+    //       p_CoalId: null,
+    //       p_CoalType: row['Type of Coal'],
+    //       p_CoalName: row['Coal'],
+    //       p_Ash: parseFloat(row['Ash (%)']),
+    //       p_VolatileMatter: parseFloat(row['Volatile Matter (%)']),
+    //       p_Moisture: parseFloat(row['Moisture (%)']),
+    //       p_MaxContraction: parseFloat(row['Max. Contraction']),
+    //       p_MaxExpansion: parseFloat(row['Max. Expansion']),
+    //       p_Maxfluidityddpm: parseFloat(row['Max. fluidity (ddpm)']),
+    //       p_MMR: parseFloat(row['MMR']),
+    //       p_HGI: parseFloat(row['HGI']),
+    //       p_SofteningTemperaturec: parseFloat(row['Softening temperature (°C)']),
+    //       p_ResolidificationTempRangeMinc: parseFloat(row['Resolidification temp range Min (°C)']),
+    //       p_ResolidificationTempRangeMaxc: parseFloat(row['Resolidification temp range Max (°C)']),
+    //       p_PlasticRangec: parseFloat(row['Plastic range (°C)']),
+    //       p_Sulphur: parseFloat(row['Sulphur (%)']),
+    //       p_Phosphorous: parseFloat(row['Phosphorous (%)']),
+    //       p_CSN: parseFloat(row['CSN']),
+    //       p_CostPerTonRs: parseFloat(row['Cost per Ton (Rs.)']),
+    //       p_FileId:1, p_CompanyId:1, p_UserId:1,
+    //       p_FileName:file.name,
+    //       p_FileDate:new Date().toISOString().slice(0,19).replace('T',' ')
+    //     };
 
-        try{await postEncrypted('http://3.111.89.109:3000/api/insertCoalProperties',newCoalData);}catch(err){console.error('Row error',err);}      }
-      await restartServer();
-      fetchCoalData();
-      alert('Excel upload complete');
-      document.getElementById("fullscreenLoader").classList.add("hidden");
-      e.target.value='';
-    });
+    //     try{await postEncrypted('http://3.111.89.109:3000/api/insertCoalProperties',newCoalData);}catch(err){console.error('Row error',err);}      }
+    //   await restartServer();
+    //   fetchCoalData();
+    //   alert('Excel upload complete');
+    //   document.getElementById("fullscreenLoader").classList.add("hidden");
+    //   e.target.value='';
+    // });
 
     let coalData = [];
     let coalTypes = [];
