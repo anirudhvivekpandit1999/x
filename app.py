@@ -975,7 +975,7 @@ def train_and_store_models():
         coke_output[i] = np.append(coke_output[i], np.random.uniform(54, 56))
 
     # Train first model (coal blending model)
-    daily_vectors_flattened = GLOBAL_DATA['daily_vectors_tensor'].numpy().reshape(52, -1)
+    daily_vectors_flattened = GLOBAL_DATA['daily_vectors_tensor'].numpy().reshape(74, -1)
 
     input_train, input_test, target_train, target_test = train_test_split(
         GLOBAL_DATA['daily_vectors_tensor'].numpy(), GLOBAL_DATA['Blended_coal_parameters'],
@@ -1137,20 +1137,22 @@ def read_min_max_values():
         'coke_quality': df['coke_quality'].iloc[0]
     }
 
+
 initialize_app_startup()
 
-@app.route('/restart',methods=['GET'])
+
+@app.route('/restart', methods=['GET'])
 def restart():
     """Endpoint to restart the application"""
     print("Restarting the application...")
-    
+
     GLOBAL_DATA = {}
     initialize_app_startup()
     return jsonify({"message": "Application restarted successfully"}), 200
 
+
 @app.route('/cost', methods=['POST'])
 def cost():
-    
     # initialize_app_startup()
     data = request.json
     if not data:
@@ -1177,7 +1179,8 @@ def cost():
         user_input_values = np.array([blend['currentRange'] for blend in oneblends])
         if user_input_values.sum() != 100:
             return jsonify({"error": "The total of current range must add up to 100."}), 400
-        user_input_values_padded = np.pad(user_input_values, (0, get_coal_count() - len(user_input_values)), mode='constant')
+        user_input_values_padded = np.pad(user_input_values, (0, get_coal_count() - len(user_input_values)),
+                                          mode='constant')
         user_input_values_padded = np.array(user_input_values_padded).reshape(1, -1)
         print("D-tensor-1", user_input_values_padded)
 
@@ -1196,7 +1199,7 @@ def cost():
     print("model Process Parameters:", proces_para)
 
     # Get process parameters from global data
-    print("Global data",GLOBAL_DATA)
+    print("Global data", GLOBAL_DATA)
     if Option not in GLOBAL_DATA['Process_parameters']:
         raise ValueError(f"Invalid option value: {Option}")
 
@@ -1232,7 +1235,7 @@ def cost():
                 yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
 
     all_combinations = np.array(list(itertools.islice(generate_combinations(0, [], 0), 10000)))
-
+    print(f"all_combinations: {all_combinations}")
     # Prepare tensors for new combinations
     D_tensor = tf.constant(all_combinations, dtype=tf.float32)
     P_tensor = tf.constant(P, dtype=tf.float32)
@@ -1347,12 +1350,13 @@ def cost():
 
     total_differences = [sum(diff) for diff in differences]
     sorted_indices = np.argsort(total_differences)[::-1]
-
+    print(f"total_differences = {total_differences}")
+    print(f"sorted_indices: {sorted_indices}")
     sorted_predictions = predictions[sorted_indices]
     sorted_blends = all_combinations[sorted_indices]
     sorted_diff = [differences[i] for i in sorted_indices]
     sorted_blended_coal_properties = [blended_coal_properties[i] for i in sorted_indices]
-
+    print(f"sortedBlendes:{sorted_blends}")
     # Calculate costs
     coal_costs = []
     for i, blend in enumerate(sorted_blends):
@@ -1534,15 +1538,13 @@ def get_coal_data():
         'coal_data': data
     })
 
+
 @app.route('/add_coal_properties', methods=['POST'])
 def add_coal():
     try:
         new_data = request.json.get('data')
         if not new_data:
             return jsonify({'error': 'No data provided'}), 400
-        
-    
-
 
         new_data.append(datetime.now().strftime('%d %B %Y'))
 
@@ -1576,7 +1578,6 @@ def modify_coal():
         return jsonify({'message': 'Invalid coal index'}), 400
 
 
-
 @app.route('/download-template-properties', methods=['GET'])
 def download_template_prop():
     columns = [
@@ -1595,6 +1596,7 @@ def download_template_prop():
     return send_file(output, as_attachment=True,
                      download_name="coal-properties-template.xlsx",
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
 
 # min-max page
 
