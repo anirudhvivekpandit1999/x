@@ -814,7 +814,7 @@ def initialize_app_startup():
     GLOBAL_DATA['D'] = np.loadtxt(io.StringIO(get_coal_percentages_csv()), delimiter=',')
     print(GLOBAL_DATA['D'].shape)
 
-    GLOBAL_DATA['P'] = np.loadtxt(io.StringIO(get_individual_coal_properties_csv()), delimiter=',')
+    GLOBAL_DATA['P'] = np.loadtxt(io.StringIO(get_Individual_coal_properties_csv()), delimiter=',')
     print(GLOBAL_DATA['P'].shape)
 
     GLOBAL_DATA['Coke_properties'] = np.loadtxt(io.StringIO(get_coke_properties_csv()), delimiter=',')
