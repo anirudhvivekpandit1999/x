@@ -1231,7 +1231,7 @@ def cost():
                 yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
 
     all_combinations = np.array(list(generate_combinations(0, [], 0)))
-
+    print(f"All combinations generated: {len(all_combinations)} ")
     # Prepare tensors for new combinations
     D_tensor = tf.constant(all_combinations, dtype=tf.float32)
     P_tensor = tf.constant(P, dtype=tf.float32)
