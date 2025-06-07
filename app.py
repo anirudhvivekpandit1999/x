@@ -1300,12 +1300,12 @@ def cost():
         for i, prediction in enumerate(predictions):
             if (ash_min <= prediction[0] <= ash_max 
              and
-                    vm_min <= prediction[1] <= vm_max + vm_max and
-                    m40_min <= prediction[9] <= m40_max + m40_max and
-                    m10_min <= prediction[10] <= m10_max + m10_max and
-                    csr_min <= prediction[12] <= csr_max + csr_max and
-                    cri_min <= prediction[13] <= cri_max + cri_max and
-                    ams_min <= prediction[14] <= ams_max + ams_max):
+                    vm_min <= prediction[1] <= vm_max  and
+                    m40_min <= prediction[9] <= m40_max  and
+                    m10_min <= prediction[10] <= m10_max  and
+                    csr_min <= prediction[12] <= csr_max  and
+                    cri_min <= prediction[13] <= cri_max  and
+                    ams_min <= prediction[14] <= ams_max ):
                 valid_indices.append(i)
             else:
                 invalid_indices.append(i)
