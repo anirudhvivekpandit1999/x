@@ -811,13 +811,13 @@ def initialize_app_startup():
     print("Loading static data and training models at startup...")
 
     # 1. Load all CSV data (these don't change between requests)
-    GLOBAL_DATA['D'] = np.loadtxt('coal_percentages.csv', delimiter=',')
+    GLOBAL_DATA['D'] = np.loadtxt(io.StringIO(get_coal_percentages_csv()), delimiter=',')
     print(GLOBAL_DATA['D'].shape)
 
-    GLOBAL_DATA['P'] = np.loadtxt('Individual_coal_properties.csv', delimiter=',')
+    GLOBAL_DATA['P'] = np.loadtxt(io.StringIO(get_individual_coal_properties_csv()), delimiter=',')
     print(GLOBAL_DATA['P'].shape)
 
-    GLOBAL_DATA['Coke_properties'] = np.loadtxt('coke_properties.csv', delimiter=',')
+    GLOBAL_DATA['Coke_properties'] = np.loadtxt(io.StringIO(get_coke_properties_csv()), delimiter=',')
 
     # Load coal properties data
     data = pd.read_csv(io.StringIO(get_coal_properties_csv()), dtype=str, header=None, on_bad_lines='skip')
@@ -826,7 +826,7 @@ def initialize_app_startup():
     GLOBAL_DATA['coal_data'] = data  # Store for cost calculations
 
     # Load blended coal parameters
-    GLOBAL_DATA['Blended_coal_parameters'] = np.loadtxt('blended_coal_data.csv', delimiter=',')
+    GLOBAL_DATA['Blended_coal_parameters'] = np.loadtxt(io.StringIO(get_blended_coal_properties_csv()), delimiter=',')
     # Load min/max values
     GLOBAL_DATA['min_max_values'] = read_min_max_values()
 
