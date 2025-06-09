@@ -827,7 +827,6 @@ def initialize_app_startup():
 
     # Load blended coal parameters
     GLOBAL_DATA['Blended_coal_parameters'] = np.loadtxt(io.StringIO(get_blended_coal_properties_csv()), delimiter=',')
-
     # Load min/max values
     GLOBAL_DATA['min_max_values'] = read_min_max_values()
 
@@ -1235,7 +1234,7 @@ def cost():
                 yield from generate_combinations(index + 1, current_combination + [value], current_sum + value)
 
     all_combinations = np.array(list(itertools.islice(generate_combinations(0, [], 0), 10000)))
-    print(f"all_combinations: {all_combinations}")
+    print(f"All combinations generated: {len(all_combinations)} ")
     # Prepare tensors for new combinations
     D_tensor = tf.constant(all_combinations, dtype=tf.float32)
     P_tensor = tf.constant(P, dtype=tf.float32)
@@ -1302,13 +1301,14 @@ def cost():
         valid_indices = []
         invalid_indices = []
         for i, prediction in enumerate(predictions):
-            if (ash_min <= prediction[0] <= ash_max and
-                    vm_min <= prediction[1] <= vm_max and
-                    m40_min <= prediction[9] <= m40_max and
-                    m10_min <= prediction[10] <= m10_max and
-                    csr_min <= prediction[12] <= csr_max and
-                    cri_min <= prediction[13] <= cri_max and
-                    ams_min <= prediction[14] <= ams_max):
+            if (ash_min <= prediction[0] <= ash_max 
+             and
+                    vm_min <= prediction[1] <= vm_max  and
+                    m40_min <= prediction[9] <= m40_max  and
+                    m10_min <= prediction[10] <= m10_max  and
+                    csr_min <= prediction[12] <= csr_max  and
+                    cri_min <= prediction[13] <= cri_max  and
+                    ams_min <= prediction[14] <= ams_max ):
                 valid_indices.append(i)
             else:
                 invalid_indices.append(i)
