@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -26,9 +28,7 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
       margin: 10px 15px;
-      /* Adds horizontal space between buttons */
       margin-top: 120px;
-      /* Adds space from the top */
       display: inline-block;
     }
 
@@ -237,6 +237,7 @@
         transform: rotate(360deg);
       }
     }
+
   </style>
 </head>
 
@@ -261,11 +262,9 @@
         <!-- <li><a href="training.html">TRAINING</a></li> -->
         <li><a href="index.html">HOME</a></li>
       </ul>
-
-    </nav>
-  </header>
-
-  <h2>Coal Properties</h2>
+   
+  </nav>
+</header>
 
   <!-- <button id="addCoalDataButton">Add Coal Data</button> -->
   <button id="modifyCoalDataButton">Modify Coal Data</button>
@@ -383,17 +382,17 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script>
     async function restartServer() {
-  try {
-    console.log("Sending request...");
-    const response = await fetch("http://3.111.89.109:5000/restart");
-    
-    
-  } catch (error) {
-    console.error("Error restarting server:", error);
-  }
-}
+      try {
+        console.log("Sending request...");
+        const response = await fetch("http://3.111.89.109:5000/restart");
+        
+        
+      } catch (error) {
+        console.error("Error restarting server:", error);
+      }
+    }
 
-
+    
 
     function encryptData(data) {
       const secretKey = CryptoJS.enc.Utf8.parse(
@@ -853,11 +852,11 @@
       document.getElementById("fullscreenLoader").classList.add("hidden");
     });
 
-    document
-      .getElementById("addCoalDataButton")
-      .addEventListener("click", () => {
-        document.getElementById("coalFormPopup").style.display = "block";
-      });
+    //document
+      //.getElementById("addCoalDataButton")
+      //.addEventListener("click", () => {
+       // document.getElementById("coalFormPopup").style.display = "block";
+      //});
 
     document.getElementById("closeForm").addEventListener("click", () => {
       document.getElementById("coalFormPopup").style.display = "none";
@@ -877,6 +876,15 @@
         }
       });
     });
+
+    document.getElementById('logoutButton').addEventListener('click', () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.clear();
+
+    // Redirect to login page
+    window.location.href = '/login.html';
+  });
+
   </script>
 </body>
 

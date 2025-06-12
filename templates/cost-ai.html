@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
 
     <style>
         body {
@@ -691,6 +692,7 @@
                 <li><a href="index.html">HOME</a></li>
 
             </ul>
+            <button id="logoutButton">Logout</button>
         </nav>
     </header>
 
@@ -1248,79 +1250,86 @@ const rows = response;
             return totalCost.toFixed(2);
         }
 
-        function updateProcessParameters() {
-            const processType = document.getElementById("processDropdown").value;
+
+        function updateProcessParameters(roleId) {
             const processParametersDiv = document.getElementById("processParameters");
 
-            // Clear the existing parameters
+            // Clear previous data
             processParametersDiv.innerHTML = '';
 
-            if (processType === "1") {
-                // Recovery Top Charge COB
-                processParametersDiv.innerHTML = `
-                    <h3>Recovery Top Charge COB </h3>
-                    <table>
-                        <tr><td>Charging Tonnage:</td><td><input type="number" name="charging_tonnage" value= "17" ></td></tr>
-                        <tr><td>Moisture Content:</td><td><input type="number" name="moisture_content" value="10" ></td></tr>
-                        <tr><td>Bulk Density:</td><td><input type="number" name="bulk_density" value="0.78"></td></tr>
-                        <tr><td>Charging Temperature (°C):</td><td><input type="number" name="charging_temperature" value="1198"></td></tr>
-                        <tr><td>Battery Operating Temperature (°C):</td><td><input type="number" name="battery_operating_temperature" value="1255"></td></tr>
-                        <tr><td>Cross Wall Temperature (°C):</td><td><input type="number" name="cross_wall_temperature" value="1214"></td></tr>
-                        <tr><td>Push Force (Amp):</td><td><input type="number" name="push_force" value="125"></td></tr>
-                        <tr><td>PRI:</td><td><input type="number" name="pri" value="100"></td></tr>
-                        <tr><td>Coke per Push (kg):</td><td><input type="number" name="coke_per_push" value="12.84"></td></tr>
-                        <tr><td>Gross Coke Yield (%):</td><td><input type="number" name="gross_coke_yield" value="75"></td></tr>
-                        <tr><td>GCM Pressure (Pa):</td><td><input type="number" name="gcm_pressure" value="140"></td></tr>
-                        <tr><td>GCM Temperature (°C):</td><td><input type="number" name="gcm_temperature" value="80"></td></tr>
-                        <tr><td>Coking Time (hrs):</td><td><input type="number" name="coking_time" value="20"></td></tr>
-                        <tr><td>Coke End Temperature (°C):</td><td><input type="number" name="coke_end_temperature" value="1050"></td></tr>
-                        <tr><td>Quenching Time (min):</td><td><input type="number" name="quenching_time" value="5"></td></tr>
-                    </table>
-                `;
-            } else if (processType === "2") {
-                // Recovery Stamp Charge COB
-                processParametersDiv.innerHTML = `
-                    <h3>Recovery Stamp Charge COB </h3>
-                    <table>
-                        <tr><td>Charging Tonnage:</td><td><input type="number" name="charging_tonnage" value="27"></td></tr>
-                        <tr><td>Moisture Content:</td><td><input type="number" name="moisture_content" value="10.5"></td></tr>
-                        <tr><td>Bulk Density:</td><td><input type="number" name="bulk_density" value="1.15"></td></tr>
-                        <tr><td>Charging Temperature (°C):</td><td><input type="number" name="charging_temperature" value="1100"></td></tr>
-                        <tr><td>Battery Operating Temperature (°C):</td><td><input type="number" name="battery_operating_temperature" value="1350"></td></tr>
-                        <tr><td>Cross Wall Temperature (°C):</td><td><input type="number" name="cross_wall_temperature" value="1280"></td></tr>
-                        <tr><td>Push Force (Amp):</td><td><input type="number" name="push_force" value="220"></td></tr>
-                        <tr><td>PRI:</td><td><input type="number" name="pri" value="100"></td></tr>
-                        <tr><td>Coke per Push (kg):</td><td><input type="number" name="coke_per_push" value="20.7"></td></tr>
-                        <tr><td>Gross Coke Yield (%):</td><td><input type="number" name="gross_coke_yield" value="76"></td></tr>
-                        <tr><td>GCM Pressure (Pa):</td><td><input type="number" name="gcm_pressure" value="190"></td></tr>
-                        <tr><td>GCM Temperature (°C):</td><td><input type="number" name="gcm_temperature" value="80"></td></tr>
-                        <tr><td>Coking Time (hrs):</td><td><input type="number" name="coking_time" value="26"></td></tr>
-                        <tr><td>Coke End Temperature (°C):</td><td><input type="number" name="coke_end_temperature" value="1000"></td></tr>
-                        <tr><td>Quenching Time (min):</td><td><input type="number" name="quenching_time" value="5"></td></tr>
-                    </table>
-                `;
-            } else if (processType === "3") {
-                // Non-Recovery Stamp Charge
-                processParametersDiv.innerHTML = `
-                    <h3>Non-Recovery Stamp Charge </h3>
-                    <table>
-                        <tr><td>Charging Tonnage:</td><td><input type="number" name="charging_tonnage" value="50"></td></tr>
-                        <tr><td>Moisture Content:</td><td><input type="number" name="moisture_content" value="10"></td></tr>
-                        <tr><td>Bulk Density:</td><td><input type="number" name="bulk_density" value="1.1"></td></tr>
-                        <tr><td>Charging Temperature (°C):</td><td><input type="number" name="charging_temperature" value="1000"></td></tr>
-                        <tr><td>Battery Operating Temperature (°C):</td><td><input type="number" name="battery_operating_temperature" value="1350"></td></tr>
-                        <tr><td>Push Force (Amp):</td><td><input type="number" name="push_force" value="250"></td></tr>
-                        <tr><td>PRI:</td><td><input type="number" name="pri" value="100"></td></tr>
-                        <tr><td>Coke per Push (kg):</td><td><input type="number" name="coke_per_push" value="34.5"></td></tr>
-                        <tr><td>Gross Coke Yield (%):</td><td><input type="number" name="gross_coke_yield" value="73"></td></tr>
-                        <tr><td>Header Temperature (°C):</td><td><input type="number" name="header_temperature" value="1100"></td></tr>
-                        <tr><td>Coking Time (hrs):</td><td><input type="number" name="coking_time" value="66"></td></tr>
-                        <tr><td>Coke End Temperature (°C):</td><td><input type="number" name="coke_end_temperature" value="1050"></td></tr>
-                        <tr><td>Quenching Time (min):</td><td><input type="number" name="quenching_time" value="5"></td></tr>
-                    </table>
-                `;
+            switch (parseInt(roleId)) {
+                case 3: // Recovery Top Charge COB
+                    processParametersDiv.innerHTML = `
+                        <h3>Recovery Top Charge COB</h3>
+                        <table>
+                            <tr><td>Charging Tonnage:</td><td><input type="number" name="charging_tonnage" value="17"></td></tr>
+                            <tr><td>Moisture Content:</td><td><input type="number" name="moisture_content" value="10"></td></tr>
+                            <tr><td>Bulk Density:</td><td><input type="number" name="bulk_density" value="0.78"></td></tr>
+                            <tr><td>Charging Temperature (°C):</td><td><input type="number" name="charging_temperature" value="1198"></td></tr>
+                            <tr><td>Battery Operating Temperature (°C):</td><td><input type="number" name="battery_operating_temperature" value="1255"></td></tr>
+                            <tr><td>Cross Wall Temperature (°C):</td><td><input type="number" name="cross_wall_temperature" value="1214"></td></tr>
+                            <tr><td>Push Force (Amp):</td><td><input type="number" name="push_force" value="125"></td></tr>
+                            <tr><td>PRI:</td><td><input type="number" name="pri" value="100"></td></tr>
+                            <tr><td>Coke per Push (kg):</td><td><input type="number" name="coke_per_push" value="12.84"></td></tr>
+                            <tr><td>Gross Coke Yield (%):</td><td><input type="number" name="gross_coke_yield" value="75"></td></tr>
+                            <tr><td>GCM Pressure (Pa):</td><td><input type="number" name="gcm_pressure" value="140"></td></tr>
+                            <tr><td>GCM Temperature (°C):</td><td><input type="number" name="gcm_temperature" value="80"></td></tr>
+                            <tr><td>Coking Time (hrs):</td><td><input type="number" name="coking_time" value="20"></td></tr>
+                            <tr><td>Coke End Temperature (°C):</td><td><input type="number" name="coke_end_temperature" value="1050"></td></tr>
+                            <tr><td>Quenching Time (min):</td><td><input type="number" name="quenching_time" value="5"></td></tr>
+                        </table>
+                    `;
+                    break;
+
+                case 1: // Recovery Stamp Charge COB
+                    processParametersDiv.innerHTML = `
+                        <h3>Recovery Stamp Charge COB</h3>
+                        <table>
+                            <tr><td>Charging Tonnage:</td><td><input type="number" name="charging_tonnage" value="27"></td></tr>
+                            <tr><td>Moisture Content:</td><td><input type="number" name="moisture_content" value="10.5"></td></tr>
+                            <tr><td>Bulk Density:</td><td><input type="number" name="bulk_density" value="1.15"></td></tr>
+                            <tr><td>Charging Temperature (°C):</td><td><input type="number" name="charging_temperature" value="1100"></td></tr>
+                            <tr><td>Battery Operating Temperature (°C):</td><td><input type="number" name="battery_operating_temperature" value="1350"></td></tr>
+                            <tr><td>Cross Wall Temperature (°C):</td><td><input type="number" name="cross_wall_temperature" value="1280"></td></tr>
+                            <tr><td>Push Force (Amp):</td><td><input type="number" name="push_force" value="220"></td></tr>
+                            <tr><td>PRI:</td><td><input type="number" name="pri" value="100"></td></tr>
+                            <tr><td>Coke per Push (kg):</td><td><input type="number" name="coke_per_push" value="20.7"></td></tr>
+                            <tr><td>Gross Coke Yield (%):</td><td><input type="number" name="gross_coke_yield" value="76"></td></tr>
+                            <tr><td>GCM Pressure (Pa):</td><td><input type="number" name="gcm_pressure" value="190"></td></tr>
+                            <tr><td>GCM Temperature (°C):</td><td><input type="number" name="gcm_temperature" value="80"></td></tr>
+                            <tr><td>Coking Time (hrs):</td><td><input type="number" name="coking_time" value="26"></td></tr>
+                            <tr><td>Coke End Temperature (°C):</td><td><input type="number" name="coke_end_temperature" value="1000"></td></tr>
+                            <tr><td>Quenching Time (min):</td><td><input type="number" name="quenching_time" value="5"></td></tr>
+                        </table>
+                    `;
+                    break;
+
+                case 2: // Non-Recovery Stamp Charge
+                    processParametersDiv.innerHTML = `
+                        <h3>Non-Recovery Stamp Charge</h3>
+                        <table>
+                            <tr><td>Charging Tonnage:</td><td><input type="number" name="charging_tonnage" value="50"></td></tr>
+                            <tr><td>Moisture Content:</td><td><input type="number" name="moisture_content" value="10"></td></tr>
+                            <tr><td>Bulk Density:</td><td><input type="number" name="bulk_density" value="1.1"></td></tr>
+                            <tr><td>Charging Temperature (°C):</td><td><input type="number" name="charging_temperature" value="1000"></td></tr>
+                            <tr><td>Battery Operating Temperature (°C):</td><td><input type="number" name="battery_operating_temperature" value="1350"></td></tr>
+                            <tr><td>Push Force (Amp):</td><td><input type="number" name="push_force" value="250"></td></tr>
+                            <tr><td>PRI:</td><td><input type="number" name="pri" value="100"></td></tr>
+                            <tr><td>Coke per Push (kg):</td><td><input type="number" name="coke_per_push" value="34.5"></td></tr>
+                            <tr><td>Gross Coke Yield (%):</td><td><input type="number" name="gross_coke_yield" value="73"></td></tr>
+                            <tr><td>Header Temperature (°C):</td><td><input type="number" name="header_temperature" value="1100"></td></tr>
+                            <tr><td>Coking Time (hrs):</td><td><input type="number" name="coking_time" value="66"></td></tr>
+                            <tr><td>Coke End Temperature (°C):</td><td><input type="number" name="coke_end_temperature" value="1050"></td></tr>
+                            <tr><td>Quenching Time (min):</td><td><input type="number" name="quenching_time" value="5"></td></tr>
+                        </table>
+                    `;
+                    break;
+
+                default:
+                    processParametersDiv.innerHTML = `<p>No process parameters available for this Role ID.</p>`;
             }
         }
+
 
         function resetForm() {
             window.location.href = 'cost-ai.html';
@@ -2096,6 +2105,14 @@ const rows = response;
                     link.classList.add('active'); // Add 'active' class to the link that matches the URL
                 }
             });
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.clear();
+
+            // Redirect to login page
+            window.location.href = '/login.html';
         });
     </script>
 </body>

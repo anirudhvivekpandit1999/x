@@ -6,11 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartCoke</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f5f5f5;
-            margin: 0;
+             margin: 0;
             padding-top: 1px;
         }
 
@@ -115,25 +116,6 @@
         button[type="submit"]:hover {
             background-color: #1e40af;
         }
-
-        button {
-            display: block;
-            width: 30%;
-            padding: 10px 0;
-            background-color: #020947;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 35%;
-            font-size: 1.1em;
-            margin-top: 20px;
-            transition: background-color 0.3s ease-in-out;
-        }
-
-        button:hover {
-            background-color: #1e40af;
-        }
     </style>
 
 </head>
@@ -153,8 +135,9 @@
                 <li><a href="cost-ai.html">COST AI</a></li>
                 <!-- <li><a href="training.html">TRAINING</a></li> -->
                 <li><a href="index.html">HOME</a></li>
-
+                
             </ul>
+        <button id="logoutButton">Logout</button>
         </nav>
     </header>
 
@@ -538,6 +521,15 @@
                     link.classList.add('active'); // Add 'active' class to the link that matches the URL
                 }
             });
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            // Clear login flag
+            localStorage.removeItem('isLoggedIn');
+            localStorage.clear();
+
+            // Redirect to login page
+            window.location.href = '/login.html';
         });
     </script>
 </body>
