@@ -217,22 +217,26 @@
             );
 
             const decryptedStr = decrypted.toString(CryptoJS.enc.Utf8);
+            console.log("🔓 Raw Decrypted String (before JSON parse):", decryptedStr);
+            
 
-            //  if (!decryptedStr) {
-            //    console.warn("⚠️ Decryption returned empty string. Possibly wrong secret or IV.");
-            //    return null;
-            //  }
+            if (!decryptedStr) {
+               console.warn("⚠️ Decryption returned empty string. Possibly wrong secret or IV.");
+               return null;
+              }
 
             try {
                 return JSON.parse(decryptedStr);
             } catch (jsonErr) {
                 console.error(
                     "❌ JSON parse failed. Decrypted string:",
-                    decryptedStr
+                    decryptedStr,
+                    "Error:", jsonErr
                 );
-                throw jsonErr;
+                return null;
             }
         } catch (error) {
+            console.error("🚨 DecryptData error:", error.message, "Encrypted data:", encryptedHexData);
             return null;
         }
     }
@@ -248,12 +252,14 @@
             const encryptedResponse = result.data.coalProperties;
             //  const firstResultSet = encryptedResponse[0];
 
-            //  if (!encryptedResponse) {
-            //    console.warn("⚠️ No encryptedData in server response. Full response:", result);
-            //    throw new Error("Invalid encrypted response");
-            //  }
+             //if (!encryptedResponse) {
+              //console.warn("⚠️ No encryptedData in server response. Full response:", result);
+              //throw new Error("Invalid encrypted response");
+            //}
 
             const decryptedResponse = decryptData(encryptedResponse);
+
+            console.log("🔓 Decrypted Server Response:", decryptedResponse);
             const resultRow = (
                 decryptedResponse &&
                 Array.isArray(decryptedResponse) &&
@@ -275,30 +281,41 @@
         }
     }
 
-    document.getElementById('loginForm').addEventListener('submit', async function (e) {
-        e.preventDefault(); // prevent default form submission
+   document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
 
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
 
-        const payload = { email, password };
+    const payload = { email, password };
 
-        try {
-            const response = await postEncrypted('http://3.111.89.109:3000/api/login', payload);
-            // Handle successful login (you can change this based on what the backend returns)
-            if (response) {
-                // Example: save token to localStorage and redirect
-                
-                window.location.href = '/index.html'; // or wherever
+    try {
+        const response = await postEncrypted('http://3.111.89.109:3000/api/login', payload);
+
+        console.log("✨ Final Processed Server Response:", response);
+
+        if (response) { 
+            console.log("✅ Login successful!");
+            console.log("✅ Logged-in user details:", response.user); // Logs the 'user' object from the response
+
+            alert("Login successful!");
+
+            if (response.user) {
+                localStorage.setItem('user', JSON.stringify(response.user));
             } else {
-                alert('Login failed: ' + response.message);
+                console.warn("⚠️ Login was successful, but no 'user' object found in the response.");
             }
-        } catch (error) {
-            console.error('Login error:', error);
-            alert('An error occurred while logging in.');
-        }
-    });
 
+            window.location.href = '/index.html';
+        } else {
+            console.warn("❌ Login failed. Message:", response.message || "Invalid credentials provided.");
+            alert("Login failed: " + (response.message || "Invalid credentials provided."));
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('An unexpected error occurred while logging in.');
+    }
+});
 </script>
 
 </html>

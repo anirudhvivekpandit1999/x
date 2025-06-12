@@ -127,16 +127,6 @@
             });
         });
 
-        const langSelect = document.getElementById('language-select');
-        langSelect.addEventListener('change', () => {
-            const selectedLang = langSelect.value;
-            const currentPath = window.location.pathname.split('/')[1]; // Get current path
-            if (currentPath == ""){
-                window.location.href = `/${selectedLang}/index.html`; //Redirect to the selected language
-            }else{
-                window.location.href = `/${selectedLang}/${currentPath}`; //Redirect to the selected language
-            }
-        });
 
         document.getElementById('logoutButton').addEventListener('click', () => {
             // Clear login flag
