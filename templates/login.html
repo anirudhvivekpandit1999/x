@@ -261,21 +261,19 @@
             const decryptedResponse = decryptData(encryptedResponse);
 
             console.log("🔓 Decrypted Server Response:", decryptedResponse);
-            const resultRow = (
-                decryptedResponse &&
-                Array.isArray(decryptedResponse) &&
-                decryptedResponse.length > 0 &&
-                typeof decryptedResponse[0] === "object"
-            )
-                ? decryptedResponse[0]
-                : decryptedResponse;
-            ; // First item of the first result set
-            const finalResult = resultRow;
-            //  if (!decryptedResponse) {
-            //    console.warn("⚠️ Decrypted response is empty or null.");
-            //  }
 
-            return finalResult || {};
+            const finalResult = (
+                  Array.isArray(decryptedResponse) &&
+                  Array.isArray(decryptedResponse[0]) &&
+                  decryptedResponse[0].length > 0
+              ) ? decryptedResponse[0][0] : null;
+
+              if (!finalResult) {
+                  console.warn("❌ No valid user data found in decrypted response.");
+                  return {};
+              }
+
+            return { user: finalResult };
         } catch (error) {
             console.error("🚨 Secure POST Error:", error.message);
             throw error;
@@ -294,30 +292,39 @@
         const response = await postEncrypted('http://3.111.89.109:3000/api/login', {p_Email : payload.email,
         p_Password_Hash : payload.password});
 
-        console.log("✨ Final Processed Server Response:", response);
 
-        if (response) { 
+        // Extract the stored password hash
+        const user = response?.user;
+        
+
+       if (!user) {
+            console.warn("❌ No user found with this email.");
+            alert("Login failed: User not found.");
+            return;
+        }
+
+        // Compare passwords (plain text, insecure in production)
+        if (password === user.Password_Hash) {
             console.log("✅ Login successful!");
-            console.log("✅ Logged-in user details:", response.user); // Logs the 'user' object from the response
+            console.log("✅ Logged-in user details:", user);
 
+            console.log("🏢 Company ID:", user.CompanyId);
+
+            localStorage.setItem('user', JSON.stringify(user));
+            
             alert("Login successful!");
-
-            if (response.user) {
-                localStorage.setItem('user', JSON.stringify(response.user));
-            } else {
-                console.warn("⚠️ Login was successful, but no 'user' object found in the response.");
-            }
-
             window.location.href = '/index.html';
         } else {
-            console.warn("❌ Login failed. Message:", response.message || "Invalid credentials provided.");
-            alert("Login failed: " + (response.message || "Invalid credentials provided."));
+            console.warn("❌ Incorrect password for user:", user.Email);
+            alert("Login failed: Incorrect password.");
         }
+
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('🚨 Login error:', error);
         alert('An unexpected error occurred while logging in.');
     }
 });
+
 </script>
 
 </html>

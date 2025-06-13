@@ -570,8 +570,10 @@
     let coalTypes = [];
 
     async function fetchCoalData() {
+      const companyId = getCompanyId();
+        if (!companyId) return '';
       try {
-        const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId:1})
+        const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId})
         const data = result[0];
         coalData = data.CoalData.CoalProperties;
         console.log(coalData,"coalData");
@@ -672,7 +674,12 @@
         document.getElementById("selectCoal").value,
         10
       );
-      const result = await postEncrypted("http://3.111.89.109:3000/api/getIndividualCoalProperty", { p_CompanyId: 1 , p_CoalId : (selectedIndex + 1) })
+
+      const companyId = getCompanyId();
+          if (!companyId) return '';
+
+          
+      const result = await postEncrypted("http://3.111.89.109:3000/api/getIndividualCoalProperty", { companyId , p_CoalId : (selectedIndex + 1) })
       if (selectedIndex >= 0 && selectedIndex < coalData.length) {
         const selectedCoal = coalData[selectedIndex];
 
@@ -884,6 +891,46 @@
     // Redirect to login page
     window.location.href = '/login.html';
   });
+
+  window.addEventListener('pageshow', (event) => {
+            console.log("Pageshow event triggered. Persisted:", event.persisted); 
+
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                console.warn("⚠️ No user session found. Redirecting to login.");
+              
+                window.location.replace('/login.html');
+                return;
+            }
+            const user = JSON.parse(userData);
+           
+        });
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const navLinks = document.querySelectorAll('.navbar a');
+
+            navLinks.forEach(link => {
+                if (link.href === window.location.href) {
+                    link.classList.add('active'); 
+                }
+            });
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                console.warn("⚠️ No user session found on DOMContentLoaded. Redirecting to login.");
+                window.location.replace('/login.html');
+                return;
+            }
+
+          
+            const user = JSON.parse(userData);
+            console.log("👤 Logged-in user:", user);
+
+
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                localStorage.clear(); 
+                window.location.replace('/login.html');
+            });
+        });
 
   </script>
 </body>

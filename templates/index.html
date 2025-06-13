@@ -127,13 +127,44 @@
             });
         });
 
+        window.addEventListener('pageshow', (event) => {
+            console.log("Pageshow event triggered. Persisted:", event.persisted); 
 
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            // Clear login flag
-            localStorage.removeItem('isLoggedIn');
-            localStorage.clear();
-            // Redirect to login page
-            window.location.href = '/login.html';
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                console.warn("⚠️ No user session found. Redirecting to login.");
+              
+                window.location.replace('/login.html');
+                return;
+            }
+            const user = JSON.parse(userData);
+           
+        });
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const navLinks = document.querySelectorAll('.navbar a');
+
+            navLinks.forEach(link => {
+                if (link.href === window.location.href) {
+                    link.classList.add('active'); 
+                }
+            });
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                console.warn("⚠️ No user session found on DOMContentLoaded. Redirecting to login.");
+                window.location.replace('/login.html');
+                return;
+            }
+
+          
+            const user = JSON.parse(userData);
+            console.log("👤 Logged-in user:", user);
+
+
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                localStorage.clear(); 
+                window.location.replace('/login.html');
+            });
         });
 
     </script>

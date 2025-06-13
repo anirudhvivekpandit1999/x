@@ -785,11 +785,11 @@
 
                 <h2>Process Parameters</h2>
                 <label for="processDropdown">Choose Process Type:</label>
-                <select id="processDropdown" name="processDropdown" onchange="updateProcessParameters()">
+                <select id="processDropdown" name="processDropdown" onchange="updateProcessParameters(this.value)">
                     <option value="">Select Process Parameter Type</option>
-                    <option value="1">Recovery Top Charge COB</option>
-                    <option value="2">Recovery Stamp Charge COB</option>
-                    <option value="3">Non-Recovery Stamp Charge</option>
+                    <option value="3">Recovery Top Charge COB</option>
+                    <option value="1">Recovery Stamp Charge COB</option>
+                    <option value="2">Non-Recovery Stamp Charge</option>
                 </select>
                 <div class="form-section">
                     <div id="processParameters">
@@ -918,6 +918,15 @@
             }
         }
 
+        function getCompanyId() {
+            const user = JSON.parse(localStorage.getItem("user"));
+            if (!user || !user.CompanyId) {
+                console.error("🚫 CompanyId not found in user object.");
+                return null;
+            }
+            return user.CompanyId;
+        }
+
         async function sendDataToBackend(data) {
             try {
                 const response = await fetch('http://3.111.89.109:5001/ai', {
@@ -961,8 +970,12 @@
         }
 
         async function loadCoalTypes() {
+            const companyId = getCompanyId();
+                if (!companyId) return '';
+            
             try {
-                const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 })
+
+                const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId });
                 const data = result[0];
                 const coalData = data.CoalData.CoalProperties;
                 const coalTypes = data.CoalData.CoalTypes;
@@ -1097,57 +1110,58 @@
 
 
         document.addEventListener('DOMContentLoaded', async () => {
+            const companyId = getCompanyId();
+                if (!companyId) return '';
             try {
                 // 1. call your secured API
                 const apiResult = await postEncrypted(
                     'http://3.111.89.109:3000/api/getMinMaxValues',
-                    { p_CompanyId: 1 }
-                );
+                    { companyId});
 
                  
-           const response  = await postEncrypted("http://3.111.89.109:3000/api/getCoalPropertiescsv",{p_CompanyId : 1});
+           const response  = await postEncrypted("http://3.111.89.109:3000/api/getCoalPropertiescsv", { companyId });
               const csvData = response;
               console.log(csvData,"csvData");
         
-const rows = response;  
-  if (!rows.length) return '';
-  const headers = [
-    'CoalName',
-    'Ash',
-    'VolatileMatter',
-    'Moisture',
-    'MaxContraction',
-    'MaxExpansion',
-    'Maxfluidityddpm',
-    'MMR',
-    'HGI',
-    'SofteningTemperaturec',
-    'ResolidificationTempRangeMinc',
-    'ResolidificationTempRangeMaxc',
-    'PlasticRangec',
-    'Sulphur',
-    'Phosphorous',
-    'CSN',
-    'CostPerTonRs'
-  ];
+            const rows = response;  
+            if (!rows.length) return '';
+            const headers = [
+                'CoalName',
+                'Ash',
+                'VolatileMatter',
+                'Moisture',
+                'MaxContraction',
+                'MaxExpansion',
+                'Maxfluidityddpm',
+                'MMR',
+                'HGI',
+                'SofteningTemperaturec',
+                'ResolidificationTempRangeMinc',
+                'ResolidificationTempRangeMaxc',
+                'PlasticRangec',
+                'Sulphur',
+                'Phosphorous',
+                'CSN',
+                'CostPerTonRs'
+            ];
 
-  const csvLines = [
-                                    // header row
-    ...rows.map(r =>
-      headers
-        .map(h => {
-          const v = r[h];
-          // escape any embedded quotes by doubling them
-          const s = v == null ? '' : String(v).replace(/"/g, '""');
-          return `"${s}"`;                            // wrap every field in quotes
-        })
-        .join(',')
-    )
-  ];
-  console.log(csvLines.join('\n'), "csvLines");
-                // 2. extract & parse your ranges payload
-                //    (assuming `CoalPropertiesFormatted` is JSON-stringified in the response)
-                
+            const csvLines = [
+                                                // header row
+                ...rows.map(r =>
+                headers
+                    .map(h => {
+                    const v = r[h];
+                    // escape any embedded quotes by doubling them
+                    const s = v == null ? '' : String(v).replace(/"/g, '""');
+                    return `"${s}"`;                            // wrap every field in quotes
+                    })
+                    .join(',')
+                )
+            ];
+            console.log(csvLines.join('\n'), "csvLines");
+                            // 2. extract & parse your ranges payload
+                            //    (assuming `CoalPropertiesFormatted` is JSON-stringified in the response)
+                            
                 const formatted = apiResult[0].CoalPropertiesFormatted;
 
 
@@ -1174,8 +1188,10 @@ const rows = response;
         });
 
         async function loadProposedCoalTypes() {
+            const companyId = getCompanyId();
+                if (!companyId) return '';
             try {
-                const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 })
+                const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId });
                 const data = result[0];
                 const coalData = data.CoalData.CoalProperties;
                 const coalTypes = data.CoalData.CoalTypes;
@@ -1251,13 +1267,13 @@ const rows = response;
         }
 
 
-        function updateProcessParameters(roleId) {
+        function updateProcessParameters(companyId) {
             const processParametersDiv = document.getElementById("processParameters");
 
             // Clear previous data
             processParametersDiv.innerHTML = '';
 
-            switch (parseInt(roleId)) {
+            switch (parseInt(companyId)) {
                 case 3: // Recovery Top Charge COB
                     processParametersDiv.innerHTML = `
                         <h3>Recovery Top Charge COB</h3>
@@ -1326,7 +1342,7 @@ const rows = response;
                     break;
 
                 default:
-                    processParametersDiv.innerHTML = `<p>No process parameters available for this Role ID.</p>`;
+                    processParametersDiv.innerHTML = `<p>No process parameters available for this Company ID.</p>`;
             }
         }
 
@@ -1419,6 +1435,8 @@ const rows = response;
                 blendcoal: blendcoal.length > 0 ? blendcoal : [],
                 processParameters
             };
+
+            console.log("Form Data:", formData);
 
             try {
                 const response = await fetch("http://3.111.89.109:5000/cost", {
@@ -1773,6 +1791,23 @@ const rows = response;
 
             // Get the process parameters from the input form
             const processParamNames = {
+                '3': [
+                    { name: 'charging_tonnage', unit: 'tons' },
+                    { name: 'moisture_content', unit: '%' },
+                    { name: 'bulk_density', unit: 'g/cm³' },
+                    { name: 'charging_temperature', unit: '°C' },
+                    { name: 'battery_operating_temperature', unit: '°C' },
+                    { name: 'cross_wall_temperature', unit: '°C' },
+                    { name: 'push_force', unit: 'Amp' },
+                    { name: 'pri', unit: 'kPa' },
+                    { name: 'coke_per_push', unit: 'kg' },
+                    { name: 'gross_coke_yield', unit: '%' },
+                    { name: 'gcm_pressure', unit: 'Pa' },
+                    { name: 'gcm_temperature', unit: '°C' },
+                    { name: 'coking_time', unit: 'hrs' },
+                    { name: 'coke_end_temperature', unit: '°C' },
+                    { name: 'quenching_time', unit: 'min' }
+                ],
                 '1': [
                     { name: 'charging_tonnage', unit: 'tons' },
                     { name: 'moisture_content', unit: '%' },
@@ -1791,23 +1826,6 @@ const rows = response;
                     { name: 'quenching_time', unit: 'min' }
                 ],
                 '2': [
-                    { name: 'charging_tonnage', unit: 'tons' },
-                    { name: 'moisture_content', unit: '%' },
-                    { name: 'bulk_density', unit: 'g/cm³' },
-                    { name: 'charging_temperature', unit: '°C' },
-                    { name: 'battery_operating_temperature', unit: '°C' },
-                    { name: 'cross_wall_temperature', unit: '°C' },
-                    { name: 'push_force', unit: 'Amp' },
-                    { name: 'pri', unit: 'kPa' },
-                    { name: 'coke_per_push', unit: 'kg' },
-                    { name: 'gross_coke_yield', unit: '%' },
-                    { name: 'gcm_pressure', unit: 'Pa' },
-                    { name: 'gcm_temperature', unit: '°C' },
-                    { name: 'coking_time', unit: 'hrs' },
-                    { name: 'coke_end_temperature', unit: '°C' },
-                    { name: 'quenching_time', unit: 'min' }
-                ],
-                '3': [
                     { name: 'charging_tonnage', unit: 'tons' },
                     { name: 'moisture_content', unit: '%' },
                     { name: 'bulk_density', unit: 'g/cm³' },
@@ -2107,13 +2125,70 @@ const rows = response;
             });
         });
 
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            localStorage.removeItem('isLoggedIn');
-            localStorage.clear();
+         window.addEventListener('DOMContentLoaded', () => {
+        const user = JSON.parse(localStorage.getItem('user'));
 
-            // Redirect to login page
-            window.location.href = '/login.html';
+        if (user && user.CompanyId) {
+            const companyId = user.CompanyId.toString();
+            console.log("🌐 CompanyId found:", companyId);
+
+            const dropdown = document.getElementById('processDropdown');
+
+            // Remove all options except the one matching CompanyId
+            const options = dropdown.querySelectorAll('option');
+
+            options.forEach(option => {
+                if (option.value !== "" && option.value !== companyId) {
+                    option.remove(); // completely remove the option
+                }
+            });
+
+            // Auto-select the valid one and trigger update
+            dropdown.value = companyId;
+            updateProcessParameters(companyId);
+        }
+    });
+
+    window.addEventListener('pageshow', (event) => {
+            console.log("Pageshow event triggered. Persisted:", event.persisted); 
+
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                console.warn("⚠️ No user session found. Redirecting to login.");
+              
+                window.location.replace('/login.html');
+                return;
+            }
+            const user = JSON.parse(userData);
+           
         });
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const navLinks = document.querySelectorAll('.navbar a');
+
+            navLinks.forEach(link => {
+                if (link.href === window.location.href) {
+                    link.classList.add('active'); 
+                }
+            });
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                console.warn("⚠️ No user session found on DOMContentLoaded. Redirecting to login.");
+                window.location.replace('/login.html');
+                return;
+            }
+
+          
+            const user = JSON.parse(userData);
+            console.log("👤 Logged-in user:", user);
+
+
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                localStorage.clear(); 
+                window.location.replace('/login.html');
+            });
+        });
+
     </script>
 </body>
 
