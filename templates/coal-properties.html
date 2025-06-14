@@ -503,6 +503,15 @@
       }
     }
 
+  function getCompanyId() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user || !user.CompanyId) {
+          console.error("🚫 CompanyId not found in user object.");
+          return null;
+      }
+      return user.CompanyId;
+  }
+
   document.getElementById("downloadcoalfile").addEventListener("click", function () {
     fetch("http://3.111.89.109:5000/download-template-properties")
     .then(response => {
@@ -678,7 +687,7 @@
       const companyId = getCompanyId();
           if (!companyId) return '';
 
-          
+
       const result = await postEncrypted("http://3.111.89.109:3000/api/getIndividualCoalProperty", { companyId , p_CoalId : (selectedIndex + 1) })
       if (selectedIndex >= 0 && selectedIndex < coalData.length) {
         const selectedCoal = coalData[selectedIndex];
