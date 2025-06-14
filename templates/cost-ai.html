@@ -927,6 +927,15 @@
             return user.CompanyId;
         }
 
+        function getRoleId() {
+            const user = JSON.parse(localStorage.getItem("user"));
+            if (!user || !user.RoleId) {
+                console.error("🚫 RoleId not found in user object.");
+                return null;
+            }
+            return user.RoleId;
+        }
+
         async function sendDataToBackend(data) {
             try {
                 const response = await fetch('http://3.111.89.109:5001/ai', {
@@ -1267,13 +1276,13 @@
         }
 
 
-        function updateProcessParameters(companyId) {
+        function updateProcessParameters(roleId) {
             const processParametersDiv = document.getElementById("processParameters");
 
             // Clear previous data
             processParametersDiv.innerHTML = '';
 
-            switch (parseInt(companyId)) {
+            switch (parseInt(roleId)) {
                 case 3: // Recovery Top Charge COB
                     processParametersDiv.innerHTML = `
                         <h3>Recovery Top Charge COB</h3>
@@ -2125,12 +2134,12 @@
             });
         });
 
-         window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', () => {
         const user = JSON.parse(localStorage.getItem('user'));
 
-        if (user && user.CompanyId) {
-            const companyId = user.CompanyId.toString();
-            console.log("🌐 CompanyId found:", companyId);
+        if (user && user.RoleId) {
+            const roleId = user.RoleId.toString();
+            console.log("🌐 RoleId found:", roleId);
 
             const dropdown = document.getElementById('processDropdown');
 
@@ -2138,14 +2147,14 @@
             const options = dropdown.querySelectorAll('option');
 
             options.forEach(option => {
-                if (option.value !== "" && option.value !== companyId) {
+                if (option.value !== "" && option.value !== roleId) {
                     option.remove(); // completely remove the option
                 }
             });
 
             // Auto-select the valid one and trigger update
-            dropdown.value = companyId;
-            updateProcessParameters(companyId);
+            dropdown.value = roleId;
+            updateProcessParameters(roleId);
         }
     });
 
