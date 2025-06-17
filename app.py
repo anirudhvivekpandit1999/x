@@ -831,10 +831,15 @@ def initialize_app_startup():
     GLOBAL_DATA['min_max_values'] = read_min_max_values()
 
     # 2. Load process parameters for different options
+    # GLOBAL_DATA['Process_parameters'] = {
+    #     1: np.loadtxt('Process_parameter_for_Rec_Top_Char.csv', delimiter=','),
+    #     2: np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv', delimiter=','),
+    #     3: np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
+    # }
     GLOBAL_DATA['Process_parameters'] = {
-        1: np.loadtxt('Process_parameter_for_Rec_Top_Char.csv', delimiter=','),
-        2: np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv', delimiter=','),
-        3: np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
+        1: np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv', delimiter=','),
+        2: np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=','),
+        3: np.loadtxt('Process_parameter_for_Rec_Top_Char.csv', delimiter=',')
     }
 
     # 3. Process training data from CSV (this is expensive and static)
@@ -1205,7 +1210,7 @@ def cost():
     Process_parameters = GLOBAL_DATA['Process_parameters'][Option]
 
     # Pad process parameters if Option == 3
-    if Option == 3:
+    if Option == 2:
         proces_para = np.pad(proces_para, (0, 2), mode='constant', constant_values=0)
 
     # Get pre-trained models and scalers
