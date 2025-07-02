@@ -1,2 +1,8 @@
-node_modules
-venv/   git add .gitignore
+tfenv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.env
+.DS_Store
