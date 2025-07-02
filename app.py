@@ -837,9 +837,9 @@ def initialize_app_startup():
     #     3: np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
     # }
     GLOBAL_DATA['Process_parameters'] = {
-        1: np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv', delimiter=','),
-        2: np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=','),
-        3: np.loadtxt('Process_parameter_for_Rec_Top_Char.csv', delimiter=',')
+        1: np.loadtxt('Process_parameter_for_Rec_Top_Char.csv', delimiter=','),
+        2: np.loadtxt('Process_parameter_for_Rec_Stam_Char.csv', delimiter=','),
+        3: np.loadtxt('Process_parameter_for_Non_Rec_Stam_Char.csv', delimiter=',')
     }
 
     # 3. Process training data from CSV (this is expensive and static)
