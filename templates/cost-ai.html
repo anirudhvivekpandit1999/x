@@ -938,43 +938,62 @@
         }
        
 
-        function updateTotalRange() {
-            totalCurrentRange = 0;
-            const ranges = document.querySelectorAll('input[id^="currentrange"]');
-            ranges.forEach(range => {
-                const rangeValue = parseFloat(range.value) || 0;
-                totalCurrentRange += rangeValue;
-            });
-            document.getElementById("totalRange").textContent = totalCurrentRange;
-        }
+     function updateTotalRange() {
+    let totalCurrentRange = 0;
+    const ranges = document.querySelectorAll('input[id^="currentrange"]');
+    ranges.forEach(range => {
+        const rangeValue = parseFloat(range.value) || 0;
+        totalCurrentRange += rangeValue;
+    });
 
-        function updateProposedTotalRange() {
-            totalCurrentRange = 0;
-            const ranges = document.querySelectorAll('input[id^="currentRange"]');
-            ranges.forEach(range => {
-                const rangeValue = parseFloat(range.value) || 0;
-                totalCurrentRange += rangeValue;
-            });
-            document.getElementById("totalproposedRange").textContent = totalCurrentRange;
-        }
+    const totalRangeElement = document.getElementById("totalRange");
+    totalRangeElement.textContent = totalCurrentRange;
 
-        async function loadCoalTypes() {
-            try {
-                const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 })
-                const data = result[0];
-                const coalData = data.CoalData.CoalProperties;
-                const coalTypes = data.CoalData.CoalTypes;
+    // Change color if above 100
+    if (totalCurrentRange > 100) {
+        totalRangeElement.style.color = "red";
+    } else {
+        totalRangeElement.style.color = "black";
+    }
+}
 
-                // Store coal properties globally
-                window.coalProperties = coalData;
+function updateProposedTotalRange() {
+    let totalCurrentRange = 0;
+    const ranges = document.querySelectorAll('input[id^="currentRange"]');
+    ranges.forEach(range => {
+        const rangeValue = parseFloat(range.value) || 0;
+        totalCurrentRange += rangeValue;
+    });
 
-                // Return dropdown options
-                return coalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
-            } catch (error) {
-                console.error("Error loading coal types:", error);
-                return '';
-            }
-        }
+    const totalRangeElement = document.getElementById("totalproposedRange");
+    totalRangeElement.textContent = totalCurrentRange;
+
+    // Change color if above 100
+    if (totalCurrentRange > 100) {
+        totalRangeElement.style.color = "red";
+    } else {
+        totalRangeElement.style.color = "black";
+    }
+}
+
+
+      async function loadCoalTypes() {
+    try {
+        const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 });
+        const data = result[0];
+        const coalData = data.CoalData.CoalProperties;
+        const coalTypes = data.CoalData.CoalTypes.sort((a, b) => a.localeCompare(b));
+
+        // Store coal properties globally
+        window.coalProperties = coalData;
+
+        // Return dropdown options
+        return coalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
+    } catch (error) {
+        console.error("Error loading coal types:", error);
+        return '';
+    }
+}
 
         async function addBlend() {
             const MAX_COALS = 10;
@@ -1171,23 +1190,24 @@ const rows = response;
             }
         });
 
-        async function loadProposedCoalTypes() {
-            try {
-                const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 })
-                const data = result[0];
-                const coalData = data.CoalData.CoalProperties;
-                const coalTypes = data.CoalData.CoalTypes;
+    async function loadProposedCoalTypes() {
+    try {
+        const result = await postEncrypted("http://3.111.89.109:3000/api/getCoalProperties", { companyId: 1 });
+        const data = result[0];
+        const coalData = data.CoalData.CoalProperties;
+        const coalTypes = data.CoalData.CoalTypes.sort((a, b) => a.localeCompare(b)); 
 
-                // Store coal properties globally
-                window.coalProperties = coalData;
+        // Store coal properties globally
+        window.coalProperties = coalData;
 
-                // Return dropdown options
-                return coalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
-            } catch (error) {
-                console.error("Error loading coal types:", error);
-                return '';
-            }
-        }
+        // Return dropdown options
+        return coalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
+    } catch (error) {
+        console.error("Error loading coal types:", error);
+        return '';
+    }
+}
+
 
         async function addProposedCoalBlend() {
             const MAX_COALS = 10;

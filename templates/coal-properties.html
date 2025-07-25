@@ -595,24 +595,28 @@
       }
     }
 
-    function populateCoalDropdown() {
-      const selectCoal = document.getElementById("selectCoal");
-      selectCoal.innerHTML = "";
+   function populateCoalDropdown() {
+  const selectCoal = document.getElementById("selectCoal");
+  selectCoal.innerHTML = "";
 
-      const labelOption = document.createElement("option");
-      labelOption.value = "";
-      labelOption.textContent = "Select Coal Type";
-      labelOption.disabled = true;
-      labelOption.selected = true;
-      selectCoal.appendChild(labelOption);
+  const labelOption = document.createElement("option");
+  labelOption.value = "";
+  labelOption.textContent = "Select Coal Type";
+  labelOption.disabled = true;
+  labelOption.selected = true;
+  selectCoal.appendChild(labelOption);
 
-      coalTypes.forEach((coal, index) => {
-        const option = document.createElement("option");
-        option.value = index;
-        option.textContent = coal;
-        selectCoal.appendChild(option);
-      });
-    }
+  
+  const sortedCoalTypes = [...coalTypes].sort((a, b) => a.localeCompare(b));
+
+  sortedCoalTypes.forEach((coal, index) => {
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = coal;
+    selectCoal.appendChild(option);
+  });
+}
+
 
     function displayTable() {
   const tableBody = document.querySelector("#coalTable tbody");
