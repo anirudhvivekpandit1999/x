@@ -18,19 +18,18 @@
     }
 
     /* Button Styling */
-    button {
-      background-color: #020947;
-      color: #fff;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      margin: 10px 15px;
-      margin-top: 120px;
-      display: inline-block;
-    }
+   button {
+  background-color: #020947;
+  color: #fff;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin: 10px 15px;
+  display: inline-block;
+}
 
     /* Hover Effect */
     button:hover {
@@ -237,7 +236,6 @@
         transform: rotate(360deg);
       }
     }
-
   </style>
 </head>
 
@@ -249,19 +247,18 @@
 
   <header>
     <nav class="navbar">
-      <div class="logo-left">
-        <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left" />
+      <div class="logo-left"><a href="index.html">
+        <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left" /></a>
       </div>
       <ul class="navbar-links">
-        <li>
-          <h1>SmartCoke</h1>
-        </li>
+        <li><a href="index.html"><h1>SmartCoke</h1></a></li>
         <li><a href="coal-properties.html">COAL PROPERTIES</a></li>
         <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
         <li><a href="cost-ai.html">COST AI</a></li>
         <!-- <li><a href="training.html">TRAINING</a></li> -->
-        <li><a href="index.html">HOME</a></li>
+        <!-- <li><a href="index.html">HOME</a></li> -->
       </ul>
+      <button id="logoutButton">Logout</button>
    
   </nav>
 </header>

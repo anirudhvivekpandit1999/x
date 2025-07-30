@@ -484,4 +484,250 @@ section.process .content .card-body p {
     }
 }
 
+.typing-text {
+    font-size: 1.5rem;
+    color: #000;
+    white-space: nowrap;
+    overflow: hidden;
+    animation: typing 4s steps(40, end) forwards;
+    caret-color: transparent; /* hides real caret */
+    border-right: none; /* remove the fake typing line */
+}
+
+
+/* Keep full text after typing completes */
+@keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+}
+
+@keyframes blink {
+    50% { border-color: transparent }
+}
+/* Card and layout styling */
+
+/* Typing text styling */
+
+
+@keyframes blink {
+  from, to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: black;
+  }
+}
+
+/* Existing layout styles for .about .row */
+section.about .row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+  align-items: center;
+}
+
+/* Animation: start hidden */
+.about .row {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 1s ease, transform 1s ease;
+}
+
+/* Animation: visible when scrolled in */
+.about .row.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Reset spacing and make section clean */
+.about {
+  padding: 4rem 1rem;
+  background: #f8f9fb;
+}
+
+/* Main heading */
+.heading {
+  font-size: 2.5rem;
+  text-align: center;
+  color: #001d4a;
+  margin-bottom: 1rem;
+}
+
+/* Typing sub-heading */
+.typing-text {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #555;
+  min-height: 1.5em;
+  caret-color: transparent;
+}
+
+/* Container grid rows */
+.about .row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  background:#020947;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  margin-bottom: 3rem;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s ease;
+}
+
+/* Make visible on scroll */
+.about .row.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Image inside the row */
+.about .image {
+  flex: 1 1 45%;
+  text-align: center;
+}
+
+.about .image img {
+  max-width: 100%;
+  border-radius: 1rem;
+}
+
+/* Content (text) */
+.about .content {
+  flex: 1 1 50%;
+  padding: 1rem;
+}
+
+.about .content h3 {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color:  #f8f9fb;
+}
+
+/* Responsive for smaller screens */
+@media (max-width: 768px) {
+  .about .row {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .about .content {
+    padding: 1rem 0;
+  }
+
+  .about .image {
+    margin-bottom: 1rem;
+  }
+}
+/* Process Section */
+
+/* Process Section Styling Like About Card */
+.process {
+  padding: 4rem 1rem;
+  background: #f8f9fb;
+}
+
+.process .box-container {
+  display: flex;
+  justify-content: center;
+}
+
+.process .content {
+  background: #020947;
+  color: #f8f9fb;
+  padding: 2rem;
+  border-radius: 1.5rem;
+  max-width: 800px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  transform: translateX(50px);
+  transition: all 0.8s ease;
+  text-align: center;
+}
+
+.process .content.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+
+.process .content.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.process .content h1 {
+  font-size: 2.5rem;
+  color: #f8f9fb;
+  margin-bottom: 1.5rem;
+}
+
+.process .content h2 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: #f8f9fb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .process .content {
+    padding: 1.5rem;
+  }
+
+  .process .content h1 {
+    font-size: 2rem;
+  }
+
+  .process .content h2 {
+    font-size: 1rem;
+  }
+}
+li a {
+  text-decoration: none;
+  color: inherit; /* Keeps the text color same as parent */
+}
+/* Remove faded background for first menu item */
+.navbar-links li:first-child a,
+.navbar-links li:first-child a:hover,
+.navbar-links li:first-child a.active {
+    background-color: transparent !important;
+}
+
+.image img,
+.model-image img {
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  display: block; /* ensures no extra space issues */
+}
+
+.image img:hover,
+.model-image img:hover {
+  transform: scale(1.05); /* zoom */
+  box-shadow: 0 0 25px rgba(0, 123, 255, 0.6); /* glow */
+}
+
+/* Ensure container doesn't block zoom */
+.image,
+.model-image {
+  display: inline-block;
+  overflow: visible !important; /* allow zoom beyond container */
+}
+.logo-link {
+  opacity: 1 !important;        /* Remove any opacity */
+  filter: none !important;      /* Remove filters */
+  pointer-events: auto;         /* Make sure it’s clickable */
+  transition: none !important;  /* Remove any transition/fade effects */
+}
+
+.logo-link:hover,
+.logo-link:focus,
+.logo-link:active {
+  opacity: 1 !important;
+  filter: none !important;
+  /* no changes on hover/focus/active */
+}
+
 

@@ -10,6 +10,58 @@
     
     
 </head>
+ <script>
+  document.addEventListener("DOMContentLoaded", function () {
+   // Select all elements you want to have typing effect
+  document.querySelectorAll('.typing-text').forEach(element => {
+    const originalText = element.innerHTML; // get the existing text (including <br>)
+    element.innerHTML = ""; // clear it so we can "type" it
+    let index = 0;
+
+    function typeEffect() {
+      if (index < originalText.length) {
+        element.innerHTML += originalText.charAt(index);
+        index++;
+        setTimeout(typeEffect, 50);
+      }
+    }
+
+    typeEffect();
+  });
+
+    // Reveal rows in .about section
+    const rows = document.querySelectorAll('.about .row');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        } else {
+          entry.target.classList.remove('visible');
+        }
+      });
+    }, {
+      threshold: 0.2
+    });
+
+    rows.forEach(row => observer.observe(row));
+
+    // Reveal .process .content every time it scrolls into view
+    const processContents = document.querySelectorAll('.process .content');
+    const processObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('show');
+        } else {
+          entry.target.classList.remove('show'); // reset for repeat animation
+        }
+      });
+    }, { threshold: 0.2 });
+
+    processContents.forEach(el => processObserver.observe(el));
+  });
+</script>
+
+
 <body>
     <header>
             <nav class="navbar">
@@ -17,7 +69,7 @@
                     <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left">
                 </div>
                 <ul class="navbar-links">
-                    <li><h1>SmartCoke</h1></li>
+                    <li><a href="index.html"><h1>SmartCoke</h1></a></li>
                     <li><a href="coal-properties.html">COAL PROPERTIES</a></li>
                     <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
                     <li><a href="cost-ai.html">COST AI</a></li>
@@ -32,9 +84,9 @@
     <section class="home" id="home">
 
         <div class="content">
-            <h3>SmartCoke</h3>
-            <p>Coal to Coke - Prediction of the optimized blend and quality using Artificial Intelligence. </p>
-            <br><p> Developed in collaboration with Industantra</p>
+            <h3 class="typing-text">SmartCoke</h3>
+            <p class="typing-text">Coal to Coke - Prediction of the optimized blend and quality using Artificial Intelligence. </p>
+            <br><p class="typing-text"> Developed in collaboration with Industantra</p>
         </div>
 
     </section>
@@ -42,38 +94,37 @@
     <!-- home section ends -->
 
     <section class="about" id="about">
-        <div class="container">
-            <h1 class="heading">Abhitech Software Division</h1>
-            <h1>
-                We develop cutting edge AI-based software to enhance efficiency and reduce cost, helping solve real-world industrial process challenges.
-            </h1>
-            <br>
-    
-            <!-- Top Row -->
-            <div class="row top-row">
-                <div class="image">
-                    <img src="/static/images/coal-to-coke.png" alt="">
-                </div>
-                <div class="content">
-                    <h3>
-                        SMARTCOKE, our AI-driven metallurgical coke blend and quality optimisation software, helps coke manufacturers balance coal blends and process parameters to maintain quality while reducing costs.
-                    </h3>
-                </div>
-            </div>
-    
-            <!-- Bottom Row -->
-            <div class="row bottom-row">
-                <div class="content">
-                    <h3>
-                        SMARTCOKE uses advanced machine learning models and real-time data analysis. By incorporating logistical constraints like coal cost and availability, it determines the most efficient coal mix and operational parameters to produce high-quality coke while reducing cost and carbon footprint.
-                    </h3>
-                </div>
-                <div class="image model-image">
-                    <img src="/static/images/model.png" alt="">
-                </div>
-            </div>
-        </div>
-    </section>
+  <div class="container">
+    <h1 class="heading">Abhitech Software Division</h1>
+    <h1>We develop cutting edge AI-based software to enhance efficiency and reduce cost, helping solve real-world industrial process challenges.</h1>
+    <br>
+
+    <!-- Top Row -->
+    <div class="row top-row hidden">
+      <div class="image">
+        <img src="/static/images/coal-to-coke.png" alt="">
+      </div>
+      <div class="content">
+        <h3>
+          SMARTCOKE, our AI-driven metallurgical coke blend and quality optimisation software, helps coke manufacturers balance coal blends and process parameters to maintain quality while reducing costs.
+        </h3>
+      </div>
+    </div>
+
+    <!-- Bottom Row -->
+    <div class="row bottom-row hidden">
+      <div class="content">
+        <h3>
+          SMARTCOKE uses advanced machine learning models and real-time data analysis. By incorporating logistical constraints like coal cost and availability, it determines the most efficient coal mix and operational parameters to produce high-quality coke while reducing cost and carbon footprint.
+        </h3>
+      </div>
+      <div class="image model-image">
+        <img src="/static/images/neural-network.svg" alt="">
+      </div>
+    </div>
+  </div>
+</section>
+
     
     <!-- about section ends -->
 

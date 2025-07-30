@@ -1,0 +1,212 @@
+<svg width="100%" height="600" viewBox="0 0 1800 600" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .node {
+      fill: #00ff99;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    .link {
+      stroke: white;
+      stroke-width: 1;
+      stroke-opacity: 0.3;
+      animation: glow 3s infinite ease-in-out;
+    }
+    .particle {
+      fill: white;
+    }
+    text {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      fill: white;
+      text-anchor: middle;
+    }
+    @keyframes pulse {
+      0%, 100% { r: 8; }
+      50% { r: 11; }
+    }
+    @keyframes glow {
+      0%, 100% { stroke-opacity: 0.3; }
+      50% { stroke-opacity: 0.8; stroke: #00ffcc; }
+    }
+  </style>
+
+  <!-- Layer definitions: x positions -->
+  <g id="network">
+    <!-- We'll space layers evenly -->
+    <!-- LAYER 1: 6 nodes -->
+    <g>
+      <circle cx="100" cy="80" r="8" class="node"/>
+      <circle cx="100" cy="140" r="8" class="node"/>
+      <circle cx="100" cy="200" r="8" class="node"/>
+      <circle cx="100" cy="260" r="8" class="node"/>
+      <circle cx="100" cy="320" r="8" class="node"/>
+      <circle cx="100" cy="380" r="8" class="node"/>
+      <text x="100" y="420">Layer 1</text>
+    </g>
+
+    <!-- LAYER 2: 12 nodes -->
+    <g>
+      <circle cx="250" cy="40" r="8" class="node"/>
+      <circle cx="250" cy="80" r="8" class="node"/>
+      <circle cx="250" cy="120" r="8" class="node"/>
+      <circle cx="250" cy="160" r="8" class="node"/>
+      <circle cx="250" cy="200" r="8" class="node"/>
+      <circle cx="250" cy="240" r="8" class="node"/>
+      <circle cx="250" cy="280" r="8" class="node"/>
+      <circle cx="250" cy="320" r="8" class="node"/>
+      <circle cx="250" cy="360" r="8" class="node"/>
+      <circle cx="250" cy="400" r="8" class="node"/>
+      <circle cx="250" cy="440" r="8" class="node"/>
+      <circle cx="250" cy="480" r="8" class="node"/>
+      <text x="250" y="520">Layer 2</text>
+    </g>
+
+    <!-- LAYER 3: 12 nodes -->
+    <g>
+      <circle cx="400" cy="40" r="8" class="node"/>
+      <circle cx="400" cy="80" r="8" class="node"/>
+      <circle cx="400" cy="120" r="8" class="node"/>
+      <circle cx="400" cy="160" r="8" class="node"/>
+      <circle cx="400" cy="200" r="8" class="node"/>
+      <circle cx="400" cy="240" r="8" class="node"/>
+      <circle cx="400" cy="280" r="8" class="node"/>
+      <circle cx="400" cy="320" r="8" class="node"/>
+      <circle cx="400" cy="360" r="8" class="node"/>
+      <circle cx="400" cy="400" r="8" class="node"/>
+      <circle cx="400" cy="440" r="8" class="node"/>
+      <circle cx="400" cy="480" r="8" class="node"/>
+      <text x="400" y="520">Layer 3</text>
+    </g>
+
+    <!-- LAYER 4: 8 nodes -->
+    <g>
+      <circle cx="550" cy="80" r="8" class="node"/>
+      <circle cx="550" cy="140" r="8" class="node"/>
+      <circle cx="550" cy="200" r="8" class="node"/>
+      <circle cx="550" cy="260" r="8" class="node"/>
+      <circle cx="550" cy="320" r="8" class="node"/>
+      <circle cx="550" cy="380" r="8" class="node"/>
+      <circle cx="550" cy="440" r="8" class="node"/>
+      <circle cx="550" cy="500" r="8" class="node"/>
+      <text x="550" y="540">Layer 4</text>
+    </g>
+
+    <!-- LAYER 5: 8 nodes -->
+    <g>
+      <circle cx="700" cy="80" r="8" class="node"/>
+      <circle cx="700" cy="140" r="8" class="node"/>
+      <circle cx="700" cy="200" r="8" class="node"/>
+      <circle cx="700" cy="260" r="8" class="node"/>
+      <circle cx="700" cy="320" r="8" class="node"/>
+      <circle cx="700" cy="380" r="8" class="node"/>
+      <circle cx="700" cy="440" r="8" class="node"/>
+      <circle cx="700" cy="500" r="8" class="node"/>
+      <text x="700" y="540">Layer 5</text>
+    </g>
+
+    <!-- LAYER 6: 12 nodes -->
+    <g>
+      <circle cx="850" cy="40" r="8" class="node"/>
+      <circle cx="850" cy="80" r="8" class="node"/>
+      <circle cx="850" cy="120" r="8" class="node"/>
+      <circle cx="850" cy="160" r="8" class="node"/>
+      <circle cx="850" cy="200" r="8" class="node"/>
+      <circle cx="850" cy="240" r="8" class="node"/>
+      <circle cx="850" cy="280" r="8" class="node"/>
+      <circle cx="850" cy="320" r="8" class="node"/>
+      <circle cx="850" cy="360" r="8" class="node"/>
+      <circle cx="850" cy="400" r="8" class="node"/>
+      <circle cx="850" cy="440" r="8" class="node"/>
+      <circle cx="850" cy="480" r="8" class="node"/>
+      <text x="850" y="520">Layer 6</text>
+    </g>
+
+    <!-- LAYER 7: 8 nodes -->
+    <g>
+      <circle cx="1000" cy="80" r="8" class="node"/>
+      <circle cx="1000" cy="140" r="8" class="node"/>
+      <circle cx="1000" cy="200" r="8" class="node"/>
+      <circle cx="1000" cy="260" r="8" class="node"/>
+      <circle cx="1000" cy="320" r="8" class="node"/>
+      <circle cx="1000" cy="380" r="8" class="node"/>
+      <circle cx="1000" cy="440" r="8" class="node"/>
+      <circle cx="1000" cy="500" r="8" class="node"/>
+      <text x="1000" y="540">Layer 7</text>
+    </g>
+
+    <!-- LAYER 8: 8 nodes -->
+    <g>
+      <circle cx="1150" cy="80" r="8" class="node"/>
+      <circle cx="1150" cy="140" r="8" class="node"/>
+      <circle cx="1150" cy="200" r="8" class="node"/>
+      <circle cx="1150" cy="260" r="8" class="node"/>
+      <circle cx="1150" cy="320" r="8" class="node"/>
+      <circle cx="1150" cy="380" r="8" class="node"/>
+      <circle cx="1150" cy="440" r="8" class="node"/>
+      <circle cx="1150" cy="500" r="8" class="node"/>
+      <text x="1150" y="540">Layer 8</text>
+    </g>
+
+    <!-- LAYER 9: 12 nodes -->
+    <g>
+      <circle cx="1300" cy="40" r="8" class="node"/>
+      <circle cx="1300" cy="80" r="8" class="node"/>
+      <circle cx="1300" cy="120" r="8" class="node"/>
+      <circle cx="1300" cy="160" r="8" class="node"/>
+      <circle cx="1300" cy="200" r="8" class="node"/>
+      <circle cx="1300" cy="240" r="8" class="node"/>
+      <circle cx="1300" cy="280" r="8" class="node"/>
+      <circle cx="1300" cy="320" r="8" class="node"/>
+      <circle cx="1300" cy="360" r="8" class="node"/>
+      <circle cx="1300" cy="400" r="8" class="node"/>
+      <circle cx="1300" cy="440" r="8" class="node"/>
+      <circle cx="1300" cy="480" r="8" class="node"/>
+      <text x="1300" y="520">Layer 9</text>
+    </g>
+
+    <!-- LAYER 10: 8 nodes -->
+    <g>
+      <circle cx="1450" cy="80" r="8" class="node"/>
+      <circle cx="1450" cy="140" r="8" class="node"/>
+      <circle cx="1450" cy="200" r="8" class="node"/>
+      <circle cx="1450" cy="260" r="8" class="node"/>
+      <circle cx="1450" cy="320" r="8" class="node"/>
+      <circle cx="1450" cy="380" r="8" class="node"/>
+      <circle cx="1450" cy="440" r="8" class="node"/>
+      <circle cx="1450" cy="500" r="8" class="node"/>
+      <text x="1450" y="540">Layer 10</text>
+    </g>
+
+    <!-- LAYER 11: 8 nodes -->
+    <g>
+      <circle cx="1600" cy="80" r="8" class="node"/>
+      <circle cx="1600" cy="140" r="8" class="node"/>
+      <circle cx="1600" cy="200" r="8" class="node"/>
+      <circle cx="1600" cy="260" r="8" class="node"/>
+      <circle cx="1600" cy="320" r="8" class="node"/>
+      <circle cx="1600" cy="380" r="8" class="node"/>
+      <circle cx="1600" cy="440" r="8" class="node"/>
+      <circle cx="1600" cy="500" r="8" class="node"/>
+      <text x="1600" y="540">Layer 11</text>
+    </g>
+
+    <!-- LAYER 12: 15 nodes -->
+    <g>
+      <circle cx="1750" cy="20" r="8" class="node"/>
+      <circle cx="1750" cy="60" r="8" class="node"/>
+      <circle cx="1750" cy="100" r="8" class="node"/>
+      <circle cx="1750" cy="140" r="8" class="node"/>
+      <circle cx="1750" cy="180" r="8" class="node"/>
+      <circle cx="1750" cy="220" r="8" class="node"/>
+      <circle cx="1750" cy="260" r="8" class="node"/>
+      <circle cx="1750" cy="300" r="8" class="node"/>
+      <circle cx="1750" cy="340" r="8" class="node"/>
+      <circle cx="1750" cy="380" r="8" class="node"/>
+      <circle cx="1750" cy="420" r="8" class="node"/>
+      <circle cx="1750" cy="460" r="8" class="node"/>
+      <circle cx="1750" cy="500" r="8" class="node"/>
+      <circle cx="1750" cy="540" r="8" class="node"/>
+      <circle cx="1750" cy="580" r="8" class="node"/>
+      <text x="1750" y="600">Layer 12</text>
+    </g>
+  </g>
+</svg>
