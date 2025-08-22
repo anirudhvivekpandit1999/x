@@ -258,7 +258,7 @@ coal_count_number = get_coal_count()
 
 @app.route('/')
 def index():
-    return render_template('login.html')
+    return render_template('home.html')
 
 
 @app.route('/github-deploy', methods=['POST'])
@@ -307,10 +307,13 @@ def trainig_html():
 def traindata_html():
     return render_template('TrainData-storage.html')
 
-
 @app.route('/login.html')
 def login():
     return render_template('login.html')
+
+@app.route('/training_data.html')
+def training_html():
+    return render_template('training_data.html')
 
 
 # training page

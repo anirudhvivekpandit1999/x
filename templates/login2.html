@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smartcoke Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #e6f0ff, #f9f9f9);
+    }
+
+    .container {
+      display: flex;
+      width: 80%;
+      height: 75%;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      background-color: #ffffff;
+    }
+
+    .form-section {
+      width: 50%;
+      padding: 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background-color: #ffffff;
+    }
+
+    .website-name {
+      font-size: 32px;
+      font-weight: 600;
+      color: #0a3d62;
+      margin-bottom: 10px;
+    }
+
+    .form-section h2 {
+      margin-bottom: 25px;
+      font-size: 22px;
+      color: #333;
+    }
+
+    .input-field {
+      margin-bottom: 20px;
+    }
+
+    .input-field label {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 6px;
+      color: #444;
+    }
+
+    .input-field input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .input-field input:focus {
+      outline: none;
+      border-color: #0a3d62;
+      box-shadow: 0 0 0 3px rgba(10, 61, 98, 0.15);
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 12px;
+      background-color: #0a3d62;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #082a45;
+      transform: translateY(-1px);
+    }
+
+    .image-section {
+      width: 50%;
+      background: linear-gradient(to bottom right, #e0ecff, #f9fbff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .image-section img {
+      max-width: 80%;
+      height: auto;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column-reverse;
+        width: 90%;
+        height: auto;
+      }
+
+      .form-section, .image-section {
+        width: 100%;
+        padding: 30px;
+      }
+
+      .website-name {
+        text-align: center;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Form Section -->
+    <div class="form-section">
+      <div class="website-name">SMARTCOKE</div>
+      <h2>Welcome Back</h2>
+
+      <form id="loginForm">
+        <div class="input-field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" autocomplete="email" required>
+        </div>
+
+        <div class="input-field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+        </div>
+
+        <button type="submit">Log In</button>
+      </form>
+    </div>
+
+    <!-- Image Section -->
+    <div class="image-section">
+      <img src="{{ url_for('static', filename='images/Abhitech.jpeg') }}" alt="Abhitech Logo">
+    </div>
+  </div>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script>
+    function encryptData(data) {
+        const secretKey = CryptoJS.enc.Utf8.parse(
+            "qwertyuiopasdfghjklzxcvbnm123456"
+        );
+        const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
+
+        const encrypted = CryptoJS.AES.encrypt(
+            JSON.stringify(data),
+            secretKey,
+            {
+                iv: iv,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7,
+            }
+        );
+
+        // Convert Base64 output to Hex
+        const ciphertextWords = CryptoJS.enc.Base64.parse(encrypted.toString());
+        const hexCipherText = CryptoJS.enc.Hex.stringify(ciphertextWords);
+        return hexCipherText;
+    }
+
+    function decryptData(encryptedHexData) {
+        try {
+            const secretKey = CryptoJS.enc.Utf8.parse(
+                "qwertyuiopasdfghjklzxcvbnm123456"
+            );
+            const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
+
+            if (!encryptedHexData || encryptedHexData.length < 16) {
+                console.warn(
+                    "⚠️ Encrypted data is missing or too short:",
+                    encryptedHexData
+                );
+                return null;
+            }
+
+            const decrypted = CryptoJS.AES.decrypt(
+                {
+                    ciphertext: CryptoJS.enc.Hex.parse(encryptedHexData),
+                },
+                secretKey,
+                {
+                    iv: iv,
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7,
+                }
+            );
+
+            const decryptedStr = decrypted.toString(CryptoJS.enc.Utf8);
+            console.log("🔓 Raw Decrypted String (before JSON parse):", decryptedStr);
+            
+
+            if (!decryptedStr) {
+               console.warn("⚠️ Decryption returned empty string. Possibly wrong secret or IV.");
+               return null;
+              }
+
+            try {
+                return JSON.parse(decryptedStr);
+            } catch (jsonErr) {
+                console.error(
+                    "❌ JSON parse failed. Decrypted string:",
+                    decryptedStr,
+                    "Error:", jsonErr
+                );
+                return null;
+            }
+        } catch (error) {
+            console.error("🚨 DecryptData error:", error.message, "Encrypted data:", encryptedHexData);
+            return null;
+        }
+    }
+
+    async function postEncrypted(endpoint, data) {
+        try {
+            const encryptedPayload = encryptData(data);
+
+            const result = await axios.post(endpoint, {
+                encryptedData: encryptedPayload,
+            });
+            console.log(result)
+
+            const encryptedResponse = result?.data?.coalProperties || result?.data?.encryptedData;
+            //  const firstResultSet = encryptedResponse[0];
+
+             //if (!encryptedResponse) {
+              //console.warn("⚠️ No encryptedData in server response. Full response:", result);
+              //throw new Error("Invalid encrypted response");
+            //}
+
+            const decryptedResponse = decryptData(encryptedResponse);
+
+            console.log("🔓 Decrypted Server Response:", decryptedResponse);
+
+            const finalResult = (
+                  Array.isArray(decryptedResponse) &&
+                  Array.isArray(decryptedResponse[0]) &&
+                  decryptedResponse[0].length > 0
+              ) ? decryptedResponse[0][0] : null;
+
+              if (!finalResult) {
+                  console.warn("❌ No valid user data found in decrypted response.");
+                  return {};
+              }
+
+            return { user: finalResult };
+        } catch (error) {
+            console.error("🚨 Secure POST Error:", error.message);
+            throw error;
+        }
+    }
+
+   document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    const payload = { email, password };
+
+    try {
+        const response = await postEncrypted('http://3.111.89.109:3000/api/login', {p_Email : payload.email,
+        p_Password_Hash : payload.password});
+
+
+        // Extract the stored password hash
+        const user = response?.user;
+        
+
+       if (!user) {
+            console.warn("❌ No user found with this email.");
+            alert("Login failed: User not found.");
+            return;
+        }
+
+        // Compare passwords (plain text, insecure in production)
+        if (password === user.Password_Hash) {
+            console.log("✅ Login successful!");
+            console.log("✅ Logged-in user details:", user);
+
+            console.log("🏢 Company ID:", user.CompanyId);
+
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            alert("Login successful!");
+            window.location.href = '/index.html';
+        } else {
+            console.warn("❌ Incorrect password for user:", user.Email);
+            alert("Login failed: Incorrect password.");
+        }
+
+    } catch (error) {
+        console.error('🚨 Login error:', error);
+        alert('An unexpected error occurred while logging in.');
+    }
+});
+
+</script>
+
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Training Page</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    :root{
+      --brand:#003366;
+      --brand-dark:#002244;
+      --bg:#f5f5f5;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --ring: rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--bg);
+      margin: 0;
+      padding-top: 1px; /* keep your original spacing */
+    }
+
+    /* ---- Page container ---- */
+    .page-wrap{
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+
+    .page-title{
+      color: var(--brand);
+      text-align: center;
+      font-size: 24px;
+      margin: 0 0 24px 0;
+      border-bottom: 2px solid var(--brand);
+      padding-bottom: 10px;
+    }
+
+    /* ---- Cards grid ---- */
+  .cards-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* was 260px */
+  gap: 24px; /* a little more spacing between cards */
+}
+
+.data-card{
+  min-height: 220px; /* increase height */
+  padding-bottom: 10px; /* add breathing room inside */
+}
+    .data-card{
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: 0 6px 18px var(--ring);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .data-card:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 10px 22px var(--ring);
+    }
+
+    .data-card__header {
+  background: #020947; 
+  color: #fff;
+  padding: 14px 16px;
+  font-weight: bold;
+  text-align: center;
+  font-size: 15px;
+  letter-spacing: .3px;
+}
+
+
+    .data-card__body{
+      padding: 18px 16px 22px;
+      text-align: center;
+    }
+
+    /* Nice upload button (label) + hidden input */
+    .file-input{
+      display: none;
+    }
+
+    .file-btn{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: #020947;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background .2s ease, transform .05s ease;
+      user-select: none;
+    }
+    .file-btn:hover{ background: var(--brand-dark); }
+    .file-btn:active{ transform: scale(0.99); }
+
+    .file-name{
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 18px;
+    }
+
+    .hint{
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Submit button */
+    .submit-wrap{
+      text-align: center;
+      margin-top: 26px;
+    }
+    .submit-btn{
+      background: #020947;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 22px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background .2s ease, transform .05s ease;
+    }
+    .submit-btn:hover{ background: var(--brand-dark); }
+    .submit-btn:active{ transform: scale(0.99); }
+
+    /* Responsive tweak */
+    @media (max-width: 480px){
+      .page-title{ font-size: 20px; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HEADER (unchanged) -->
+  <header>
+    <nav class="navbar">
+      <div class="logo-left">
+        <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left">
+      </div>
+      <ul class="navbar-links">
+        <li><h1>SmartCoke</h1></li>
+        <li><a href="coal-properties.html">COAL PROPERTIES</a></li>
+        <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
+        <li><a href="cost-ai.html">COST AI</a></li>
+        <li><a href="training.html">TRAINING</a></li>
+        <li><a href="index.html">HOME</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- BODY (card UI) -->
+  <main class="page-wrap">
+    <h2 class="page-title">Upload CSV Files for Model Training</h2>
+
+    <form id="trainForm" method="POST" enctype="multipart/form-data" action="/train">
+      <div class="cards-grid">
+
+        <!-- Coke Properties -->
+        <div class="data-card">
+          <div class="data-card__header">Coke Properties</div>
+          <div class="data-card__body">
+            <input id="coke_csv" class="file-input" type="file" name="coke_csv" accept=".csv" required>
+            <label for="coke_csv" class="file-btn" role="button" aria-label="Choose Coke Properties CSV">
+              <!-- simple inline icon -->
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Choose CSV
+            </label>
+            <div id="coke_csv_name" class="file-name">No file chosen</div>
+            <div class="hint">Accepted: .csv</div>
+          </div>
+        </div>
+
+        <!-- Coal Properties -->
+        <div class="data-card">
+          <div class="data-card__header">Coal Properties</div>
+          <div class="data-card__body">
+            <input id="coal_csv" class="file-input" type="file" name="coal_csv" accept=".csv" required>
+            <label for="coal_csv" class="file-btn" role="button" aria-label="Choose Coal Properties CSV">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Choose CSV
+            </label>
+            <div id="coal_csv_name" class="file-name">No file chosen</div>
+            <div class="hint">Accepted: .csv</div>
+          </div>
+        </div>
+
+        <!-- Individual Coal Properties -->
+        <div class="data-card">
+          <div class="data-card__header">Individual Coal Properties</div>
+          <div class="data-card__body">
+            <input id="individual_csv" class="file-input" type="file" name="individual_csv" accept=".csv" required>
+            <label for="individual_csv" class="file-btn" role="button" aria-label="Choose Individual Coal CSV">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Choose CSV
+            </label>
+            <div id="individual_csv_name" class="file-name">No file chosen</div>
+            <div class="hint">Accepted: .csv</div>
+          </div>
+        </div>
+
+        <!-- Blended Coal Properties -->
+        <div class="data-card">
+          <div class="data-card__header">Blended Coal Properties</div>
+          <div class="data-card__body">
+            <input id="blended_csv" class="file-input" type="file" name="blended_csv" accept=".csv" required>
+            <label for="blended_csv" class="file-btn" role="button" aria-label="Choose Blended Coal CSV">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Choose CSV
+            </label>
+            <div id="blended_csv_name" class="file-name">No file chosen</div>
+            <div class="hint">Accepted: .csv</div>
+          </div>
+        </div>
+
+        <!-- Process Parameter -->
+        <div class="data-card">
+          <div class="data-card__header">Process Parameter</div>
+          <div class="data-card__body">
+            <input id="process_csv" class="file-input" type="file" name="process_csv" accept=".csv" required>
+            <label for="process_csv" class="file-btn" role="button" aria-label="Choose Process Parameter CSV">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Choose CSV
+            </label>
+            <div id="process_csv_name" class="file-name">No file chosen</div>
+            <div class="hint">Accepted: .csv</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="submit-wrap">
+        <button type="submit" class="submit-btn">Upload & Train Model</button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    // Show selected filename under each card
+    (function() {
+      const ids = ["coke_csv","coal_csv","individual_csv","blended_csv","process_csv"];
+      ids.forEach(id => {
+        const input = document.getElementById(id);
+        const out = document.getElementById(id + "_name");
+        if(!input || !out) return;
+        input.addEventListener("change", () => {
+          if (input.files && input.files.length > 0) {
+            out.textContent = input.files[0].name;
+          } else {
+            out.textContent = "No file chosen";
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
