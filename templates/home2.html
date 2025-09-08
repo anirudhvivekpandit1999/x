@@ -63,27 +63,41 @@
 
 
 <body>
-    <header>
-            <nav class="navbar">
-                <div class="logo-left">
-                    <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left">
-                </div>
-                <ul class="navbar-links">
-                    <li><a href="index.html"><h1>SmartCoke</h1></a></li>
-                    <li><a href="coal-properties.html">COAL PROPERTIES</a></li>
-                    <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
-                    <li><a href="cost-ai.html">COST AI</a></li>
-                    <li><a href="training_data.html">TRAINING</a></li>
-                    
-                </ul>
-               <button id="logoutButton">Logout</button>
+       <nav class="navbar">
+        <div class="logo-left">
+            <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left">
+        </div>
+      <ul class="navbar-links">
+  <li><a href="index.html"><h1>SmartCoke</h1></a></li>
+  <li>
+    <a href="#">COAL PROPERTIES</a>
+    <div class="desc-tooltip">This section contains coal property details. Login to know more or to use it.</div>
+  </li>
+  <li>
+    <a href="#">MIN-MAX WEIGHTAGE</a>
+    <div class="desc-tooltip">This section allows you to set min-max weightage for coal blending. Login to know more or to use it.</div>
+  </li>
+  <li>
+    <a href="#">COST AI</a>
+    <div class="desc-tooltip">This section calculates cost using AI models. Login to know more or to use it.</div>
+  </li>
+  <li>
+    <a href="#">TRAINING</a>
+    <div class="desc-tooltip">This section provides model training functionalities. Login to know more or to use it.</div>
+  </li>
+</ul>
 
-            </nav>
-    </header>
+
+        <button id="logoutButton">Login</button>
+    </nav>
+</header>
+
+<!-- Description box -->
+<div id="descBox" class="desc-box"></div>
 
     <section class="home" id="home">
 
-       <div class="content">
+        <div class="content">
             <h3 class="typing-text">SmartCoke</h3>
             <p class="typing-text">Coal to Coke - Prediction of the optimized blend and quality using Artificial Intelligence. </p>
             <p class="typing-text">SMARTCOKE is suitable for Recovery Top charge , Recovery Stamp charge and Non Recovery Metcoke manufacturing processes</p>
@@ -120,7 +134,7 @@
         </h3>
       </div>
       <div class="image model-image">
-        <img src="/static/images/model.png" alt="">
+        <img src="/static/images/neural-network.svg" alt="">
       </div>
     </div>
   </div>

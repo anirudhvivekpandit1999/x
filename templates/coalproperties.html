@@ -256,22 +256,9 @@
   background-color: #c0392b;
 }
 
-.controls {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      margin: 12px 0;
-      flex-wrap: wrap;
-    }
-    .controls label {
-      font-weight: 600;
-    }
-#coalTable {
-  display: none;
-}
-
   </style>
 </head>
+
 <body>
   <!-- Fullscreen Loader -->
   <div id="fullscreenLoader" class="fullscreen-loader-bg hidden">
@@ -302,15 +289,7 @@
   <!-- <button id="upload-file-btn">Upload Excel File</button>
   <input type="file" id="file-upload" accept=".xls,.xlsx" /> -->
 
-  <div class="controls">
-    <label for="coalFilter">Select Coal:</label>
-<select id="coalFilter"></select>
-        <!-- Coal options will be dynamically populated here --></select><br />
-    <button id="showAllBtn" type="button">Show All</button>
-  </div>
-
-  <!-- Existing table (keep your classes/IDs/styles as-is) -->
-  <table id="coalTable" class="table table-striped table-bordered">
+  <table id="coalTable">
     <thead>
       <tr>
         <th>Index</th>
@@ -337,15 +316,7 @@
       </tr>
     </thead>
     <tbody>
-      <!-- Keep your current server-rendered or static rows here -->
-      <!-- Example:
-      <tr>
-        <td>1</td>
-        <td>ABC Coal</td>
-        <td>Bituminous</td>
-        ...
-      </tr>
-      -->
+      <!-- Data rows will be inserted here by JavaScript -->
     </tbody>
   </table>
 
@@ -355,9 +326,9 @@
 
       <span id="closeModifyForm" class="close-btn">&times;</span>
 
-      <label for="selectCoalToModify">Select Coal:</label>
-      <select id="selectCoalToModify" required></select><br />
-
+      <label for="selectCoal">Select Coal:</label>
+      <select id="selectCoal" required>
+        <!-- Coal options will be dynamically populated here --></select><br />
 
       <label for="coal">Coal:</label><input type="text" id="coal" required /><br />
       <label for="coaltype">Type of Coal:</label><input type="text" id="coaltype" required /><br />
@@ -624,28 +595,6 @@
     let coalData = [];
     let coalTypes = [];
 
-    function buildCoalFilter() {
-  const filter = document.getElementById("coalFilter");
-  if (!filter) return;
-
-  filter.innerHTML = "";
-  const first = document.createElement("option");
-  first.value = "";
-  first.textContent = "-- Select Coal --";
-  filter.appendChild(first);
-
-  const names = Array.from(new Set(coalData.map(r => r.CoalName)))
-    .sort((a, b) => a.localeCompare(b));
-
-  names.forEach(name => {
-    const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    filter.appendChild(opt);
-  });
-}
-
-
     async function fetchCoalData() {
       const companyId = getCompanyId();
         if (!companyId) return '';
@@ -656,37 +605,37 @@
         console.log(coalData,"coalData");
         coalTypes = data.CoalData.CoalTypes;
 
-        populateCoalDropdownForModify();
-        buildCoalFilter();
-
+        populateCoalDropdown();
+        displayTable();
       } catch (error) {
         console.error("Error fetching coal data:", error);
       }
     }
 
- function populateCoalDropdownForModify() {
-  const select = document.getElementById("selectCoalToModify");
-  if (!select) return;
+   function populateCoalDropdown() {
+  const selectCoal = document.getElementById("selectCoal");
+  selectCoal.innerHTML = "";
 
-  select.innerHTML = "";
   const labelOption = document.createElement("option");
   labelOption.value = "";
-  labelOption.textContent = "Select Coal";
+  labelOption.textContent = "Select Coal Type";
   labelOption.disabled = true;
   labelOption.selected = true;
-  select.appendChild(labelOption);
+  selectCoal.appendChild(labelOption);
 
-  const byName = [...coalData].sort((a, b) => a.CoalName.localeCompare(b.CoalName));
-  byName.forEach(row => {
-    const opt = document.createElement("option");
-    opt.value = row.CoalId;       // keep the actual CoalId here
-    opt.textContent = row.CoalName;
-    select.appendChild(opt);
+  
+  const sortedCoalTypes = [...coalTypes].sort((a, b) => a.localeCompare(b));
+
+  sortedCoalTypes.forEach((coal, index) => {
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = coal;
+    selectCoal.appendChild(option);
   });
 }
 
 
-   function displayTable(filterCoal = "") {
+    function displayTable() {
   const tableBody = document.querySelector("#coalTable tbody");
   tableBody.innerHTML = "";
 
@@ -701,8 +650,8 @@
     "Maxfluidityddpm",
     "MMR",
     "HGI",
-    "SofteningTemperaturec",
     "ResolidificationTempRangeMinc",
+    "SofteningTemperaturec",
     "ResolidificationTempRangeMaxc",
     "PlasticRangec",
     "Sulphur",
@@ -712,30 +661,31 @@
     "LastModifiedDate"
   ];
 
-  let data = [...coalData].sort((a, b) => a.CoalName.localeCompare(b.CoalName));
-  if (filterCoal) data = data.filter(r => r.CoalName === filterCoal);
-
-  data.forEach((row, index) => {
+  coalData.forEach((row, index) => {
     const tr = document.createElement("tr");
 
+    // S.No column
     const tdIndex = document.createElement("td");
     tdIndex.textContent = index + 1;
     tr.appendChild(tdIndex);
 
+    // Data columnsw
     columnOrder.forEach((key) => {
       const td = document.createElement("td");
       td.textContent = row[key] !== undefined ? row[key] : "N/A";
       tr.appendChild(td);
     });
 
+    // Delete button
     const tdDelete = document.createElement("td");
     const deleteButton = document.createElement("button");
     deleteButton.textContent = "Delete";
     deleteButton.className = "delete-button";
     deleteButton.onclick = async () => {
       try {
-        await postEncrypted('http://3.111.89.109:3000/api/deleteCoalProperties', { p_CoalId: row.CoalId });
-        await fetchCoalData();
+        const response = await postEncrypted('http://3.111.89.109:3000/api/deleteCoalProperties',{p_CoalId : row.CoalId})
+
+        fetchCoalData();
         alert("Deleted Coal");
       } catch (error) {
         console.error("Error deleting coal entry:", error);
@@ -749,70 +699,40 @@
   });
 }
 
+    document.getElementById("selectCoal").addEventListener("change",async () => {
+      const selectedIndex = parseInt(
+        document.getElementById("selectCoal").value,
+        10
+      );
 
-    const coalFilterEl = document.getElementById("coalFilter");
-const tableEl = document.getElementById("coalTable");
-const showAllBtn = document.getElementById("showAllBtn");
+      const companyId = getCompanyId();
+          if (!companyId) return '';
 
-coalFilterEl.addEventListener("change", (e) => {
-  const name = e.target.value;
-  if (name) {
-    displayTable(name);            // only that coal
-    tableEl.style.display = "table";
-    showAllBtn.textContent = "Hide All";
-  } else {
-    // cleared -> hide table
-    tableEl.style.display = "none";
-    showAllBtn.textContent = "Show All";
-  }
-});
-document.getElementById("selectCoalToModify").addEventListener("change", async (e) => {
-  const coalId = parseInt(e.target.value, 10);
-  const companyId = getCompanyId();
-  if (!companyId || Number.isNaN(coalId)) return;
 
-  const result = await postEncrypted(
-    "http://3.111.89.109:3000/api/getIndividualCoalProperty",
-    { companyId, p_CoalId: coalId }
-  );
+      const result = await postEncrypted("http://3.111.89.109:3000/api/getIndividualCoalProperty", { companyId , p_CoalId : (selectedIndex + 1) })
+      if (selectedIndex >= 0 && selectedIndex < coalData.length) {
+        const selectedCoal = coalData[selectedIndex];
 
-  const selectedCoal = (Array.isArray(result) && result[0]) ? result[0] :
-                       coalData.find(r => r.CoalId === coalId);
-
-  if (!selectedCoal) return;
-
-  document.getElementById("coal").value = selectedCoal.CoalName || "";
-  document.getElementById("coaltype").value = selectedCoal.CoalName || ""; // keeping your original behavior
-  document.getElementById("ash").value = selectedCoal.Ash ?? "";
-  document.getElementById("volatile_matter").value = selectedCoal.VolatileMatter ?? "";
-  document.getElementById("moisture").value = selectedCoal.Moisture ?? "";
-  document.getElementById("max_contraction").value = selectedCoal.MaxContraction ?? "";
-  document.getElementById("max_expansion").value = selectedCoal.MaxExpansion ?? "";
-  document.getElementById("max_fluidity").value = selectedCoal.Maxfluidityddpm ?? "";
-  document.getElementById("mmr").value = selectedCoal.MMR ?? "";
-  document.getElementById("hgi").value = selectedCoal.HGI ?? "";
-  document.getElementById("softening_temp").value = selectedCoal.SofteningTemperaturec ?? "";
-  document.getElementById("resolidification_min").value = selectedCoal.ResolidificationTempRangeMinc ?? "";
-  document.getElementById("resolidification_max").value = selectedCoal.ResolidificationTempRangeMaxc ?? "";
-  document.getElementById("plastic_range").value = selectedCoal.PlasticRangec ?? "";
-  document.getElementById("sulphur").value = selectedCoal.Sulphur ?? "";
-  document.getElementById("phosphorous").value = selectedCoal.Phosphorous ?? "";
-  document.getElementById("csn").value = selectedCoal.CSN ?? "";
-  document.getElementById("cost").value = selectedCoal.CostPerTonRs ?? "";
-});
-showAllBtn.addEventListener("click", () => {
-  const isHidden = tableEl.style.display === "none" || tableEl.style.display === "";
-  if (isHidden) {
-    displayTable("");             // show all, sorted
-    tableEl.style.display = "table";
-    showAllBtn.textContent = "Hide All";
-    coalFilterEl.value = "";      // clear any filter selection
-  } else {
-    tableEl.style.display = "none";
-    showAllBtn.textContent = "Show All";
-  }
-});
-
+        document.getElementById("coal").value = selectedCoal.CoalName;
+         document.getElementById("coaltype").value = selectedCoal.CoalName;
+        document.getElementById("ash").value = selectedCoal.Ash;
+        document.getElementById("volatile_matter").value = selectedCoal.VolatileMatter;
+        document.getElementById("moisture").value = selectedCoal.Moisture;
+        document.getElementById("max_contraction").value = selectedCoal.MaxContraction;
+        document.getElementById("max_expansion").value = selectedCoal.MaxExpansion;
+        document.getElementById("max_fluidity").value = selectedCoal.Maxfluidityddpm;
+        document.getElementById("mmr").value = selectedCoal.MMR;
+        document.getElementById("hgi").value = selectedCoal.HGI;
+        document.getElementById("softening_temp").value = selectedCoal.SofteningTemperaturec;
+        document.getElementById("resolidification_min").value = selectedCoal.ResolidificationTempRangeMinc;
+        document.getElementById("resolidification_max").value = selectedCoal.ResolidificationTempRangeMaxc;
+        document.getElementById("plastic_range").value = selectedCoal.PlasticRangec;
+        document.getElementById("sulphur").value = selectedCoal.Sulphur;
+        document.getElementById("phosphorous").value = selectedCoal.Phosphorous;
+        document.getElementById("csn").value = selectedCoal.CSN;
+        document.getElementById("cost").value = selectedCoal.CostPerTonRs;
+      }
+    });
 
     document
       .getElementById("modifyCoalForm")
@@ -1041,42 +961,6 @@ showAllBtn.addEventListener("click", () => {
                 window.location.replace('/login.html');
             });
         });
-document.getElementById("showAllBtn").addEventListener("click", () => {
-  const table = document.getElementById("coalTable");
-
-  if (table.style.display === "none" || table.style.display === "") {
-    // Show table
-    displayTable();
-    table.style.display = "table";
-    document.getElementById("showAllBtn").textContent = "Hide All";
-  } else {
-    // Hide table
-    table.style.display = "none";
-    document.getElementById("showAllBtn").textContent = "Show All";
-  }
-});
-document.getElementById("selectCoalToModify").addEventListener("change", (e) => {
-  const selectedCoal = e.target.value;
-  if (selectedCoal) {
-    populateCoalData(selectedCoal);
-  } else {
-    clearCoalData();
-  }
-});
-
-// 👉 ADD THE SHOW ALL TOGGLE HERE
-showAllBtn.addEventListener("click", () => {
-  const isHidden = tableEl.style.display === "none" || tableEl.style.display === "";
-  if (isHidden) {
-    displayTable("");             
-    tableEl.style.display = "table";
-    showAllBtn.textContent = "Hide All";
-    coalFilterEl.value = "";      
-  } else {
-    tableEl.style.display = "none";
-    showAllBtn.textContent = "Show All";
-  }
-});
 
   </script>
 </body>

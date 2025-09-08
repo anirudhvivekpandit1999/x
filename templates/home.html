@@ -5,31 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartCoke</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    
-    
 </head>
- <script>
+
+<script>
   document.addEventListener("DOMContentLoaded", function () {
-   // Select all elements you want to have typing effect
-  document.querySelectorAll('.typing-text').forEach(element => {
-    const originalText = element.innerHTML; // get the existing text (including <br>)
-    element.innerHTML = ""; // clear it so we can "type" it
-    let index = 0;
+    document.querySelectorAll('.typing-text').forEach(element => {
+      const originalText = element.innerHTML;
+      element.innerHTML = "";
+      let index = 0;
 
-    function typeEffect() {
-      if (index < originalText.length) {
-        element.innerHTML += originalText.charAt(index);
-        index++;
-        setTimeout(typeEffect, 50);
+      function typeEffect() {
+        if (index < originalText.length) {
+          element.innerHTML += originalText.charAt(index);
+          index++;
+          setTimeout(typeEffect, 50);
+        }
       }
-    }
+      typeEffect();
+    });
 
-    typeEffect();
-  });
-
-    // Reveal rows in .about section
     const rows = document.querySelectorAll('.about .row');
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
@@ -39,20 +34,17 @@
           entry.target.classList.remove('visible');
         }
       });
-    }, {
-      threshold: 0.2
-    });
+    }, { threshold: 0.2 });
 
     rows.forEach(row => observer.observe(row));
 
-    // Reveal .process .content every time it scrolls into view
     const processContents = document.querySelectorAll('.process .content');
     const processObserver = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('show');
         } else {
-          entry.target.classList.remove('show'); // reset for repeat animation
+          entry.target.classList.remove('show');
         }
       });
     }, { threshold: 0.2 });
@@ -61,46 +53,50 @@
   });
 </script>
 
-
 <body>
-    <header>
-            <nav class="navbar">
-                <div class="logo-left">
-                    <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left">
-                </div>
-                <ul class="navbar-links">
-                    <li><h1>SmartCoke</h1></a></li>
-                    <!--<li><a href="coal-properties.html">COAL PROPERTIES</a></li>
-                    <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
-                    <li><a href="cost-ai.html">COST AI</a></li>-->
-                    <!-- <li><a href="training.html">TRAINING</a></li> -->
-                    
-                </ul>
-               <button id="logoutButton">Login</button>
-
-            </nav>
-    </header>
-
-    <section class="home" id="home">
-
-        <div class="content">
-            <h3 class="typing-text">SmartCoke</h3>
-            <p class="typing-text">Coal to Coke - Prediction of the optimized blend and quality using Artificial Intelligence. </p>
-            <p class="typing-text">SMARTCOKE is suitable for Recovery Top charge , Recovery Stamp charge and Non Recovery Metcoke manufacturing processes</p>
-            <br><p class="typing-text"> Developed in collaboration with Industantra</p>
+    <nav class="navbar">
+        <div class="logo-left">
+            <img src="/static/images/abhitech-logo.png" alt="Abhitech Logo" class="logo-img-left">
         </div>
+        <ul class="navbar-links">
+            <li><a href="index.html"><h1>SmartCoke</h1></a></li>
+            <li>
+              <a href="#">COAL PROPERTIES</a>
+              <div class="desc-tooltip">This section contains coal property details. Login to know more or to use it.</div>
+            </li>
+            <li>
+              <a href="#">MIN-MAX WEIGHTAGE</a>
+              <div class="desc-tooltip">This section allows you to set min-max weightage for coal blending. Login to know more or to use it.</div>
+            </li>
+            <li>
+              <a href="#">COST AI</a>
+              <div class="desc-tooltip">This section calculates cost using AI models. Login to know more or to use it.</div>
+            </li>
+            <li>
+              <a href="#">TRAINING</a>
+              <div class="desc-tooltip">This section provides model training functionalities. Login to know more or to use it.</div>
+            </li>
+        </ul>
+        <button id="logoutButton">Login</button>
+    </nav>
+</header>
 
-    </section>
+<div id="descBox" class="desc-box"></div>
 
-    <!-- home section ends -->
+<section class="home" id="home">
+    <div class="content">
+        <h3 class="typing-text">SmartCoke</h3>
+        <p class="typing-text">Coal to Coke - Prediction of the optimized blend and quality using Artificial Intelligence. </p>
+        <p class="typing-text">SMARTCOKE is suitable for Recovery Top charge , Recovery Stamp charge and Non Recovery Metcoke manufacturing processes</p>
+        <br><p class="typing-text"> Developed in collaboration with Industantra</p>
+    </div>
+</section>
 
-    <section class="about" id="about">
+<section class="about" id="about">
   <div class="container">
     <h1 class="heading">Abhitech Software Division</h1>
     <h1>We develop cutting edge AI-based software to enhance efficiency and reduce cost, helping solve real-world industrial process challenges.</h1>
     <br>
-
-    <!-- Top Row -->
     <div class="row top-row hidden">
       <div class="image">
         <img src="/static/images/coal-to-coke.png" alt="">
@@ -111,8 +107,6 @@
         </h3>
       </div>
     </div>
-
-    <!-- Bottom Row -->
     <div class="row bottom-row hidden">
       <div class="content">
         <h3>
@@ -120,106 +114,62 @@
         </h3>
       </div>
       <div class="image model-image">
-        <img src="/static/images/neural-network.svg" alt="">
+        <img src="/static/images/model.png" alt="">
       </div>
     </div>
   </div>
 </section>
 
-    
-    <!-- about section ends -->
+<section class="process" id="process">
+  <div class="box-container">
+    <div class="content">
+        <h1 class="text-center" id="services" >ABHITECH SERVICES</h1>
+        <h2>SMARTCOKE is suitable for Recovery Top charge , Recovery Stamp charge and Non Recovery Metcoke manufacturing processes</h2>
+    </div>
+  </div>
+</section>
 
-    <section class="process" id="process">
-      <div class="box-container">
-        <div class="content">
-            <h1 class="text-center" id="services" >ABHITECH SERVICES</h1>
-            <h2>SMARTCOKE is suitable for Recovery Top charge , Recovery Stamp charge and Non Recovery Metcoke manufacturing processes</h2>
+<div class="footerInner">
+    <div class="footerInnerTop">
+        <div class="footerCol3 footerLinkl">
+          <h3 class="fg">Follow us on</h3>
+          <div class="fg footersocial">
+            <ul>
+                <li><a href="https://in.linkedin.com/company/abhitech-energycon-limited"><i class="fa-brands fa-linkedin" aria-hidden="true"></i></a></li>
+            </ul>
+          </div>
+          <div class="fg callIcon">
+            <a href="#">
+              <i class="fa fa-phone-square" aria-hidden="true"></i> 
+              +91-(22) 28479999 / +91-(22) 28570616
+            </a>
+          </div>
+          <div class="fg callIcon mailIcon">
+            <a href="mailto:abhitech@abhitechenergycon.com">
+              <i class="fa fa-envelope" aria-hidden="true"></i> 
+              abhitech@abhitechenergycon.com
+            </a>
+          </div>
         </div>
     </div>
-    </section>
-    
-    <!-- card1 -->
+</div>
 
-    <div class="footerInner">
-        <div class="footerInnerTop">
-              
-            <div class="footerCol3 footerLinkl">
-              <h3 class="fg">Follow us on</h3>
-              <div class="fg footersocial">
-                <ul>
-                    <li><a href="https://in.linkedin.com/company/abhitech-energycon-limited"><i class="fa-brands fa-linkedin" aria-hidden="true"></i></a></li>
-                </ul>
-              </div>
-              <div class="fg callIcon">
-                <a href="#">
-                  <i class="fa fa-phone-square" aria-hidden="true"></i> 
-                  +91-(22) 28479999 / +91-(22) 28570616                </a>
-              </div>
-              <div class="fg callIcon mailIcon">
-                <a href="mailto:abhitech@abhitechenergycon.com">
-                  <i class="fa fa-envelope" aria-hidden="true"></i> 
-                  <span class="__cf_email__" data-cfemail="345d5a525b7455565c5d4051575c515a5146534d575b5a1a575b59">
-                    abhitech@abhitechenergycon.com                  </span>
-                </a>
-              </div>
-            </div>
-      </div>
-      </div>
-
-    <script>
-        window.addEventListener('DOMContentLoaded', (event) => {
-            // Get all the navigation links
-            const navLinks = document.querySelectorAll('.navbar a');
-    
-            // Loop through each link to check if it matches the current page URL
-            navLinks.forEach(link => {
-                if (link.href === window.location.href) {
-                    link.classList.add('active'); // Add 'active' class to the link that matches the URL
-                }
-            });
-        });
-
-        window.addEventListener('pageshow', (event) => {
-            console.log("Pageshow event triggered. Persisted:", event.persisted); 
-
-            const userData = localStorage.getItem('user');
-            if (!userData) {
-                console.warn("⚠️ No user session found. Redirecting to login.");
-              
-                window.location.replace('/login.html');
-                return;
+<script>
+    window.addEventListener('DOMContentLoaded', (event) => {
+        const navLinks = document.querySelectorAll('.navbar a');
+        navLinks.forEach(link => {
+            if (link.href === window.location.href) {
+                link.classList.add('active');
             }
-            const user = JSON.parse(userData);
-           
         });
 
-        window.addEventListener('DOMContentLoaded', (event) => {
-            const navLinks = document.querySelectorAll('.navbar a');
-
-            navLinks.forEach(link => {
-                if (link.href === window.location.href) {
-                    link.classList.add('active'); 
-                }
-            });
-            const userData = localStorage.getItem('user');
-            if (!userData) {
-                console.warn("⚠️ No user session found on DOMContentLoaded. Redirecting to login.");
-                window.location.replace('/login.html');
-                return;
-            }
-
-          
-            const user = JSON.parse(userData);
-            console.log("👤 Logged-in user:", user);
-
-
-            document.getElementById('logoutButton').addEventListener('click', () => {
-                localStorage.clear(); 
-                window.location.replace('/login.html');
-            });
+        // 👉 For homepage we don't force login, only handle logout button
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.clear(); 
+            window.location.replace('/login.html');
         });
+    });
+</script>
 
-    </script>
-    
 </body>
 </html>

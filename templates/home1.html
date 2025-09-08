@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartCoke</title>
+
+  <!-- Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  />
+
+  <!-- CSS -->
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+  />
+</head>
+
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo-left">
+      <img
+        src="/static/images/abhitech-logo.png"
+        alt="Abhitech Logo"
+        class="logo-img-left"
+      />
+    </div>
+    <ul class="navbar-links">
+      <li><a href="index.html"><h1>SmartCoke</h1></a></li>
+      <li>
+        <a href="#">COAL PROPERTIES</a>
+        <div class="desc-tooltip">
+          This section contains coal property details. Login to know more or to
+          use it.
+        </div>
+      </li>
+      <li>
+        <a href="#">MIN-MAX WEIGHTAGE</a>
+        <div class="desc-tooltip">
+          This section allows you to set min-max weightage for coal blending.
+          Login to know more or to use it.
+        </div>
+      </li>
+      <li>
+        <a href="#">COST AI</a>
+        <div class="desc-tooltip">
+          This section calculates cost using AI models. Login to know more or to
+          use it.
+        </div>
+      </li>
+      <li>
+        <a href="#">TRAINING</a>
+        <div class="desc-tooltip">
+          This section provides model training functionalities. Login to know
+          more or to use it.
+        </div>
+      </li>
+    </ul>
+    <button id="authButton">Login</button>
+  </nav>
+
+  <!-- Description box -->
+  <div id="descBox" class="desc-box"></div>
+
+  <!-- Home Section -->
+  <section class="home" id="home">
+    <div class="content">
+      <h3 class="typing-text">SmartCoke</h3>
+      <p class="typing-text">
+        Coal to Coke - Prediction of the optimized blend and quality using
+        Artificial Intelligence.
+      </p>
+      <p class="typing-text">
+        SMARTCOKE is suitable for Recovery Top charge , Recovery Stamp charge
+        and Non Recovery Metcoke manufacturing processes
+      </p>
+      <br />
+      <p class="typing-text">Developed in collaboration with Industantra</p>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="about" id="about">
+    <div class="container">
+      <h1 class="heading">Abhitech Software Division</h1>
+      <h1>
+        We develop cutting edge AI-based software to enhance efficiency and
+        reduce cost, helping solve real-world industrial process challenges.
+      </h1>
+      <br />
+
+      <div class="row top-row hidden">
+        <div class="image">
+          <img src="/static/images/coal-to-coke.png" alt="Coal to Coke" />
+        </div>
+        <div class="content">
+          <h3>
+            SMARTCOKE, our AI-driven metallurgical coke blend and quality
+            optimisation software, helps coke manufacturers balance coal blends
+            and process parameters to maintain quality while reducing costs.
+          </h3>
+        </div>
+      </div>
+
+      <div class="row bottom-row hidden">
+        <div class="content">
+          <h3>
+            SMARTCOKE uses advanced machine learning models and real-time data
+            analysis. By incorporating logistical constraints like coal cost and
+            availability, it determines the most efficient coal mix and
+            operational parameters to produce high-quality coke while reducing
+            cost and carbon footprint.
+          </h3>
+        </div>
+        <div class="image model-image">
+          <img
+            src="/static/images/neural-network.svg"
+            alt="Neural Network Model"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="process" id="process">
+    <div class="box-container">
+      <div class="content">
+        <h1 class="text-center" id="services">ABHITECH SERVICES</h1>
+        <h2>
+          SMARTCOKE is suitable for Recovery Top charge , Recovery Stamp charge
+          and Non Recovery Metcoke manufacturing processes
+        </h2>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <div class="footerInner">
+    <div class="footerInnerTop">
+      <div class="footerCol3 footerLinkl">
+        <h3 class="fg">Follow us on</h3>
+        <div class="fg footersocial">
+          <ul>
+            <li>
+              <a
+                href="https://in.linkedin.com/company/abhitech-energycon-limited"
+                ><i class="fa-brands fa-linkedin" aria-hidden="true"></i
+              ></a>
+            </li>
+          </ul>
+        </div>
+        <div class="fg callIcon">
+          <a href="#">
+            <i class="fa fa-phone-square" aria-hidden="true"></i>
+            +91-(22) 28479999 / +91-(22) 28570616
+          </a>
+        </div>
+        <div class="fg callIcon mailIcon">
+          <a href="mailto:abhitech@abhitechenergycon.com">
+            <i class="fa fa-envelope" aria-hidden="true"></i>
+            abhitech@abhitechenergycon.com
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      /* ---------------- Typing Effect ---------------- */
+      document.querySelectorAll(".typing-text").forEach((element) => {
+        const originalText = element.innerHTML;
+        element.innerHTML = "";
+        let index = 0;
+
+        function typeEffect() {
+          if (index < originalText.length) {
+            element.innerHTML += originalText.charAt(index);
+            index++;
+            setTimeout(typeEffect, 50);
+          }
+        }
+        typeEffect();
+      });
+
+      /* ---------------- Scroll Reveal ---------------- */
+      const rowObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            entry.target.classList.toggle("visible", entry.isIntersecting);
+          });
+        },
+        { threshold: 0.2 }
+      );
+      document
+        .querySelectorAll(".about .row")
+        .forEach((row) => rowObserver.observe(row));
+
+      const processObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            entry.target.classList.toggle("show", entry.isIntersecting);
+          });
+        },
+        { threshold: 0.2 }
+      );
+      document
+        .querySelectorAll(".process .content")
+        .forEach((el) => processObserver.observe(el));
+
+      /* ---------------- Navbar Active Link ---------------- */
+      const navLinks = document.querySelectorAll(".navbar a");
+      navLinks.forEach((link) => {
+        if (link.pathname === window.location.pathname) {
+          link.classList.add("active");
+        }
+      });
+
+      /* ---------------- Auth Handling ---------------- */
+      const authButton = document.getElementById("authButton");
+      const userData = localStorage.getItem("user");
+
+     
+
+      const user = JSON.parse(userData);
+      console.log("👤 Logged-in user:", user);
+
+      // Change button text to Logout
+      authButton.textContent = "Logout";
+      authButton.addEventListener("click", () => {
+        localStorage.clear();
+        window.location.replace("/login.html");
+      });
+    });
+  </script>
+</body>
+</html>

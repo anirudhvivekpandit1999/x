@@ -686,7 +686,7 @@
         <li><a href="coal-properties.html">COAL PROPERTIES</a></li>
         <li><a href="min-max.html">MIN-MAX WEIGHTAGE</a></li>
         <li><a href="cost-ai.html">COST AI</a></li>
-        <!-- <li><a href="training.html">TRAINING</a></li> -->
+        <li><a href="training_data.html">TRAINING</a></li>
         <!-- <li><a href="index.html">HOME</a></li> -->
       </ul>
       <button id="logoutButton">Logout</button>
@@ -2116,6 +2116,14 @@ const rows = response;
                 }
             });
         });
+
+        const logoutBtn = document.getElementById('logoutButton');
+if (logoutBtn) {
+logoutBtn.addEventListener('click', () => {
+localStorage.clear();
+window.location.replace('/');
+});
+}
     </script>
 </body>
 

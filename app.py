@@ -268,6 +268,7 @@ def github_deploy():
     if payload.get('ref') != 'refs/heads/main':
         return jsonify({'status': 'ignored'}), 200
 
+
     # Run deploy.sh in the background
     threading.Thread(target=lambda: subprocess.run([DEPLOY_SCRIPT], check=True)).start()
     return jsonify({'status': 'triggered'}), 202
